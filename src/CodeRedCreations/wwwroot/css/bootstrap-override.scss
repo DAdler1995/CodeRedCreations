@@ -1,0 +1,136 @@
+﻿@import 'variables';
+
+.navbar .nav,
+.navbar .nav > li {
+    cursor: pointer;
+    font-family: $hind;
+    text-transform: uppercase;
+}
+
+.body-content.container {
+    padding: 0;
+    margin: 0;
+}
+
+.row {
+    padding: 0;
+}
+
+@media screen and (min-width: 768px) {
+    .navbar .nav,
+    .navbar .nav > li {
+        cursor: pointer;
+        font-family: $hind;
+        text-transform: uppercase;
+        float: none;
+        display: inline-block;
+        *display: inline;
+        *zoom: 1;
+        vertical-align: top;
+    }
+
+    .navbar-collapse {
+        text-align: center;
+    }
+
+    .body-content.container {
+        padding: 0 15px;
+        margin: 0 auto;
+    }
+
+    .row {
+        padding: 15px 0;
+    }
+}
+
+
+.navbar-default .navbar-nav > li > a {
+    color: $red;
+    border-width: 1px 0;
+    border-style: solid;
+    border-color: transparent;
+    @include transition(color .5s ease-in-out, border-color 1s ease-in-out);
+
+    &:hover {
+        color: $red-dark;
+        border-color: $red-dark;
+    }
+}
+
+.navbar-default {
+    border-width: 1px 0 0 0;
+}
+
+.navbar {
+    border-radius: 0;
+}
+
+
+.navbar-nav > li > div.dropdown,
+.navbar-nav > li > div.dropdown {
+    line-height: 20px;
+    padding: 15px 15px;
+    color: $red;
+    border-width: 1px 0;
+    border-style: solid;
+    border-color: transparent;
+    background-color: transparent;
+    @include transition(color .5s ease-in-out, border-color 1s ease-in);
+
+    &:hover,
+    &:active,
+    &:focus,
+    &:hover:focus {
+        color: $red-dark;
+        border-color: $red-dark;
+    }
+}
+
+.navbar-nav > li > div.dropdown > a,
+.navbar-default .navbar-nav > .open > a {
+    color: $red;
+    background-color: transparent;
+    border-width: 1px 0;
+    border-style: solid;
+    border-color: transparent;
+    @include transition(color .5s ease-in-out, border-color 1s ease-in);
+
+    &:hover,
+    &:active,
+    &.active,
+    &:focus,
+    &:hover:focus {
+        color: $red-dark;
+        border-color: $red-dark;
+        background-color: transparent;
+    }
+}
+
+.dropdown-header {
+    font-family: $hind;
+    color: $red;
+    text-transform: uppercase;
+    padding: 3px 0;
+}
+
+.nav .open > a, .nav .open > a:hover, .nav .open > a:focus {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.dropdown-menu > li > div.yamm-content ul > li {
+    margin: 3px 5px;
+
+    a {
+        color: $grey;
+        text-decoration: none !important;
+        @include transition(color .5s ease-in-out, border-color 1s ease-in-out);
+
+        &:hover,
+        &:active,
+        &:focus,
+        &:hover:focus {
+            color: $red-dark;
+        }
+    }
+}

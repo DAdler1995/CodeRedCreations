@@ -1,0 +1,141 @@
+﻿@import 'bootstrap-override';
+@import 'variables';
+@import 'flexbox';
+body,
+html {
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    color: $grey;
+    font-family: $open;
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    text-shadow: rgba(0,0,0,0.01) 0 0 1px;
+    -webkit-font-smoothing: antialiased;
+}
+
+header {
+    order: 1;
+}
+
+ul {
+    margin: 0;
+}
+
+.body-content {
+    order: 2;
+    flex: 1;
+}
+
+footer {
+    margin-top: 20px;
+    padding: 10px 0;
+    border-width: 1px 0 0 0;
+    border-style: solid;
+    border-color: $grey-dark;
+    background-color: $grey-light;
+    order: 3;
+
+    img {
+        height: 35px;
+        width: auto;
+    }
+}
+
+h1, h2, h3, h4, h5, h6, strong, th, thead {
+    font-family: $hind;
+    text-transform: uppercase;
+}
+
+a {
+    color: $red;
+    text-decoration: none !important;
+    @include transition(color .5s ease-in-out, border-color 1s ease-in-out);
+
+    &:hover,
+    &:active,
+    &:focus,
+    &:hover:focus {
+        color: $red-dark;
+    }
+}
+
+
+//-----------------------------
+//  Yamm Styles
+//-----------------------------
+.yamm {
+    // reset positions
+    .nav, .collapse, .dropup, .dropdown {
+        position: static;
+    }
+    // propagate menu position under container for fw navbars
+    .container {
+        position: relative;
+    }
+    // by default aligns menu to left
+    .dropdown-menu {
+        left: auto;
+    }
+    // Content with padding
+    .yamm-content {
+        padding: 20px 30px;
+    }
+    // Fullwidth menu
+    .dropdown.yamm-fw .dropdown-menu {
+        left: 0;
+        right: 0;
+    }
+}
+
+
+//-----------------------------
+//  Cover Background
+//-----------------------------
+.background {
+    height: 100%;
+    width: 100%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+
+    div.text-overlay {
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.457);
+        margin: 15px 0;
+        left: 15px;
+        right: 15px;
+        color: #F8F8F8;
+
+        * {
+            margin: 10px 0;
+        }
+    }
+
+    .text-overlay.overlay-bottom {
+        bottom: 0;
+    }
+
+    .text-overlay.overlay-top {
+        top: 0;
+    }
+}
+
+.background.banner {
+    height: 30vh;
+}
+
+.background.bg-one {
+    background-image: url("https://images5.alphacoders.com/499/499290.jpg");
+}
+
+.background.bg-two {
+    background-image: url("https://images5.alphacoders.com/499/499290.jpg");
+}
+
+.background.bg-three {
+    background-image: url("https://images5.alphacoders.com/499/499290.jpg");
+}

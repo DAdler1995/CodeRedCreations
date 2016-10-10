@@ -1,0 +1,27 @@
+﻿@import 'https://fonts.googleapis.com/css?family=Hind:500|Open+Sans:300';
+@import 'mixins';
+
+$open: 'Open Sans', sans-serif;
+$hind: 'Hind', sans-serif;
+
+$red-light: #dc1818;
+$red: #dc1818;
+$red-dark: #a81313;
+
+$grey-light: #F8F8F8;
+$grey: #6b6b6b;
+$grey-dark: #E7E7E7;
+
+.text-red {
+    color: $red;
+}
+.text-grey {
+    color: $grey;
+}
+
+.text-open {
+    font-family: $open;
+}
+.text-hind {
+    font-family: $hind;
+}
