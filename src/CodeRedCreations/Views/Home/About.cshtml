@@ -5,3 +5,14 @@
 <h3>@ViewData["Message"]</h3>
 
 <p>Use this area to provide additional information.</p>
+<ul>
+    <li>@User.Identity.Name</li>
+    <li>---</li>
+    @foreach (var item in User.Identities)
+    {
+        <li>@item</li>
+    }
+    <li>
+        @User.IsInRole("Admin")
+    </li>
+</ul>

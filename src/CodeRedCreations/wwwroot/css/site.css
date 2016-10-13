@@ -209,11 +209,12 @@ footer {
     height: 35px;
     width: auto; }
 
-h1, h2, h3, h4, h5, h6, strong, th, thead {
+h1, h2, h3, h4, h5, h6, strong, th, thead, dt {
   font-family: "Hind", sans-serif;
   text-transform: uppercase; }
 
-a {
+a,
+.btn-link {
   color: #dc1818;
   text-decoration: none !important;
   -webkit-transition: color 0.5s ease-in-out, border-color 1s ease-in-out;
@@ -221,7 +222,11 @@ a {
   -ms-transition: color 0.5s ease-in-out, border-color 1s ease-in-out;
   -o-transition: color 0.5s ease-in-out, border-color 1s ease-in-out;
   transition: color 0.5s ease-in-out, border-color 1s ease-in-out; }
-  a:hover, a:active, a:focus, a:hover:focus {
+  a:hover, a:active, a:focus, a:hover:focus,
+  .btn-link:hover,
+  .btn-link:active,
+  .btn-link:focus,
+  .btn-link:hover:focus {
     color: #a81313; }
 
 .yamm .nav, .yamm .collapse, .yamm .dropup, .yamm .dropdown {
@@ -234,7 +239,9 @@ a {
   left: auto; }
 
 .yamm .yamm-content {
-  padding: 20px 30px; }
+  padding: 0 10px; }
+  .yamm .yamm-content .row {
+    padding: 0; }
 
 .yamm .dropdown.yamm-fw .dropdown-menu {
   left: 0;

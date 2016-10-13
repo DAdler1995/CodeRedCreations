@@ -18,5 +18,6 @@ namespace CodeRedCreations.Models
         public decimal Shipping { get; set; }
         public int Stock { get; set; }
         public bool OnSale { get; set; }
+        public string PaypalUrl { get; set; }
     }
 }
