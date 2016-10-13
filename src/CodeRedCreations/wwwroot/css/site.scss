@@ -45,12 +45,13 @@ footer {
     }
 }
 
-h1, h2, h3, h4, h5, h6, strong, th, thead {
+h1, h2, h3, h4, h5, h6, strong, th, thead, dt {
     font-family: $hind;
     text-transform: uppercase;
 }
 
-a {
+a,
+.btn-link {
     color: $red;
     text-decoration: none !important;
     @include transition(color .5s ease-in-out, border-color 1s ease-in-out);
@@ -82,7 +83,10 @@ a {
     }
     // Content with padding
     .yamm-content {
-        padding: 20px 30px;
+        padding: 0 10px;
+        .row {
+            padding: 0;
+        }
     }
     // Fullwidth menu
     .dropdown.yamm-fw .dropdown-menu {

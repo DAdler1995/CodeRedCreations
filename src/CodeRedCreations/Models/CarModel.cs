@@ -12,7 +12,6 @@ namespace CodeRedCreations.Models
         public int CarId { get; set; }
         public string Make { get; set; }
         public string Model { get; set; }
-        public IEnumerable<int> Years { get; set; }
         public string TrimLevel { get; set; }
     }
 }

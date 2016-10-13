@@ -1,0 +1,83 @@
+﻿@model List<CodeRedCreations.Models.ApplicationUser>
+@inject Microsoft.AspNetCore.Identity.UserManager<CodeRedCreations.Models.ApplicationUser> _userManager;
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<h2>@ViewData["Title"]</h2>
+<p class="text-success">@ViewData["SuccessMessage"]</p>
+
+    <table class="table table-hover table-responsive" id="ManageUsers">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Set Role</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.UserName</td>
+                    <td>
+                        @_userManager.GetRolesAsync(await _userManager.FindByEmailAsync(item.Email)).Result.FirstOrDefault()
+                    </td>
+                    <td>
+                        <div class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                New Role
+                                <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#" onclick="UpdateRole('@item.Email', 'Default')">Default</a></li>
+                                <li><a href="#" onclick="UpdateRole('@item.Email', 'Admin')">Admin</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        @if (!_userManager.GetRolesAsync(await _userManager.FindByEmailAsync(item.Email)).Result.Contains("Admin"))
+                        {
+                            <a href="#" onclick="DeleteUser('@item.Email')">Delete User</a>
+                        }
+                        else
+                        {
+                            <span>Cannot delete admins.</span>
+
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+<script>
+    function UpdateRole(email, newRole) {
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("UpdateRole", "Admin")',
+            data: { email: email, newRole: newRole },
+            success: function (response, textStatus, jqXHR) {
+                var updatedTable = $($.parseHTML(response)).find('#ManageUsers');
+                $('#ManageUsers').html(updatedTable);
+            }
+        });
+    }
+
+    function DeleteUser(email) {
+        if (confirm('Are you sure you wish to delete ' + email + '\'s account?')) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeleteUser", "Admin")',
+                data: { email: email },
+                success: function (response, textStatus, jqXHR) {
+                    var updatedTable = $($.parseHTML(response)).find('#ManageUsers');
+                    $('#ManageUsers').html(updatedTable);
+                }
+            });
+        }
+
+    }
+</script>
