@@ -8,6 +8,7 @@ using CodeRedCreations.Data;
 using Microsoft.AspNetCore.Identity;
 using CodeRedCreations.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 // For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -49,7 +50,82 @@ namespace CodeRedCreations.Controllers
         [HttpGet]
         public IActionResult ManageProducts()
         {
-            return View();
+            var allProducts = _context.Brand.Include(x => x.Parts).ToList();
+
+            return View(allProducts);
+        }
+
+        [HttpGet]
+        public IActionResult AddProduct()
+        {
+            var AddNewProduct = new AddNewProductModel();
+            AddNewProduct.Cars = _context.Car.ToList();
+            AddNewProduct.Brands = _context.Brand.ToList();
+
+            return View(AddNewProduct);
+        }
+
+        public async Task<IActionResult> AddBrand(AddNewProductModel model)
+        {
+            var newBrand = model.Brand;
+            bool brandExists = _context.Brand.FirstOrDefault(x => x.Name == newBrand.Name) != null;
+
+            if (brandExists)
+            {
+                ViewData["SuccessMessage"] = $"Updated {newBrand.Name}.";
+                _context.Brand.Update(newBrand);
+            }
+            else
+            {
+                ViewData["SuccessMessage"] = $"Added {newBrand.Name}.";
+                _context.Brand.Add(newBrand);
+            }
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("AddProduct");
+        }
+
+        public async Task<IActionResult> AddCar(AddNewProductModel model)
+        {
+            var newCar = model.NewCar;
+            bool brandExists = _context.Car.FirstOrDefault(x => x.Make == newCar.Make && x.Model == newCar.Model) != null;
+
+            if (brandExists)
+            {
+                ViewData["SuccessMessage"] = $"Updated {newCar.Make} {newCar.Model}.";
+                _context.Car.Update(newCar);
+            }
+            else
+            {
+                ViewData["SuccessMessage"] = $"Added {newCar.Make} {newCar.Model}.";
+                _context.Car.Add(newCar);
+            }
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("AddProduct");
+        }
+
+        public async Task<IActionResult> AddPart(AddNewProductModel model)
+        {
+            model.Part.CompatibleCars = _context.Car.FirstOrDefault(x => x.CarId == model.Part.CompatibleCars.CarId);
+            model.Part.Brand = _context.Brand.Include(x => x.Parts).FirstOrDefault(x => x.BrandId == model.Part.Brand.BrandId);
+            var newPart = model.Part;
+
+            bool partExists = _context.Part.FirstOrDefault(x => x.Brand == newPart.Brand && x.Name == newPart.Name) != null;
+            if (partExists)
+            {
+                ViewData["SuccessMessage"] = $"Updated {newPart.Brand} {newPart.Name}.";
+                _context.Part.Update(newPart);
+            }
+            else
+            {
+                ViewData["SuccessMessage"] = $"Added {newPart.Brand} {newPart.Name}.";
+                _context.Part.Add(newPart);
+            }
+            _context.Brand.Update(newPart.Brand);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("AddProduct");
         }
 
         // Called via ajax
@@ -98,4 +174,5 @@ namespace CodeRedCreations.Controllers
             return RedirectToAction("ManageUsers", "Admin");
         }
     }
+
 }

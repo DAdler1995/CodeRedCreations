@@ -12,8 +12,9 @@ namespace CodeRedCreations.Models
         public int PartId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public virtual BrandModel Brand { get; set; }
         public PartTypeEnum PartType { get; set; }
-        public IEnumerable<CarModel> CompatibleCars { get; set; }
+        public virtual CarModel CompatibleCars { get; set; }
         public decimal Price { get; set; }
         public decimal Shipping { get; set; }
         public int Stock { get; set; }

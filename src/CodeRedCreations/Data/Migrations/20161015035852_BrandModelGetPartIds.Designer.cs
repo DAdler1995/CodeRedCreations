@@ -8,9 +8,10 @@ using CodeRedCreations.Data;
 namespace CodeRedCreations.Data.Migrations
 {
     [DbContext(typeof(CodeRedContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20161015035852_BrandModelGetPartIds")]
+    partial class BrandModelGetPartIds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.1")

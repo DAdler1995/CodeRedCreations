@@ -1,0 +1,117 @@
+﻿@model CodeRedCreations.Models.NavbarViewModel
+@{
+    var carModels = new List<string>();
+}
+
+<div class="container">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <img src="~/images/Logo-small.svg" height="25" />
+        </button>
+        <a asp-controller="Home" asp-action="Index" class="navbar-brand visible-xs"><img src="~/images/Logo.svg" height="35" /></a>
+    </div>
+    <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+            <li id="ddCars" class="dropdown">
+                <a id="dCars" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Cars</a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="dCars">
+                    <li>
+                        <div class="yamm-content">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <ul class="list-unstyled">
+
+                                        @foreach (var car in Model.Cars)
+                                        {
+                                            if (!carModels.Contains(car.Make))
+                                            {
+                                                <li class="divider"></li>
+                                                <li class="dropdown-header">@car.Make</li>
+                                                carModels.Add(car.Make);
+                                            }
+                                            <li>
+                                                <a asp-controller="Parts" asp-route-part="All" asp-route-brand="All" asp-route-car="@car.CarId">@car.Model</a>
+                                            </li>
+                                        }
+
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <li id="ddParts" class="dropdown">
+                <a id="dParts" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Parts</a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="dParts">
+                    <li>
+                        <div class="yamm-content">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <ul class="list-unstyled">
+                                        <li><a asp-controller="Parts" asp-route-part="Aero_Body" asp-route-brand="All" asp-route-car="All">Aero & Body</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Air_Intake" asp-route-brand="All" asp-route-car="All">Air Intakes</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Brakes" asp-route-brand="All" asp-route-car="All">Brakes</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Cooling" asp-route-brand="All" asp-route-car="All">Cooling</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Clutch_Flywheel" asp-route-brand="All" asp-route-car="All">Clutch & Flywheel</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Engine_Management" asp-route-brand="All" asp-route-car="All">Engine Management</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Electroncis" asp-route-brand="All" asp-route-car="All">Electronics</a></li>
+                                    </ul>
+                                </div>
+                                <div class="col-sm-4">
+                                    <ul class="list-unstyled">
+                                        <li><a asp-controller="Parts" asp-route-part="Endine_Dress-Up" asp-route-brand="All" asp-route-car="All">Engine Dress-up</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Engine_Parts" asp-route-brand="All" asp-route-car="All">Engine Parts</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Exhaust" asp-route-brand="All" asp-route-car="All">Exhaust</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Forced_Induction" asp-route-brand="All" asp-route-car="All">Forced Induction</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Fuel_System" asp-route-brand="All" asp-route-car="All">Fuel System</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Guages_Pods" asp-route-brand="All" asp-route-car="All">Gauges & Pods</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Intercooler" asp-route-brand="All" asp-route-car="All">Intercooler</a></li>
+                                    </ul>
+                                </div>
+                                <div class="col-sm-4">
+                                    <ul class="list-unstyled">
+                                        <li><a asp-controller="Parts" asp-route-part="Interior" asp-route-brand="All" asp-route-car="All">Interior</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Lights_Emblems" asp-route-brand="All" asp-route-car="All">Lights & Emblems</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Nitrus" asp-route-brand="All" asp-route-car="All">Nitrus</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Oils_Lubricants" asp-route-brand="All" asp-route-car="All">Oils & Lubricants</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Suspension" asp-route-brand="All" asp-route-car="All">Suspension</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Transmission_Drivetrain" asp-route-brand="All" asp-route-car="All">Transmission & Drivetrain</a></li>
+                                        <li><a asp-controller="Parts" asp-route-part="Wheels_Tires" asp-route-brand="All" asp-route-car="All">Wheels & Tires</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <li id="ddBrands" class="dropdown">
+                <a id="dBrands" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Brands</a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="dBrands">
+                    <li>
+                        <div class="yamm-content">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <ul class="list-unstyled">
+
+                                        @foreach (var brand in Model.Brand)
+                                        {
+                                            <li>
+                                                <a asp-controller="Parts" asp-route-part="All" asp-route-brand="@brand" asp-route-car="All">@brand.Name</a>
+                                            </li>
+                                        }
+
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <li><a asp-controller="Home" asp-action="About">About</a></li>
+            <li><a asp-controller="Home" asp-action="Media">Media</a></li>
+            <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+        </ul>
+    </div>
+</div>

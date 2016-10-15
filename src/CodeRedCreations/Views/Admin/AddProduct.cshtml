@@ -1,0 +1,193 @@
+﻿@model CodeRedCreations.Models.AddNewProductModel
+
+@{
+    ViewData["Title"] = "Add New Products";
+}
+<h2>@ViewData["Title"]</h2>
+<p class="text-success">@ViewData["SuccessMessage"]</p>
+
+<a asp-area="" asp-controller="Admin" asp-action="ManageProducts">Return to Manage Products</a>
+
+<ul class="nav nav-tabs">
+    <li class="active"><a data-toggle="tab" href="#AddBrand">Add Brand</a></li>
+    <li class=""><a data-toggle="tab" href="#AddCar">Add Car</a></li>
+    <li class=""><a data-toggle="tab" href="#AddPart">Add Part</a></li>
+</ul>
+
+<div class="tab-content">
+    <div id="AddBrand" class="tab-pane fade in active">
+        <form asp-controller="Admin" asp-action="AddBrand" id="AddBrandForm" method="post" class="form-horizontal">
+            <h4>Add a new brand.</h4>
+            <hr />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Brand.Name" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="Brand.Name" class="form-control" />
+                    <span asp-validation-for="Brand.Name" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Brand.Description" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <textarea asp-for="Brand.Description" class="form-control"></textarea>
+                    <span asp-validation-for="Brand.Description" class="text-danger"></span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <button type="submit" class="btn btn-default">Add New Brand</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="AddCar" class="tab-pane fade in">
+        <form asp-controller="Admin" asp-action="AddCar" id="AddCarForm" method="post" class="form-horizontal">
+            <h4>Add a new car.</h4>
+            <hr />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="NewCar.Make" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="NewCar.Make" class="form-control" />
+                    <span asp-validation-for="NewCar.Make" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NewCar.Model" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="NewCar.Model" class="form-control" />
+                    <span asp-validation-for="NewCar.Model" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NewCar.TrimLevel" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="NewCar.TrimLevel" class="form-control" />
+                    <span asp-validation-for="NewCar.TrimLevel" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <button type="submit" class="btn btn-default">Add New Car</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="AddPart" class="tab-pane fade in">
+        <form asp-controller="Admin" asp-action="AddPart" id="AddPartForm" method="post" class="form-horizontal">
+            <h4>Add a new part.</h4>
+            <hr />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Part.Brand" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <select asp-for="Part.Brand.BrandId" class="form-control">
+                        @foreach (var brand in Model.Brands)
+                        {
+                            <option value="@brand.BrandId">@brand.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Part.Name" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="Part.Name" class="form-control" />
+                    <span asp-validation-for="Part.Name" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Part.Description" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <textarea asp-for="Part.Description" class="form-control"></textarea>
+                    <span asp-validation-for="Part.Description" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Part.PartType" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <select class="form-control">
+                        @foreach (var type in Enum.GetValues(typeof(CodeRedCreations.Models.PartTypeEnum)))
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Part.PartType" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Part.CompatibleCars" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <select asp-for="Part.CompatibleCars.CarId" class="form-control">
+                        @foreach (var item in Model.Cars)
+                        {
+                            <option value="@item.CarId">@item.Make - @item.Model</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Part.CompatibleCars" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Part.Price" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="Part.Price" class="form-control" />
+                    <span asp-validation-for="Part.Price" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Part.Shipping" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="Part.Shipping" class="form-control" />
+                    <span asp-validation-for="Part.Shipping" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Part.Stock" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="Part.Stock" class="form-control" />
+                    <span asp-validation-for="Part.Stock" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Part.OnSale" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <select class="form-control">
+                        <option value="false">False</option>
+                        <option value="true">True</option>
+                    </select>
+                    <span asp-validation-for="Part.OnSale" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Part.PaypalUrl" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="Part.PaypalUrl" class="form-control" />
+                    <span asp-validation-for="Part.PaypalUrl" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <button type="submit" class="btn btn-default">Add New Part</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

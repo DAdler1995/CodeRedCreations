@@ -1,5 +1,24 @@
 ﻿@model List<CodeRedCreations.Models.BrandModel>
-
 @{
     ViewData["Title"] = "Manage Products";
 }
+<h2>@ViewData["Title"]</h2>
+<p class="text-success">@ViewData["SuccessMessage"]</p>
+<a asp-area="" asp-controller="Admin" asp-action="AddProduct">+ Add New Product</a>
+<ul>
+    @foreach (var item in Model)
+    {
+        <li>
+            @item.Name
+            @if (item.Parts != null)
+            {
+                <ul>
+                    @foreach (var part in item.Parts)
+                    {
+                        <li>@part.Name</li>
+                    }
+                </ul>
+            }
+        </li>
+    }
+</ul>

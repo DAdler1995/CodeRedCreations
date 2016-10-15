@@ -8,8 +8,8 @@ using CodeRedCreations.Data;
 namespace CodeRedCreations.Data.Migrations
 {
     [DbContext(typeof(CodeRedContext))]
-    [Migration("20161010223120_CarBrandPartMigration")]
-    partial class CarBrandPartMigration
+    [Migration("20161015034748_GenerateBrandPartCarTables")]
+    partial class GenerateBrandPartCarTables
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -77,7 +77,7 @@ namespace CodeRedCreations.Data.Migrations
 
                     b.HasKey("BrandId");
 
-                    b.ToTable("BrandModel");
+                    b.ToTable("Brand");
                 });
 
             modelBuilder.Entity("CodeRedCreations.Models.CarModel", b =>
@@ -89,15 +89,11 @@ namespace CodeRedCreations.Data.Migrations
 
                     b.Property<string>("Model");
 
-                    b.Property<int?>("PartModelPartId");
-
                     b.Property<string>("TrimLevel");
 
                     b.HasKey("CarId");
 
-                    b.HasIndex("PartModelPartId");
-
-                    b.ToTable("CarModel");
+                    b.ToTable("Car");
                 });
 
             modelBuilder.Entity("CodeRedCreations.Models.PartModel", b =>
@@ -105,7 +101,11 @@ namespace CodeRedCreations.Data.Migrations
                     b.Property<int>("PartId")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<int?>("BrandId");
+
                     b.Property<int?>("BrandModelBrandId");
+
+                    b.Property<int?>("CompatibleCarsCarId");
 
                     b.Property<string>("Description");
 
@@ -125,9 +125,13 @@ namespace CodeRedCreations.Data.Migrations
 
                     b.HasKey("PartId");
 
+                    b.HasIndex("BrandId");
+
                     b.HasIndex("BrandModelBrandId");
 
-                    b.ToTable("PartModel");
+                    b.HasIndex("CompatibleCarsCarId");
+
+                    b.ToTable("Part");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole", b =>
@@ -237,18 +241,19 @@ namespace CodeRedCreations.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("CodeRedCreations.Models.CarModel", b =>
-                {
-                    b.HasOne("CodeRedCreations.Models.PartModel")
-                        .WithMany("CompatibleCars")
-                        .HasForeignKey("PartModelPartId");
-                });
-
             modelBuilder.Entity("CodeRedCreations.Models.PartModel", b =>
                 {
+                    b.HasOne("CodeRedCreations.Models.BrandModel", "Brand")
+                        .WithMany()
+                        .HasForeignKey("BrandId");
+
                     b.HasOne("CodeRedCreations.Models.BrandModel")
                         .WithMany("Parts")
                         .HasForeignKey("BrandModelBrandId");
+
+                    b.HasOne("CodeRedCreations.Models.CarModel", "CompatibleCars")
+                        .WithMany()
+                        .HasForeignKey("CompatibleCarsCarId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRoleClaim<string>", b =>

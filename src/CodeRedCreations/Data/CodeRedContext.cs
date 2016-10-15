@@ -10,14 +10,19 @@ namespace CodeRedCreations.Data
 {
     public class CodeRedContext : IdentityDbContext<ApplicationUser>
     {
-        public CodeRedContext(DbContextOptions<CodeRedContext> options)
+        public CodeRedContext(DbContextOptions options)
             : base(options)
         {
         }
 
+        public DbSet<BrandModel> Brand { get; set; }
+        public DbSet<CarModel> Car { get; set; }
+        public DbSet<PartModel> Part { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
             builder.Entity<CarModel>();
             builder.Entity<BrandModel>();
             builder.Entity<PartModel>();

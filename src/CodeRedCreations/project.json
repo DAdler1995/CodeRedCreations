@@ -32,7 +32,7 @@
     "Microsoft.AspNetCore.Authentication.Facebook": "1.0.0",
     "Microsoft.AspNetCore.Authentication.Google": "1.0.0",
     "Microsoft.AspNetCore.Authorization": "1.0.0",
-    "Microsoft.AspNetCore.Authentication.Cookies": "1.0.0"  },
+    "Microsoft.AspNetCore.Authentication.Cookies": "1.0.0"},
 
   "tools": {
     "BundlerMinifier.Core": "2.0.238",
