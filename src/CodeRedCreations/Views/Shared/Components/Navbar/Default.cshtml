@@ -1,6 +1,12 @@
 ﻿@model CodeRedCreations.Models.NavbarViewModel
 @{
-    var carModels = new List<string>();
+    var dictionary = new Dictionary<string, string>();
+
+    foreach (var car in Model.Cars.OrderBy(x => x.Make))
+    {
+        dictionary.Add(car.Model, car.Make);
+    }
+    var carMakes = new List<string>();
 }
 
 <div class="container">
@@ -22,17 +28,19 @@
                                 <div class="col-sm-12">
                                     <ul class="list-unstyled">
 
-                                        @foreach (var car in Model.Cars)
+                                        @foreach (var car in dictionary)
                                         {
-                                            if (!carModels.Contains(car.Make))
+                                            if (!carMakes.Contains(car.Value))
                                             {
+                                                <li class="dropdown-header">@car.Value</li>
+                                                foreach (var item in dictionary.Where(x => x.Value == car.Value).OrderBy(x => x.Key))
+                                                {
+                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="All" asp-route-car="@item.Key">@item.Key</a></li>
+                                                }
+                                                carMakes.Add(car.Value);
                                                 <li class="divider"></li>
-                                                <li class="dropdown-header">@car.Make</li>
-                                                carModels.Add(car.Make);
                                             }
-                                            <li>
-                                                <a asp-controller="Parts" asp-route-part="All" asp-route-brand="All" asp-route-car="@car.CarId">@car.Model</a>
-                                            </li>
+
                                         }
 
                                     </ul>
@@ -50,35 +58,35 @@
                             <div class="row">
                                 <div class="col-sm-4">
                                     <ul class="list-unstyled">
-                                        <li><a asp-controller="Parts" asp-route-part="Aero_Body" asp-route-brand="All" asp-route-car="All">Aero & Body</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Air_Intake" asp-route-brand="All" asp-route-car="All">Air Intakes</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Brakes" asp-route-brand="All" asp-route-car="All">Brakes</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Cooling" asp-route-brand="All" asp-route-car="All">Cooling</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Clutch_Flywheel" asp-route-brand="All" asp-route-car="All">Clutch & Flywheel</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Engine_Management" asp-route-brand="All" asp-route-car="All">Engine Management</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Electroncis" asp-route-brand="All" asp-route-car="All">Electronics</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Aero_Body" asp-route-brand="All" asp-route-car="All">Aero & Body</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Air_Intake" asp-route-brand="All" asp-route-car="All">Air Intakes</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Brakes" asp-route-brand="All" asp-route-car="All">Brakes</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Cooling" asp-route-brand="All" asp-route-car="All">Cooling</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Clutch_Flywheel" asp-route-brand="All" asp-route-car="All">Clutch & Flywheel</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Engine_Management" asp-route-brand="All" asp-route-car="All">Engine Management</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Electroncis" asp-route-brand="All" asp-route-car="All">Electronics</a></li>
                                     </ul>
                                 </div>
                                 <div class="col-sm-4">
                                     <ul class="list-unstyled">
-                                        <li><a asp-controller="Parts" asp-route-part="Endine_Dress-Up" asp-route-brand="All" asp-route-car="All">Engine Dress-up</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Engine_Parts" asp-route-brand="All" asp-route-car="All">Engine Parts</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Exhaust" asp-route-brand="All" asp-route-car="All">Exhaust</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Forced_Induction" asp-route-brand="All" asp-route-car="All">Forced Induction</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Fuel_System" asp-route-brand="All" asp-route-car="All">Fuel System</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Guages_Pods" asp-route-brand="All" asp-route-car="All">Gauges & Pods</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Intercooler" asp-route-brand="All" asp-route-car="All">Intercooler</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Endine_Dress_Up" asp-route-brand="All" asp-route-car="All">Engine Dress-up</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Engine_Parts" asp-route-brand="All" asp-route-car="All">Engine Parts</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Exhaust" asp-route-brand="All" asp-route-car="All">Exhaust</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Forced_Induction" asp-route-brand="All" asp-route-car="All">Forced Induction</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Fuel_System" asp-route-brand="All" asp-route-car="All">Fuel System</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Guages_Pods" asp-route-brand="All" asp-route-car="All">Gauges & Pods</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Intercooler" asp-route-brand="All" asp-route-car="All">Intercooler</a></li>
                                     </ul>
                                 </div>
                                 <div class="col-sm-4">
                                     <ul class="list-unstyled">
-                                        <li><a asp-controller="Parts" asp-route-part="Interior" asp-route-brand="All" asp-route-car="All">Interior</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Lights_Emblems" asp-route-brand="All" asp-route-car="All">Lights & Emblems</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Nitrus" asp-route-brand="All" asp-route-car="All">Nitrus</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Oils_Lubricants" asp-route-brand="All" asp-route-car="All">Oils & Lubricants</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Suspension" asp-route-brand="All" asp-route-car="All">Suspension</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Transmission_Drivetrain" asp-route-brand="All" asp-route-car="All">Transmission & Drivetrain</a></li>
-                                        <li><a asp-controller="Parts" asp-route-part="Wheels_Tires" asp-route-brand="All" asp-route-car="All">Wheels & Tires</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Interior" asp-route-brand="All" asp-route-car="All">Interior</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Lights_Emblems" asp-route-brand="All" asp-route-car="All">Lights & Emblems</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Nitrus" asp-route-brand="All" asp-route-car="All">Nitrus</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Oils_Lubricants" asp-route-brand="All" asp-route-car="All">Oils & Lubricants</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Suspension" asp-route-brand="All" asp-route-car="All">Suspension</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Transmission_Drivetrain" asp-route-brand="All" asp-route-car="All">Transmission & Drivetrain</a></li>
+                                        <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Wheels_Tires" asp-route-brand="All" asp-route-car="All">Wheels & Tires</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -98,7 +106,7 @@
                                         @foreach (var brand in Model.Brand)
                                         {
                                             <li>
-                                                <a asp-controller="Parts" asp-route-part="All" asp-route-brand="@brand" asp-route-car="All">@brand.Name</a>
+                                                <a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="@brand.Name" asp-route-car="All">@brand.Name</a>
                                             </li>
                                         }
 

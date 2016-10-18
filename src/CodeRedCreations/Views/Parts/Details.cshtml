@@ -1,0 +1,156 @@
+﻿@model CodeRedCreations.Models.ProductDetailsView
+
+<div class="row row-eq-height">
+    <div class="col-sm-6">
+        <div class="carousel slide flexbox-container" id="productImageCarousel" data-ride="carousel" data-interval="10000" data-pause="hover">
+            <div class="carousel-inner" role="listbox">
+
+                @if (Model.Images != null && Model.Images.Count != 0)
+                {
+                    <div class="item active">
+                        <div class="flexbox-container">
+                            <div class="item">
+                                <img class="img-responsive" src="data:image/jpeg;base64,@Model.Images.FirstOrDefault()">
+                            </div>
+                        </div>
+                    </div>
+
+                    @foreach (var image in Model.Images.Skip(1))
+                    {
+                        <div class="item">
+                            <div class="flexbox-container">
+                                <div class="item">
+                                    <img class="img-responsive" src="data:image/jpeg;base64,@image">
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                }
+                else
+                {
+                    <div class="item active">
+                        <div class="flexbox-container">
+                            <div class="item">
+                                <img class="img-responsive" src="~/images/Photo-Not-Available.png" />
+                            </div>
+                        </div>
+                    </div>
+
+                }
+
+            </div>
+
+            @if (Model.Images != null && Model.Images.Count > 1)
+            {
+            <!-- Left and right controls -->
+                <a class="left carousel-control" href="#productImageCarousel" role="button" data-slide="prev">
+                    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="right carousel-control" href="#productImageCarousel" role="button" data-slide="next">
+                    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="col-sm-6">
+        <h3>@Model.PartModel.Brand.Name</h3>
+        <h4>@Model.PartModel.Name</h4>
+
+        <hr />
+
+        <h3 class="text-red">$@Model.PartModel.Price</h3>
+        <p class="small">Item #@Model.PartModel.PartId</p>
+
+        <hr />
+
+        <div class="input-group">
+            <input class="form-control" type="number" value="1" />
+            <span class="input-group-btn">
+                <button class="btn btn-default btn-block">Add To Cart</button>
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <ul class="nav nav-tabs">
+            <li class="active"><a data-toggle="tab" href="#productDescription">Product Description</a></li>
+            <li><a data-toggle="tab" href="#productDetails">Product Details</a></li>
+            <li><a data-toggle="tab" href="#brandDescription">@Model.PartModel.Brand.Name Description</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="productDescription" class="tab-pane fade in active">
+                <h3>Product Description</h3>
+                <p>@Model.PartModel.Description</p>
+            </div>
+
+            <div id="productDetails" class="tab-pane fade">
+                <h3>Product Details</h3>
+
+                <dl class="dl-horizontal">
+                    <dt>Part Type:</dt>
+                    <dd>@Model.PartModel.PartType</dd>
+
+                    <dt>Brand:</dt>
+                    <dd>@Model.PartModel.Brand.Name</dd>
+                </dl>
+
+            </div>
+
+            <div id="brandDescription" class="tab-pane fade">
+                <h3>@Model.PartModel.Brand.Name Description</h3>
+                <p>@Model.PartModel.Brand.Description</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Normalize Carousel Heights - pass in Bootstrap Carousel items.
+    $.fn.carouselHeights = function () {
+
+        var items = $(this), //grab all slides
+            heights = [], //create empty array to store height values
+            tallest; //create variable to make note of the tallest slide
+
+        var normalizeHeights = function () {
+
+            items.each(function () { //add heights to array
+                heights.push($(this).height());
+            });
+            tallest = Math.max.apply(null, heights); //cache largest value
+            items.each(function () {
+                $(this).css('min-height', tallest + 'px');
+            });
+        };
+
+        normalizeHeights();
+
+        $(window).on('resize orientationchange', function () {
+            //reset vars
+            tallest = 0;
+            heights.length = 0;
+
+            items.each(function () {
+                $(this).css('min-height', '0'); //reset min-height
+            });
+            normalizeHeights(); //run it again
+        });
+
+    };
+
+    jQuery(function ($) {
+
+        $(window).on('load', function () {
+            $('.carousel .item').carouselHeights();
+        });
+
+    });
+</script>

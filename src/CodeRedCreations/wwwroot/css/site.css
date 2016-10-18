@@ -23,9 +23,19 @@
   margin: 0; }
 
 .row {
-  padding: 0; }
+  padding: 5px 15px; }
+
+.row-eq-height {
+  display: block; }
 
 @media screen and (min-width: 768px) {
+  .row-eq-height {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex; }
+    .row-eq-height .thumbnail {
+      height: 100%; }
   .navbar .nav,
   .navbar .nav > li {
     cursor: pointer;
@@ -131,6 +141,20 @@
     .dropdown-menu > li > div.yamm-content ul > li a:hover, .dropdown-menu > li > div.yamm-content ul > li a:active, .dropdown-menu > li > div.yamm-content ul > li a:focus, .dropdown-menu > li > div.yamm-content ul > li a:hover:focus {
       color: #a81313; }
 
+.carousel {
+  height: 100%;
+  width: 100%; }
+  .carousel .left.carousel-control,
+  .carousel .right.carousel-control {
+    background: none; }
+
+/*
+ * Styles copied from the Grid example to make grid rows & columns visible.
+ */
+.container {
+  padding-right: 15px;
+  padding-left: 15px; }
+
 .text-red {
   color: #dc1818; }
 
@@ -176,7 +200,8 @@
 body,
 html {
   padding: 0;
-  margin: 0; }
+  margin: 0;
+  overflow-x: hidden; }
 
 body {
   color: #6b6b6b;

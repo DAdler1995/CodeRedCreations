@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Identity;
 using CodeRedCreations.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http.Internal;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 // For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -110,6 +113,11 @@ namespace CodeRedCreations.Controllers
             model.Part.CompatibleCars = _context.Car.FirstOrDefault(x => x.CarId == model.Part.CompatibleCars.CarId);
             model.Part.Brand = _context.Brand.Include(x => x.Parts).FirstOrDefault(x => x.BrandId == model.Part.Brand.BrandId);
             var newPart = model.Part;
+            foreach (var image in model.Images)
+            {
+                var bytes = ConvertToBytes(image);
+                newPart.ImageStrings += $",{Convert.ToBase64String(bytes)}";
+            }
 
             bool partExists = _context.Part.FirstOrDefault(x => x.Brand == newPart.Brand && x.Name == newPart.Name) != null;
             if (partExists)
@@ -172,6 +180,16 @@ namespace CodeRedCreations.Controllers
             }
 
             return RedirectToAction("ManageUsers", "Admin");
+        }
+
+        private byte[] ConvertToBytes(IFormFile file)
+        {
+            Stream stream = file.OpenReadStream();
+            using (var memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+                return memoryStream.ToArray();
+            }
         }
     }
 

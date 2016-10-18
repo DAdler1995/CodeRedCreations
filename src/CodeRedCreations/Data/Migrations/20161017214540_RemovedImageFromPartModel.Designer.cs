@@ -8,9 +8,10 @@ using CodeRedCreations.Data;
 namespace CodeRedCreations.Data.Migrations
 {
     [DbContext(typeof(CodeRedContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20161017214540_RemovedImageFromPartModel")]
+    partial class RemovedImageFromPartModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.1")
@@ -105,8 +106,6 @@ namespace CodeRedCreations.Data.Migrations
                     b.Property<int?>("CompatibleCarsCarId");
 
                     b.Property<string>("Description");
-
-                    b.Property<string>("ImageStrings");
 
                     b.Property<string>("Name");
 

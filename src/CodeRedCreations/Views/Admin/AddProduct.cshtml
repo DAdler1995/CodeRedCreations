@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Add New Products";
+    int partTypeValue = 0;
 }
 <h2>@ViewData["Title"]</h2>
 <p class="text-success">@ViewData["SuccessMessage"]</p>
@@ -82,7 +83,7 @@
     </div>
 
     <div id="AddPart" class="tab-pane fade in">
-        <form asp-controller="Admin" asp-action="AddPart" id="AddPartForm" method="post" class="form-horizontal">
+        <form asp-controller="Admin" asp-action="AddPart" id="AddPartForm" method="post" class="form-horizontal" enctype="multipart/form-data">
             <h4>Add a new part.</h4>
             <hr />
             <div asp-validation-summary="All" class="text-danger"></div>
@@ -117,12 +118,7 @@
             <div class="form-group">
                 <label asp-for="Part.PartType" class="col-md-2 control-label"></label>
                 <div class="col-md-10">
-                    <select class="form-control">
-                        @foreach (var type in Enum.GetValues(typeof(CodeRedCreations.Models.PartTypeEnum)))
-                        {
-                            <option value="@type">@type</option>
-                        }
-                    </select>
+                    <select asp-for="Part.PartType" asp-items="Html.GetEnumSelectList<CodeRedCreations.Models.PartTypeEnum>()"  class="form-control"></select>
                     <span asp-validation-for="Part.PartType" class="text-danger"></span>
                 </div>
             </div>
@@ -180,6 +176,14 @@
                 <div class="col-md-10">
                     <input asp-for="Part.PaypalUrl" class="form-control" />
                     <span asp-validation-for="Part.PaypalUrl" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Images" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input type="file" asp-for="Images" multiple class="form-control" />
+                    <span asp-validation-for="Images" class="text-danger"></span>
                 </div>
             </div>
 

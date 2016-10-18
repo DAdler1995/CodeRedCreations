@@ -146,8 +146,8 @@ namespace CodeRedCreations
             {
                 routes.MapRoute(
                     name: "parts",
-                    template: "Parts/{part=All}/{brand?}/{car?}",
-                    defaults: new { controller = "Parts", action = "Index" });
+                    template: "Parts/{action=Index}/{part=All}/{brand?}/{car?}",
+                    defaults: new { controller = "Parts" });
 
                 routes.MapRoute(
                     name: "default",
