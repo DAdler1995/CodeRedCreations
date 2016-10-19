@@ -4,6 +4,7 @@
 
 body,
 html {
+    line-height: 1.2em;
     padding: 0;
     margin: 0;
     overflow-x: hidden;
@@ -145,4 +146,26 @@ a,
 
 .background.bg-three {
     background-image: url("https://images5.alphacoders.com/499/499290.jpg");
+}
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5; /* number of lines to show */
+    line-height: 1.2em; /* fallback */
+    max-height: 1.2em * 5; /* fallback */
+}
+
+@media screen and (max-width: 768px) {
+    .truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3; /* number of lines to show */
+        line-height: 1.2em; /* fallback */
+        max-height: 1.2em * 3; /* fallback */
+    }
 }

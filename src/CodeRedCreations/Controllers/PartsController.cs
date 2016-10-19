@@ -23,6 +23,16 @@ namespace CodeRedCreations.Controllers
         [HttpGet]
         public IActionResult Index(string part, string brand, string car)
         {
+            var carDict = new Dictionary<string, string>();
+            foreach (var c in _context.Car.OrderBy(x => x.Make))
+            {
+                carDict.Add(c.Model, c.Make);
+            }
+            
+            ViewData["allBrands"] = _context.Brand.OrderBy(x => x.Name).Select(x => x.Name).ToList();
+            ViewData["allCars"] = carDict;
+
+
             var foundParts = _context.Part.Include(x => x.Brand).Include(x => x.CompatibleCars).ToList();
             if (part != "All")
             {
@@ -37,8 +47,6 @@ namespace CodeRedCreations.Controllers
             {
                 foundParts.RemoveAll(x => x.CompatibleCars.Model.ToUpper() != car.ToUpper());
             }
-
-            foundParts.OrderBy(x => x.Name);
             
             return View(foundParts);
         }

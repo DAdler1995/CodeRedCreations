@@ -1,4 +1,113 @@
-﻿@model IEnumerable<CodeRedCreations.Models.PartModel>
+﻿@model IEnumerable<PartModel>
+@using CodeRedCreations.Models;
+@{
+    var columns = 2; // 1 - 3 recommended, higher has clipping issues
+    var col = $"col-sm-{12 / columns}";
+
+    var partType = ViewContext.RouteData.Values["part"];
+    var brand = ViewContext.RouteData.Values["brand"];
+    var car = ViewContext.RouteData.Values["car"];
+
+    var allPartTypes = Enum.GetValues(typeof(PartTypeEnum));
+    var allBrands = (List<string>)ViewData["allBrands"];
+    var allCars = (Dictionary<string, string>)ViewData["allCars"];
+    var carMakes = new List<string>();
+
+}
+
+<div class="row">
+    <div class="col-xs-12">
+        <ul class="list-inline">
+            <li>
+                <strong>Filter Parts</strong>
+                <ul class="list-inline">
+                    <li class="dropdown">
+                        Part Type:
+                        <a href="#partType" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@partType <span class="caret"></span></strong></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <div class="yamm-content">
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <ul class="list-unstyled">
+                                                <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="@brand" asp-route-car="@car">All</a></strong></li>
+                                                <li class="divider"></li>
+
+                                                @foreach (var type in allPartTypes)
+                                                {
+                                                    <li><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@type" asp-route-brand="@brand" asp-route-car="@car">@type</a></li>
+                                                }
+
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="dropdown">
+                        Brand:
+                        <a href="#brand" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@brand <span class="caret"></span></strong></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <div class="yamm-content">
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <ul class="list-unstyled">
+                                                <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="All" asp-route-car="@car">All</a></strong></li>
+                                                <li class="divider"></li>
+
+                                                @foreach (var b in allBrands)
+                                                {
+                                                    <li><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@b" asp-route-car="@car">@b</a></li>
+                                                }
+
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="dropdown">
+                        Car:
+                        <a href="#car" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@car <span class="caret"></span></strong></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <div class="yamm-content">
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <ul class="list-unstyled">
+                                                <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="All">All</a></strong></li>
+                                                <li class="divider"></li>
+                                                @foreach (var c in allCars)
+                                                {
+                                                    if (!carMakes.Contains(c.Value))
+                                                    {
+                                                        <li class="dropdown-header">@c.Value</li>
+                                                        foreach (var item in allCars.Where(x => x.Value == c.Value).OrderBy(x => x.Key))
+                                                        {
+                                                            <li><a asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="@item.Key">@item.Key</a></li>
+                                                        }
+                                                        carMakes.Add(c.Value);
+                                                        <li class="divider"></li>
+                                                    }
+
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div>
 
 
 @if (Model.Count() == 0)
@@ -7,7 +116,17 @@
         <div class="col-xs-12">
             <h3>No products found.</h3>
 
-            <p>Hello there, it seems like there are no items found  store.</p>
+            <p>Hello there, it seems like there are no products found in the store that matched:</p>
+            <dl class="dl-horizontal">
+                <dt>Part Type:</dt>
+                <dd>@partType</dd>
+
+                <dt>Brand:</dt>
+                <dd>@brand</dd>
+
+                <dt>Car:</dt>
+                <dd>@car</dd>
+            </dl>
             <p>We're always looking for new products to feature in our store, please fill out this anonomus product request form and we'll do our best to get in touch with the company and get their products in our store.</p>
             <p>Thank you for choosing <span class="text-red">Code Red</span> Performance, and we're sorry we were unsuccessfull at getting you the parts you were looking for.</p>
             <br />
@@ -17,18 +136,40 @@
 }
 else
 {
-    @foreach (var item in Model)
+    @for (int i = 0; i < Model.Count(); i += columns)
     {
-        <div class="row">
-            <div class="col-xs-12">
-                <h3>@item.Brand.Name - @item.CompatibleCars.Model</h3>
-                <h4>@item.Name</h4>
-
-                <p>@item.Description</p>
-
-                <a asp-area="" asp-controller="Parts" asp-action="Details" asp-route-id="@item.PartId">Learn more</a>
-                <hr />
-            </div>
+        <div class="row row-eq-height">
+            @foreach (var item in Model.OrderBy(x => x.Name).ThenBy(x => x.Brand.Name).Skip(i).Take(columns))
+            {
+                <div class="@col">
+                    <div class="panel panel-default" style="height: 100%">
+                        <div class="panel-heading">
+                            <h3 style="margin: 5px 0 0 0;">@item.Name</h3>
+                            <p class="small text-capitalize" style="margin: 0;">Brand: @item.Brand.Name <span class="pull-right">Car: @item.CompatibleCars.Make @item.CompatibleCars.Model</span></p>
+                        </div>
+                        <div class="panel-body" style="margin-bottom: 37px;">
+                            <div class="row row-eq-height">
+                                <div class="col-sm-4">
+                                    @if (item.ImageStrings != null && item.ImageStrings.Length > 1)
+                                    {
+                                        <img class="img-responsive" src="data:image/jpeg;base64,@item.ImageStrings.Split(',').FirstOrDefault(x => x.Length > 0)">
+                                    }
+                                    else
+                                    {
+                                        <img class="img-responsive" src="~/images/Photo-Not-Available.png" />
+                                    }
+                                </div>
+                                <div class="col-sm-8">
+                                    <p class="truncate">@item.Description</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-footer" style="position: absolute; bottom: 1px; left: 16px; right: 16px;">
+                            <a asp-area="" asp-controller="Parts" asp-action="Details" asp-route-id="@item.PartId">Order Now</a>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     }
 }
