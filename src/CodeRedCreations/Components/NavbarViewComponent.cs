@@ -23,7 +23,7 @@ namespace CodeRedCreations.Components
         {
             var NavbarModel = new NavbarViewModel();
 
-            NavbarModel.Brand = await _context.Brand.ToListAsync();
+            NavbarModel.Brand = await _context.Brand.Include(x => x.Parts).Where(x => x.Parts.Count > 0).ToListAsync();
             NavbarModel.Cars = await _context.Car.ToListAsync();
 
             return View(NavbarModel);

@@ -103,6 +103,28 @@ namespace CodeRedCreations
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    IHeaderDictionary headers = ctx.Context.Response.Headers;
+                    string contentType = headers["Content-Type"];
+                    if (contentType == "application/x-gzip")
+                    {
+                        if (ctx.File.Name.EndsWith("js.gz"))
+                        {
+                            contentType = "application/javascript";
+                        }
+                        else if (ctx.File.Name.EndsWith("css.gz"))
+                        {
+                            contentType = "text/css";
+                        }
+                        headers.Add("Content-Encoding", "gzip");
+                        headers["Content-Type"] = contentType;
+                    }
+                }
+            });
+
             app.UseApplicationInsightsRequestTelemetry();
 
             if (env.IsDevelopment())

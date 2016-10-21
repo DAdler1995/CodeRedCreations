@@ -21,7 +21,8 @@ namespace CodeRedCreations.Models
         public decimal Shipping { get; set; }
         public int Stock { get; set; }
         public bool OnSale { get; set; }
-        public string PaypalUrl { get; set; }
+        [Required(ErrorMessage = "A paypal product ID is required for products.")]
+        public string PaypalId { get; set; }
         public string ImageStrings { get; set; }
     }
 }

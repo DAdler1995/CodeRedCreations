@@ -1,4 +1,5 @@
 ﻿@model CodeRedCreations.Models.NavbarViewModel
+@using Microsoft.EntityFrameworkCore;
 @{
     var dictionary = new Dictionary<string, string>();
 
@@ -13,9 +14,9 @@
     <div class="navbar-header">
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
-            <img src="~/images/Logo-small.svg" height="25" />
+            <img src="~/images/Logo-small.png" height="25" />
         </button>
-        <a asp-controller="Home" asp-action="Index" class="navbar-brand visible-xs"><img src="~/images/Logo.svg" height="35" /></a>
+        <a asp-controller="Home" asp-action="Index" class="navbar-brand visible-xs"><img src="~/images/Logo.png" height="35" /></a>
     </div>
     <div class="navbar-collapse collapse">
         <ul class="nav navbar-nav">
@@ -102,13 +103,21 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <ul class="list-unstyled">
-
-                                        @foreach (var brand in Model.Brand)
+                                        @if (Model.Brand.Count() != 0)
                                         {
-                                            <li>
-                                                <a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="@brand.Name" asp-route-car="All">@brand.Name</a>
-                                            </li>
+                                            foreach (var brand in Model.Brand)
+                                            {
+                                                <li>
+                                                    <a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="@brand.Name" asp-route-car="All">@brand.Name</a>
+                                                </li>
+                                            }
                                         }
+                                        else
+                                        {
+                                            <li>No brands avaliable</li>
+                                        }
+
+
 
                                     </ul>
                                 </div>

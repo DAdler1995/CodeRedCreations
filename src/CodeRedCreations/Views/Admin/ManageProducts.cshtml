@@ -5,20 +5,25 @@
 <h2>@ViewData["Title"]</h2>
 <p class="text-success">@ViewData["SuccessMessage"]</p>
 <a asp-area="" asp-controller="Admin" asp-action="AddProduct">+ Add New Product</a>
-<ul>
-    @foreach (var item in Model)
-    {
-        <li>
-            @item.Name
-            @if (item.Parts != null)
+
+<div class="row">
+    <div class="col-md-4">
+        <ul>
+            @foreach (var item in Model)
             {
-                <ul>
-                    @foreach (var part in item.Parts)
+                <li>
+                    @item.Name
+                    @if (item.Parts != null)
                     {
-                        <li>@part.Name</li>
+                        <ul>
+                            @foreach (var part in item.Parts)
+                            {
+                                <li>@part.Name <a class="pull-right" asp-area="" asp-controller="Admin" asp-action="DeletePart" asp-route-id="@part.PartId" onclick="return confirm('Are you sure you want to delete: @part.Name?');">Delete</a></li>
+                            }
+                        </ul>
                     }
-                </ul>
+                </li>
             }
-        </li>
-    }
-</ul>
+        </ul>
+    </div>
+</div>

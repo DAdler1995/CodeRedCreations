@@ -3,12 +3,17 @@
 @{
     var columns = 2; // 1 - 3 recommended, higher has clipping issues
     var col = $"col-sm-{12 / columns}";
-
-    var partType = ViewContext.RouteData.Values["part"];
+    
+    var partType = (ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : EnumString.GetEnumDescription((PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), ViewContext.RouteData.Values["part"].ToString()));
     var brand = ViewContext.RouteData.Values["brand"];
     var car = ViewContext.RouteData.Values["car"];
 
-    var allPartTypes = Enum.GetValues(typeof(PartTypeEnum));
+    Dictionary<string, string> allPartTypes = new Dictionary<string, string>();
+    foreach (var type in Enum.GetValues(typeof(PartTypeEnum)))
+    {
+        allPartTypes.Add(type.ToString(), EnumString.GetEnumDescription((Enum)type));
+    }
+
     var allBrands = (List<string>)ViewData["allBrands"];
     var allCars = (Dictionary<string, string>)ViewData["allCars"];
     var carMakes = new List<string>();
@@ -35,7 +40,7 @@
 
                                                 @foreach (var type in allPartTypes)
                                                 {
-                                                    <li><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@type" asp-route-brand="@brand" asp-route-car="@car">@type</a></li>
+                                                    <li><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@type.Key" asp-route-brand="@brand" asp-route-car="@car">@type.Value</a></li>
                                                 }
 
                                             </ul>

@@ -136,6 +136,18 @@ namespace CodeRedCreations.Controllers
             return RedirectToAction("AddProduct");
         }
 
+        public async Task<IActionResult> DeletePart(int id)
+        {
+            var partFound = await _context.Part.FirstOrDefaultAsync(x => x.PartId == id);
+            if (partFound != null)
+            {
+                var remove = _context.Part.Remove(partFound);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("ManageProducts");
+        }
+
         // Called via ajax
         [HttpPost]
         public async Task<IActionResult> UpdateRole(string email, string newRole)
