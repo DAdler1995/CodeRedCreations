@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using CodeRedCreations.Models;
 
@@ -18,6 +14,7 @@ namespace CodeRedCreations.Data
         public DbSet<BrandModel> Brand { get; set; }
         public DbSet<CarModel> Car { get; set; }
         public DbSet<PartModel> Part { get; set; }
+        public DbSet<ImageModel> Images { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -26,6 +23,7 @@ namespace CodeRedCreations.Data
             builder.Entity<CarModel>();
             builder.Entity<BrandModel>();
             builder.Entity<PartModel>();
+            builder.Entity<ImageModel>();
         }
     }
 }

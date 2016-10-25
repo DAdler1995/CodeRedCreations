@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,8 +13,6 @@ using CodeRedCreations.Services;
 using CodeRedCreations.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Identity;
 
 namespace CodeRedCreations
@@ -51,7 +48,7 @@ namespace CodeRedCreations
             services.AddApplicationInsightsTelemetry(Configuration);
 
             services.AddAuthorization();
-
+            
             services.AddDbContext<CodeRedContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
@@ -86,6 +83,8 @@ namespace CodeRedCreations
             {
                 options.AddPolicy("Admin", policy => policy.RequireRole("Administrator"));
             });
+            
+            services.AddSession();
 
             services.AddMvc(options =>
             {
@@ -100,6 +99,8 @@ namespace CodeRedCreations
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public async void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IServiceProvider serviceProvider, CodeRedContext context)
         {
+            app.UseSession();
+
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 

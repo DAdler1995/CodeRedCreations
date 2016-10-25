@@ -2,17 +2,16 @@
 
 @{
     ViewData["Title"] = "Add New Products";
-    int partTypeValue = 0;
 }
 <h2>@ViewData["Title"]</h2>
-<p class="text-success">@ViewData["SuccessMessage"]</p>
+<p class="text-success">@TempData["SuccessMessage"]</p>
 
 <a asp-area="" asp-controller="Admin" asp-action="ManageProducts">Return to Manage Products</a>
 
-<ul class="nav nav-tabs">
+<ul class="nav nav-tabs" style="margin-top: 10px;">
     <li class="active"><a data-toggle="tab" href="#AddBrand">Add Brand</a></li>
-    <li class=""><a data-toggle="tab" href="#AddCar">Add Car</a></li>
     <li class=""><a data-toggle="tab" href="#AddPart">Add Part</a></li>
+    <li class=""><a data-toggle="tab" href="#AddCar">Add Car</a></li>
 </ul>
 
 <div class="tab-content">
@@ -36,47 +35,10 @@
                     <span asp-validation-for="Brand.Description" class="text-danger"></span>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <div class="col-md-offset-2 col-md-10">
                     <button type="submit" class="btn btn-default">Add New Brand</button>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <div id="AddCar" class="tab-pane fade in">
-        <form asp-controller="Admin" asp-action="AddCar" id="AddCarForm" method="post" class="form-horizontal">
-            <h4>Add a new car.</h4>
-            <hr />
-            <div asp-validation-summary="All" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="NewCar.Make" class="col-md-2 control-label"></label>
-                <div class="col-md-10">
-                    <input asp-for="NewCar.Make" class="form-control" />
-                    <span asp-validation-for="NewCar.Make" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="NewCar.Model" class="col-md-2 control-label"></label>
-                <div class="col-md-10">
-                    <input asp-for="NewCar.Model" class="form-control" />
-                    <span asp-validation-for="NewCar.Model" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="NewCar.TrimLevel" class="col-md-2 control-label"></label>
-                <div class="col-md-10">
-                    <input asp-for="NewCar.TrimLevel" class="form-control" />
-                    <span asp-validation-for="NewCar.TrimLevel" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <div class="col-md-offset-2 col-md-10">
-                    <button type="submit" class="btn btn-default">Add New Car</button>
                 </div>
             </div>
         </form>
@@ -87,6 +49,7 @@
             <h4>Add a new part.</h4>
             <hr />
             <div asp-validation-summary="All" class="text-danger"></div>
+            <input asp-for="Part.PartId" hidden="hidden" class="hidden" />
             <div class="form-group">
                 <label asp-for="Part.Brand" class="col-md-2 control-label"></label>
                 <div class="col-md-10">
@@ -118,7 +81,7 @@
             <div class="form-group">
                 <label asp-for="Part.PartType" class="col-md-2 control-label"></label>
                 <div class="col-md-10">
-                    <select asp-for="Part.PartType" asp-items="Html.GetEnumSelectList<CodeRedCreations.Models.PartTypeEnum>()"  class="form-control"></select>
+                    <select asp-for="Part.PartType" asp-items="Html.GetEnumSelectList<CodeRedCreations.Models.PartTypeEnum>()" class="form-control"></select>
                     <span asp-validation-for="Part.PartType" class="text-danger"></span>
                 </div>
             </div>
@@ -172,18 +135,9 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="Part.PaypalUrl" class="col-md-2 control-label"></label>
+                <label title="Images" class="col-md-2 control-label"></label>
                 <div class="col-md-10">
-                    <input asp-for="Part.PaypalUrl" class="form-control" />
-                    <span asp-validation-for="Part.PaypalUrl" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Images" class="col-md-2 control-label"></label>
-                <div class="col-md-10">
-                    <input type="file" asp-for="Images" multiple class="form-control" />
-                    <span asp-validation-for="Images" class="text-danger"></span>
+                    <input name="Images" type="file" multiple class="form-control" />
                 </div>
             </div>
 
@@ -194,4 +148,41 @@
             </div>
         </form>
     </div>
+    
+    <div id="AddCar" class="tab-pane fade in">
+    <form asp-controller="Admin" asp-action="AddCar" id="AddCarForm" method="post" class="form-horizontal">
+        <h4>Add a new car.</h4>
+        <hr />
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="form-group">
+            <label asp-for="NewCar.Make" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="NewCar.Make" class="form-control" />
+                <span asp-validation-for="NewCar.Make" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="NewCar.Model" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="NewCar.Model" class="form-control" />
+                <span asp-validation-for="NewCar.Model" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="NewCar.TrimLevel" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="NewCar.TrimLevel" class="form-control" />
+                <span asp-validation-for="NewCar.TrimLevel" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <button type="submit" class="btn btn-default">Add New Car</button>
+            </div>
+        </div>
+    </form>
+</div>
 </div>

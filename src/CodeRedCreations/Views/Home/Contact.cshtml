@@ -1,17 +1,25 @@
 ﻿@{
-    ViewData["Title"] = "Contact";
+    ViewData["Title"] = "Contact Us";
 }
-<h2>@ViewData["Title"].</h2>
-<h3>@ViewData["Message"]</h3>
+<h2>@ViewData["Title"]</h2>
 
-<address>
-    One Microsoft Way<br />
-    Redmond, WA 98052-6399<br />
-    <abbr title="Phone">P:</abbr>
-    425.555.0100
-</address>
+<div class="row">
+    <div class="col-md-6">
+        <h3>Contact Us Email Addresses</h3>
+        <address>
+            <ul class="list-unstyled">
+                <li><strong>Support:</strong> <a href="mailto:Support@CodeRedPerformance.Com">Support@CodeRedPerformance.Com</a></li>
+                <li><strong>Marketing:</strong> <a href="mailto:Marketing@CodeRedPerformance.Com">Marketing@CodeRedPerformance.Com</a></li>
+                <li><strong>Other:</strong> <a href="mailto:Other@CodeRedPerformance.Com">Other@CodeRedPerformance.Com</a></li>
+            </ul>
+        </address>
+    </div>
 
-<address>
-    <strong>Support:</strong> <a href="mailto:Support@example.com">Support@example.com</a><br />
-    <strong>Marketing:</strong> <a href="mailto:Marketing@example.com">Marketing@example.com</a>
-</address>
+    <div class="col-md-6">
+        <h3>Request Parts</h3>
+        <p>We're always looking for now brands to partner up with and provide their products in our store. 
+        So if there's a brand or product you'd like to see featured in our store, please let us know by either 
+        clicking <a asp-action="Request" asp-controller="Parts">here</a> or on the 
+        <a asp-action="Request" asp-controller="Parts"><strong>REQUEST A PART</strong></a> tab in the navigation bar.</p>
+    </div>
+</div>

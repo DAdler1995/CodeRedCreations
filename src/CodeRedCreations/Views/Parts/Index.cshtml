@@ -1,9 +1,12 @@
 ﻿@model IEnumerable<PartModel>
 @using CodeRedCreations.Models;
 @{
-    var columns = 2; // 1 - 3 recommended, higher has clipping issues
+
+    int columns = 3;
+
+
     var col = $"col-sm-{12 / columns}";
-    
+
     var partType = (ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : EnumString.GetEnumDescription((PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), ViewContext.RouteData.Values["part"].ToString()));
     var brand = ViewContext.RouteData.Values["brand"];
     var car = ViewContext.RouteData.Values["car"];
@@ -23,8 +26,8 @@
 <div class="row">
     <div class="col-xs-12">
         <ul class="list-inline">
-            <li>
-                <strong>Filter Parts</strong>
+            <li style="width: 100%;">
+                <h3 style="margin-top: 0;">Filter Parts<span class="pull-right">@ViewData["partCount"] parts found</span></h3>
                 <ul class="list-inline">
                     <li class="dropdown">
                         Part Type:
@@ -132,7 +135,7 @@
                 <dt>Car:</dt>
                 <dd>@car</dd>
             </dl>
-            <p>We're always looking for new products to feature in our store, please fill out this anonomus product request form and we'll do our best to get in touch with the company and get their products in our store.</p>
+            <p>We're always looking for new products to feature in our store, please click <a asp-area="" asp-action="Request" asp-controller="Parts">Here</a> to request a part. You can also click the <strong><a asp-area="" asp-action="Request" asp-controller="Parts">REQUEST A PART</a></strong> link found within the navbar.</p>
             <p>Thank you for choosing <span class="text-red">Code Red</span> Performance, and we're sorry we were unsuccessfull at getting you the parts you were looking for.</p>
             <br />
             <a asp-area="" asp-controller="Home" asp-action="Index">Return home.</a>
@@ -146,6 +149,16 @@ else
         <div class="row row-eq-height">
             @foreach (var item in Model.OrderBy(x => x.Name).ThenBy(x => x.Brand.Name).Skip(i).Take(columns))
             {
+                string imgSrc;
+                if (item.Images.Count > 0)
+                {
+                    var imageBase64 = Convert.ToBase64String(item.Images.FirstOrDefault().Bytes);
+                    imgSrc = $"data:image/gif;base64, {imageBase64}";
+                }
+                else
+                {
+                    imgSrc = "/images/Photo-Not-Available.png";
+                }
                 <div class="@col">
                     <div class="panel panel-default" style="height: 100%">
                         <div class="panel-heading">
@@ -155,14 +168,7 @@ else
                         <div class="panel-body" style="margin-bottom: 37px;">
                             <div class="row row-eq-height">
                                 <div class="col-sm-4">
-                                    @if (item.ImageStrings != null && item.ImageStrings.Length > 1)
-                                    {
-                                        <img class="img-responsive" src="data:image/jpeg;base64,@item.ImageStrings.Split(',').FirstOrDefault(x => x.Length > 0)">
-                                    }
-                                    else
-                                    {
-                                        <img class="img-responsive" src="~/images/Photo-Not-Available.png" />
-                                    }
+                                    <img class="img-responsive" src="@imgSrc">
                                 </div>
                                 <div class="col-sm-8">
                                     <p class="truncate">@item.Description</p>

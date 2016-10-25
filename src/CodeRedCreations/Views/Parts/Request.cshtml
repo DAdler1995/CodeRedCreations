@@ -1,0 +1,44 @@
+﻿@model PartModel
+@using CodeRedCreations.Models;
+
+<div class="row">
+    <h3>Request a part for the shop.</h3>
+    <p class="">
+        Please fill out as much detail as you can to help us make sure we know exactly what you're looking for.
+    </p>
+
+    <hr />
+
+    <form asp-controller="Parts" asp-action="Request" method="post" class="form-horizontal">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="form-group">
+            <label asp-for="Brand.Name" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="Brand.Name" class="form-control" />
+                <span asp-validation-for="Brand.Name"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Name" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="PartType" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <select asp-for="PartType" asp-items="Html.GetEnumSelectList<PartTypeEnum>()" class="form-control"></select>
+                <span asp-validation-for="PartType"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <button type="submit" class="btn btn-default">Submit Request</button>
+            </div>
+        </div>
+    </form>
+</div>

@@ -1,10 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CodeRedCreations.Models
 {
@@ -21,8 +16,6 @@ namespace CodeRedCreations.Models
         public decimal Shipping { get; set; }
         public int Stock { get; set; }
         public bool OnSale { get; set; }
-        [Required(ErrorMessage = "A paypal product ID is required for products.")]
-        public string PaypalId { get; set; }
-        public string ImageStrings { get; set; }
+        public virtual IList<ImageModel> Images { get; set; }
     }
 }

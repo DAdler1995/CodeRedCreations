@@ -18,7 +18,7 @@
                         <ul>
                             @foreach (var part in item.Parts)
                             {
-                                <li>@part.Name <a class="pull-right" asp-area="" asp-controller="Admin" asp-action="DeletePart" asp-route-id="@part.PartId" onclick="return confirm('Are you sure you want to delete: @part.Name?');">Delete</a></li>
+                                <li>@part.Name <span class="pull-right"><a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@part.PartId">Edit</a> | <a asp-controller="Admin" asp-action="DeletePart" asp-route-id="@part.PartId" onclick="return confirm('Are you sure you want to delete: @part.Name?');">Delete</a></span></li>
                             }
                         </ul>
                     }

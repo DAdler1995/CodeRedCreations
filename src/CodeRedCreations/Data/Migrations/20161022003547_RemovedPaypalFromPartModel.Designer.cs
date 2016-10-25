@@ -8,9 +8,10 @@ using CodeRedCreations.Data;
 namespace CodeRedCreations.Data.Migrations
 {
     [DbContext(typeof(CodeRedContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20161022003547_RemovedPaypalFromPartModel")]
+    partial class RemovedPaypalFromPartModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.1")
@@ -95,26 +96,6 @@ namespace CodeRedCreations.Data.Migrations
                     b.ToTable("Car");
                 });
 
-            modelBuilder.Entity("CodeRedCreations.Models.ImageModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<byte[]>("Bytes");
-
-                    b.Property<string>("Description");
-
-                    b.Property<string>("Name");
-
-                    b.Property<int?>("PartModelPartId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PartModelPartId");
-
-                    b.ToTable("Images");
-                });
-
             modelBuilder.Entity("CodeRedCreations.Models.PartModel", b =>
                 {
                     b.Property<int>("PartId")
@@ -125,6 +106,8 @@ namespace CodeRedCreations.Data.Migrations
                     b.Property<int?>("CompatibleCarsCarId");
 
                     b.Property<string>("Description");
+
+                    b.Property<string>("ImageStrings");
 
                     b.Property<string>("Name");
 
@@ -252,13 +235,6 @@ namespace CodeRedCreations.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens");
-                });
-
-            modelBuilder.Entity("CodeRedCreations.Models.ImageModel", b =>
-                {
-                    b.HasOne("CodeRedCreations.Models.PartModel")
-                        .WithMany("Images")
-                        .HasForeignKey("PartModelPartId");
                 });
 
             modelBuilder.Entity("CodeRedCreations.Models.PartModel", b =>

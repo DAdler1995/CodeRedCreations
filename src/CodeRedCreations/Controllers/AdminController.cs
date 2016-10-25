@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using System.IO.Compression;
 
 // For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -59,11 +60,21 @@ namespace CodeRedCreations.Controllers
         }
 
         [HttpGet]
-        public IActionResult AddProduct()
+        public async Task<IActionResult> AddProduct(int? id)
         {
             var AddNewProduct = new AddNewProductModel();
-            AddNewProduct.Cars = _context.Car.ToList();
-            AddNewProduct.Brands = _context.Brand.ToList();
+            AddNewProduct.Cars = await _context.Car.ToListAsync();
+            AddNewProduct.Brands = await _context.Brand.ToListAsync();
+
+            if (id != null)
+            {
+                AddNewProduct.Part = await _context.Part.Include(x => x.Brand)
+                    .Include(x => x.Images)
+                    .Include(x => x.CompatibleCars)
+                    .FirstOrDefaultAsync(x => x.PartId == id);
+
+                AddNewProduct.Brand = AddNewProduct.Part.Brand;
+            }
 
             return View(AddNewProduct);
         }
@@ -71,21 +82,22 @@ namespace CodeRedCreations.Controllers
         public async Task<IActionResult> AddBrand(AddNewProductModel model)
         {
             var newBrand = model.Brand;
-            bool brandExists = _context.Brand.FirstOrDefault(x => x.Name == newBrand.Name) != null;
+            var existing = _context.Brand.FirstOrDefault(x => x.Name == newBrand.Name);
 
-            if (brandExists)
+            if (existing != null)
             {
-                ViewData["SuccessMessage"] = $"Updated {newBrand.Name}.";
-                _context.Brand.Update(newBrand);
+                existing.Name = newBrand.Name;
+                existing.Description = newBrand.Description;
+                TempData["SuccessMessage"] = $"Updated {newBrand.Name} ({existing.BrandId}).";
             }
             else
             {
-                ViewData["SuccessMessage"] = $"Added {newBrand.Name}.";
+                TempData["SuccessMessage"] = $"Added {newBrand.Name}.";
                 _context.Brand.Add(newBrand);
             }
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("AddProduct");
+            return RedirectToAction("AddProduct", new { id = newBrand.BrandId });
         }
 
         public async Task<IActionResult> AddCar(AddNewProductModel model)
@@ -95,12 +107,12 @@ namespace CodeRedCreations.Controllers
 
             if (brandExists)
             {
-                ViewData["SuccessMessage"] = $"Updated {newCar.Make} {newCar.Model}.";
+                TempData["SuccessMessage"] = $"Updated {newCar.Make} {newCar.Model}.";
                 _context.Car.Update(newCar);
             }
             else
             {
-                ViewData["SuccessMessage"] = $"Added {newCar.Make} {newCar.Model}.";
+                TempData["SuccessMessage"] = $"Added {newCar.Make} {newCar.Model}.";
                 _context.Car.Add(newCar);
             }
             await _context.SaveChangesAsync();
@@ -110,37 +122,64 @@ namespace CodeRedCreations.Controllers
 
         public async Task<IActionResult> AddPart(AddNewProductModel model)
         {
-            model.Part.CompatibleCars = _context.Car.FirstOrDefault(x => x.CarId == model.Part.CompatibleCars.CarId);
-            model.Part.Brand = _context.Brand.Include(x => x.Parts).FirstOrDefault(x => x.BrandId == model.Part.Brand.BrandId);
+            int imgCount = 0;
+            var images = new List<ImageModel>();
             var newPart = model.Part;
-            foreach (var image in model.Images)
-            {
-                var bytes = ConvertToBytes(image);
-                newPart.ImageStrings += $",{Convert.ToBase64String(bytes)}";
-            }
 
-            bool partExists = _context.Part.FirstOrDefault(x => x.Brand == newPart.Brand && x.Name == newPart.Name) != null;
-            if (partExists)
+            var existing = await _context.Part.Include(x => x.Brand)
+                .Include(x => x.Images).Include(x => x.CompatibleCars)
+                .FirstOrDefaultAsync(x => (x.Brand == newPart.Brand && x.Name == newPart.Name) || x.PartId == newPart.PartId);
+
+            model.Part.CompatibleCars = await _context.Car.FirstOrDefaultAsync(x => x.CarId == model.Part.CompatibleCars.CarId);
+            model.Part.Brand = await _context.Brand.Include(x => x.Parts).FirstOrDefaultAsync(x => x.BrandId == model.Part.Brand.BrandId);
+
+            foreach (var file in Request.Form.Files)
             {
-                ViewData["SuccessMessage"] = $"Updated {newPart.Brand} {newPart.Name}.";
-                _context.Part.Update(newPart);
+                if (file.Length > 0)
+                {
+                    imgCount++;
+
+                    images.Add(new ImageModel
+                    {
+                        Name = $"{newPart.Name} ({imgCount})",
+                        Description = file.FileName,
+                        Bytes = ConvertToBytes(file)
+                    });
+                }
+            }
+            newPart.Images = images;
+
+            if (existing != null)
+            {
+                existing.Name = newPart.Name;
+                existing.Description = newPart.Description;
+                existing.Brand = newPart.Brand;
+                existing.PartType = newPart.PartType;
+                existing.CompatibleCars = newPart.CompatibleCars;
+                existing.Price = newPart.Price;
+                existing.Shipping = newPart.Shipping;
+                existing.Stock = newPart.Stock;
+                existing.OnSale = newPart.OnSale;
+                existing.Images = (newPart.Images.Count() > 0) ? newPart.Images : existing.Images;
+                TempData["SuccessMessage"] = $"Successfully updated {existing.Name} ({existing.PartId})";
             }
             else
             {
-                ViewData["SuccessMessage"] = $"Added {newPart.Brand} {newPart.Name}.";
+                TempData["SuccessMessage"] = $"Added {newPart.Brand} {newPart.Name}.";
                 _context.Part.Add(newPart);
             }
             _context.Brand.Update(newPart.Brand);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("AddProduct");
+            return RedirectToAction("AddProduct", new { id = newPart.PartId });
         }
 
         public async Task<IActionResult> DeletePart(int id)
         {
-            var partFound = await _context.Part.FirstOrDefaultAsync(x => x.PartId == id);
+            var partFound = await _context.Part.Include(x => x.Images).FirstOrDefaultAsync(x => x.PartId == id);
             if (partFound != null)
             {
+                _context.Images.RemoveRange(partFound.Images);
                 var remove = _context.Part.Remove(partFound);
                 await _context.SaveChangesAsync();
             }
@@ -204,5 +243,4 @@ namespace CodeRedCreations.Controllers
             }
         }
     }
-
 }
