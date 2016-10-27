@@ -1,0 +1,44 @@
+﻿@model IEnumerable<CodeRedCreations.Models.CarModel>
+
+@{
+    ViewData["Title"] = "Manage Cars";
+    var dictionary = new Dictionary<string, string>();
+
+    foreach (var car in Model.OrderBy(x => x.Make))
+    {
+        dictionary.Add(car.Model, car.Make);
+    }
+    var carMakes = new List<string>();
+}
+@{
+}
+<h2>@ViewData["Title"]</h2>
+<p class="text-success">@ViewData["SuccessMessage"]</p>
+<a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-section="CAR">+ Add New Car</a>
+
+<div class="row">
+    <div class="col-sm-12">
+        <ul>
+
+            @foreach (var car in dictionary)
+            {
+                if (!carMakes.Contains(car.Value))
+                {
+                    <li class="dropdown-header">@car.Value</li>
+                    foreach (var item in dictionary.Where(x => x.Value == car.Value).OrderBy(x => x.Key))
+                    {
+                        var specificCar = Model.FirstOrDefault(x => x.Make == item.Value && x.Model == item.Key);
+                        if (specificCar != null)
+                        {
+                            <li><a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@specificCar.CarId" asp-route-section="CAR">@item.Key</a></li>
+                        }
+                    }
+                    carMakes.Add(car.Value);
+                    <li class="divider"></li>
+                }
+
+            }
+
+        </ul>
+    </div>
+</div>

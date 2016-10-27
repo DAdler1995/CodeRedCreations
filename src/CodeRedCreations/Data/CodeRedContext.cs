@@ -15,6 +15,7 @@ namespace CodeRedCreations.Data
         public DbSet<CarModel> Car { get; set; }
         public DbSet<PartModel> Part { get; set; }
         public DbSet<ImageModel> Images { get; set; }
+        public DbSet<PromoModel> Promos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -24,6 +25,7 @@ namespace CodeRedCreations.Data
             builder.Entity<BrandModel>();
             builder.Entity<PartModel>();
             builder.Entity<ImageModel>();
+            builder.Entity<PromoModel>();
         }
     }
 }

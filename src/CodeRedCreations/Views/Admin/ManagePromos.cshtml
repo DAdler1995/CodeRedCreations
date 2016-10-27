@@ -1,0 +1,59 @@
+﻿@model IEnumerable<CodeRedCreations.Models.PromoModel>
+
+@{
+    ViewData["Title"] = "Manage Promo Codes";
+}
+<h2>@ViewData["Title"]</h2>
+<p>There are: @Model.Count() promo codes.</p>
+<p>There are: @Model.Where(x => x.Enabled).Count() enabled promo codes.</p>
+
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Promo Code</th>
+            <th>Applicable Parts</th>
+            <th>Discount Percentage</th>
+            <th>Discount Amount</th>
+            <th class="text-center">Enabled Status</th>
+            <th colspan="2"></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var code in Model)
+        {
+            <tr class="@((code.Enabled) ? "success" : "")">
+                <td>@code.Id</td>
+                <td>@code.Code</td>
+                <td>
+                    @if (code.ApplicableParts != null && code.ApplicableParts.Count > 0)
+                    {
+                        <ul>
+                            @foreach (var part in code.ApplicableParts)
+                            {
+                                <li>@part.Name</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <span>Global Code</span>
+                    }
+                </td>
+                <td>@((code.DiscountPercentage != null) ? $"{code.DiscountPercentage}%" : "N/A")</td>
+                <td>@((code.DiscountAmount != null) ? $"${code.DiscountAmount}" : "N/A")</td>
+                <td class="text-center">
+                    <a asp-controller="Admin" asp-action="TogglePromo" asp-route-id="@code.Id">@(code.Enabled ? "Disable" : "Enable")</a>
+                </td>
+                <td class="text-center">
+                    <a asp-controller="Admin" asp-action="EditPromo" asp-route-id="@code.Id">Edit</a>
+                </td>
+                <td class="text-center">
+                    <a asp-controller="Admin" asp-action="DeletePromo" asp-route-id="@code.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

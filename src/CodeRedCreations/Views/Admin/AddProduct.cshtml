@@ -1,6 +1,7 @@
 ﻿@model CodeRedCreations.Models.AddNewProductModel
 
 @{
+    var query = (Context.Request.Query["section"].FirstOrDefault() == null) ? string.Empty : Context.Request.Query["section"].First().ToString();
     ViewData["Title"] = "Add New Products";
 }
 <h2>@ViewData["Title"]</h2>
@@ -9,13 +10,13 @@
 <a asp-area="" asp-controller="Admin" asp-action="ManageProducts">Return to Manage Products</a>
 
 <ul class="nav nav-tabs" style="margin-top: 10px;">
-    <li class="active"><a data-toggle="tab" href="#AddBrand">Add Brand</a></li>
-    <li class=""><a data-toggle="tab" href="#AddPart">Add Part</a></li>
-    <li class=""><a data-toggle="tab" href="#AddCar">Add Car</a></li>
+    <li id="tabBrand" class=""><a data-toggle="tab" href="#addBrand">Add Brand</a></li>
+    <li id="tabPart" class=""><a data-toggle="tab" href="#addPart">Add Part</a></li>
+    <li id="tabCar" class=""><a data-toggle="tab" href="#addCar">Add Car</a></li>
 </ul>
 
 <div class="tab-content">
-    <div id="AddBrand" class="tab-pane fade in active">
+    <div id="addBrand" class="tab-pane fade in">
         <form asp-controller="Admin" asp-action="AddBrand" id="AddBrandForm" method="post" class="form-horizontal">
             <h4>Add a new brand.</h4>
             <hr />
@@ -44,7 +45,7 @@
         </form>
     </div>
 
-    <div id="AddPart" class="tab-pane fade in">
+    <div id="addPart" class="tab-pane fade in">
         <form asp-controller="Admin" asp-action="AddPart" id="AddPartForm" method="post" class="form-horizontal" enctype="multipart/form-data">
             <h4>Add a new part.</h4>
             <hr />
@@ -116,25 +117,6 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="Part.Stock" class="col-md-2 control-label"></label>
-                <div class="col-md-10">
-                    <input asp-for="Part.Stock" class="form-control" />
-                    <span asp-validation-for="Part.Stock" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Part.OnSale" class="col-md-2 control-label"></label>
-                <div class="col-md-10">
-                    <select class="form-control">
-                        <option value="false">False</option>
-                        <option value="true">True</option>
-                    </select>
-                    <span asp-validation-for="Part.OnSale" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="form-group">
                 <label title="Images" class="col-md-2 control-label"></label>
                 <div class="col-md-10">
                     <input name="Images" type="file" multiple class="form-control" />
@@ -148,41 +130,69 @@
             </div>
         </form>
     </div>
-    
-    <div id="AddCar" class="tab-pane fade in">
-    <form asp-controller="Admin" asp-action="AddCar" id="AddCarForm" method="post" class="form-horizontal">
-        <h4>Add a new car.</h4>
-        <hr />
-        <div asp-validation-summary="All" class="text-danger"></div>
-        <div class="form-group">
-            <label asp-for="NewCar.Make" class="col-md-2 control-label"></label>
-            <div class="col-md-10">
-                <input asp-for="NewCar.Make" class="form-control" />
-                <span asp-validation-for="NewCar.Make" class="text-danger"></span>
-            </div>
-        </div>
 
-        <div class="form-group">
-            <label asp-for="NewCar.Model" class="col-md-2 control-label"></label>
-            <div class="col-md-10">
-                <input asp-for="NewCar.Model" class="form-control" />
-                <span asp-validation-for="NewCar.Model" class="text-danger"></span>
+    <div id="addCar" class="tab-pane fade in">
+        <form asp-controller="Admin" asp-action="AddCar" id="AddCarForm" method="post" class="form-horizontal">
+            <h4>Add a new car.</h4>
+            <hr />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="NewCar.Make" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="NewCar.Make" class="form-control" />
+                    <span asp-validation-for="NewCar.Make" class="text-danger"></span>
+                </div>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label asp-for="NewCar.TrimLevel" class="col-md-2 control-label"></label>
-            <div class="col-md-10">
-                <input asp-for="NewCar.TrimLevel" class="form-control" />
-                <span asp-validation-for="NewCar.TrimLevel" class="text-danger"></span>
+            <div class="form-group">
+                <label asp-for="NewCar.Model" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="NewCar.Model" class="form-control" />
+                    <span asp-validation-for="NewCar.Model" class="text-danger"></span>
+                </div>
             </div>
-        </div>
 
-        <div class="form-group">
-            <div class="col-md-offset-2 col-md-10">
-                <button type="submit" class="btn btn-default">Add New Car</button>
+            <div class="form-group">
+                <label asp-for="NewCar.TrimLevel" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input asp-for="NewCar.TrimLevel" class="form-control" />
+                    <span asp-validation-for="NewCar.TrimLevel" class="text-danger"></span>
+                </div>
             </div>
-        </div>
-    </form>
+
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <button type="submit" class="btn btn-default">Add New Car</button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
-</div>
+
+<script>
+    function getParameterByName(name, url) {
+        if (!url) {
+            url = window.location.href;
+        }
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    $(function () {
+        var query = getParameterByName('section');
+        if (query == null || query.toString().toUpperCase() == "BRAND") {
+            $('#tabBrand').addClass('active');
+            $('#addBrand').addClass('active');
+        } else if (query.toString().toUpperCase() == 'PART') {
+            $('#tabPart').addClass('active');
+            $('#addPart').addClass('active');
+        } else if (query.toString().toUpperCase() == "CAR") {
+            $('#tabCar').addClass('active');
+            $('#addCar').addClass('active');
+        }
+    });
+</script>

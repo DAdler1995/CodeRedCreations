@@ -1,0 +1,67 @@
+﻿@model PartRequestModel
+@using CodeRedCreations.Models;
+@{
+    ViewData["Title"] = "Request a Product";
+}
+
+<div class="row">
+    <h3>Request a part for the shop.</h3>
+    <p class="">
+        Please fill out as much detail as you can to help us make sure we know exactly what you're looking for.
+    </p>
+    <p class="text-success">@TempData["Message"]</p>
+
+    <hr />
+
+    <form asp-controller="Parts" asp-action="RequestPart" method="post" class="form-horizontal">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="form-group">
+            <label asp-for="FromEmail" class="control-label col-md-2"></label>
+            <div class="col-md-10">
+                <div class="input-group">
+                    <input asp-for="FromEmail" type="email" class="form-control" />
+                    <a class="input-group-addon" data-html="true" data-placement="left" href="#" data-toggle="popover" data-trigger="hover" title="What We Do With Your Email" data-content="The email address is simply used so that we can let you know if your suggestion has been successful. In the future when a suggestion is successful we'll supply a promocode to you. <hr /><strong>NOT A REQUIRED TO REQUEST A PART</strong>"><span class="glyphicon glyphicon-question-sign"></span></a>
+                </div>
+                <span asp-validation-for="FromEmail"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Part.Brand.Name" class="col-md-2 control-label">Brand Name</label>
+            <div class="col-md-10">
+                <input asp-for="Part.Brand.Name" class="form-control" />
+                <span asp-validation-for="Part.Brand.Name"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Part.Name" class="col-md-2 control-label">Part Name</label>
+            <div class="col-md-10">
+                <input asp-for="Part.Name" class="form-control" />
+                <span asp-validation-for="Part.Name"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Part.PartType" class="col-md-2 control-label">Part Type</label>
+            <div class="col-md-10">
+                <select asp-for="Part.PartType" asp-items="Html.GetEnumSelectList<PartTypeEnum>()" class="form-control"></select>
+                <span asp-validation-for="Part.PartType"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <button type="submit" class="btn btn-default">Submit Request</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+
+<script>
+    $(document).ready(function () {
+        $('[data-toggle="popover"]').popover();
+    });
+</script>

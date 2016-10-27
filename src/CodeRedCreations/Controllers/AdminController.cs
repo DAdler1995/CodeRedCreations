@@ -44,23 +44,39 @@ namespace CodeRedCreations.Controllers
         }
 
         [HttpGet]
-        public IActionResult ManageUsers()
+        public async Task<IActionResult> ManageUsers()
         {
-            var allUsers = _context.Users.ToList();
+            var allUsers = await _context.Users.ToListAsync();
 
             return View(allUsers);
         }
 
         [HttpGet]
-        public IActionResult ManageProducts()
+        public async Task<IActionResult> ManageProducts()
         {
-            var allProducts = _context.Brand.Include(x => x.Parts).ToList();
+            var allProducts = await _context.Brand.Include(x => x.Parts).ToListAsync();
 
             return View(allProducts);
         }
 
         [HttpGet]
-        public async Task<IActionResult> AddProduct(int? id)
+        public async Task<IActionResult> ManageCars()
+        {
+            IList<CarModel> cars = await _context.Car.ToListAsync();
+
+            return View(cars);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ManagePromos()
+        {
+            var promoCodes = await _context.Promos.ToListAsync();
+
+            return View(promoCodes);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AddProduct(int? id, string section)
         {
             var AddNewProduct = new AddNewProductModel();
             AddNewProduct.Cars = await _context.Car.ToListAsync();
@@ -68,12 +84,23 @@ namespace CodeRedCreations.Controllers
 
             if (id != null)
             {
-                AddNewProduct.Part = await _context.Part.Include(x => x.Brand)
-                    .Include(x => x.Images)
-                    .Include(x => x.CompatibleCars)
-                    .FirstOrDefaultAsync(x => x.PartId == id);
+                if (string.IsNullOrEmpty(section) || section.Normalize() == "PART")
+                {
+                    AddNewProduct.Part = await _context.Part.Include(x => x.Brand)
+                        .Include(x => x.Images)
+                        .Include(x => x.CompatibleCars)
+                        .FirstOrDefaultAsync(x => x.PartId == id);
 
-                AddNewProduct.Brand = AddNewProduct.Part.Brand;
+                    AddNewProduct.Brand = AddNewProduct.Part.Brand;
+                }
+                if (section.Normalize() == "CAR")
+                {
+                    AddNewProduct.NewCar = await _context.Car.FirstOrDefaultAsync(x => x.CarId == id);
+                }
+                else if (section.Normalize() == "BRAND")
+                {
+                    AddNewProduct.Brand = await _context.Brand.FirstOrDefaultAsync(x => x.BrandId == id);
+                }
             }
 
             return View(AddNewProduct);
@@ -97,25 +124,34 @@ namespace CodeRedCreations.Controllers
             }
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("AddProduct", new { id = newBrand.BrandId });
+            return RedirectToAction("AddProduct", new { id = newBrand.BrandId, section = "BRAND" });
         }
 
         public async Task<IActionResult> AddCar(AddNewProductModel model)
         {
             var newCar = model.NewCar;
-            bool brandExists = _context.Car.FirstOrDefault(x => x.Make == newCar.Make && x.Model == newCar.Model) != null;
 
-            if (brandExists)
+            var existing = await _context.Car
+                .FirstOrDefaultAsync(x => (x.Make == newCar.Make && x.Model == newCar.Model) || x.CarId == newCar.CarId);
+
+            if (existing != null)
             {
+                existing.Make = newCar.Make;
+                existing.Model = newCar.Model;
+                existing.TrimLevel = newCar.TrimLevel;
                 TempData["SuccessMessage"] = $"Updated {newCar.Make} {newCar.Model}.";
-                _context.Car.Update(newCar);
             }
             else
             {
-                TempData["SuccessMessage"] = $"Added {newCar.Make} {newCar.Model}.";
                 _context.Car.Add(newCar);
+                TempData["SuccessMessage"] = $"Added {newCar.Make} {newCar.Model}.";
             }
             await _context.SaveChangesAsync();
+
+            if (existing != null)
+            {
+                return RedirectToAction("ManageCars", new { id = existing.CarId, section = "CAR" });
+            }
 
             return RedirectToAction("AddProduct");
         }
@@ -158,8 +194,6 @@ namespace CodeRedCreations.Controllers
                 existing.CompatibleCars = newPart.CompatibleCars;
                 existing.Price = newPart.Price;
                 existing.Shipping = newPart.Shipping;
-                existing.Stock = newPart.Stock;
-                existing.OnSale = newPart.OnSale;
                 existing.Images = (newPart.Images.Count() > 0) ? newPart.Images : existing.Images;
                 TempData["SuccessMessage"] = $"Successfully updated {existing.Name} ({existing.PartId})";
             }
@@ -171,7 +205,7 @@ namespace CodeRedCreations.Controllers
             _context.Brand.Update(newPart.Brand);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("AddProduct", new { id = newPart.PartId });
+            return RedirectToAction("AddProduct", new { id = newPart.PartId, section = "PART" });
         }
 
         public async Task<IActionResult> DeletePart(int id)

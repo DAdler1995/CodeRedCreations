@@ -6,8 +6,11 @@ namespace CodeRedCreations.Models
     {
         [Key]
         public int CarId { get; set; }
+        [Required, Display(Name = "Make")]
         public string Make { get; set; }
+        [Required, Display(Name = "Model")]
         public string Model { get; set; }
+        [Display(Name = "Trim Level")]
         public string TrimLevel { get; set; }
     }
 }

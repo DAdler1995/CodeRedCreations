@@ -6,6 +6,7 @@ namespace CodeRedCreations.Controllers
 {
     public class ErrorController : Controller
     {
+#pragma warning disable CS0114 // Member hides inherited member; missing override keyword
         [Route("Error/401")]
         public IActionResult Unauthorized()
         {
