@@ -16,8 +16,10 @@
             <th>Applicable Parts</th>
             <th>Discount Percentage</th>
             <th>Discount Amount</th>
+            <th>Expiration Date</th>
             <th class="text-center">Enabled Status</th>
-            <th colspan="2"></th>
+            <th></th>
+            <th class="text-right"><a asp-controller="Admin" asp-action="UpsertPromo">+</a></th>
         </tr>
     </thead>
 
@@ -30,12 +32,12 @@
                 <td>
                     @if (code.ApplicableParts != null && code.ApplicableParts.Count > 0)
                     {
-                        <ul>
+                        <ol>
                             @foreach (var part in code.ApplicableParts)
                             {
                                 <li>@part.Name</li>
                             }
-                        </ul>
+                        </ol>
                     }
                     else
                     {
@@ -44,14 +46,15 @@
                 </td>
                 <td>@((code.DiscountPercentage != null) ? $"{code.DiscountPercentage}%" : "N/A")</td>
                 <td>@((code.DiscountAmount != null) ? $"${code.DiscountAmount}" : "N/A")</td>
+                <td>@((code.ExpirationDate != null) ? $"{code.ExpirationDate.Value.ToLocalTime().Date}" : "N/A")</td>
                 <td class="text-center">
                     <a asp-controller="Admin" asp-action="TogglePromo" asp-route-id="@code.Id">@(code.Enabled ? "Disable" : "Enable")</a>
                 </td>
                 <td class="text-center">
-                    <a asp-controller="Admin" asp-action="EditPromo" asp-route-id="@code.Id">Edit</a>
+                    <a asp-controller="Admin" asp-action="UpsertPromo" asp-route-id="@code.Id">Edit</a>
                 </td>
                 <td class="text-center">
-                    <a asp-controller="Admin" asp-action="DeletePromo" asp-route-id="@code.Id">Delete</a>
+                    <a asp-controller="Admin" asp-action="DeletePromo" asp-route-id="@code.Id" onclick="return confirm('Are you sure you want to delete this promo?')">Delete</a>
                 </td>
             </tr>
         }

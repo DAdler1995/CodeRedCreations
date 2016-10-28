@@ -59,12 +59,12 @@
 
         @if (oldPrice == null)
         {
-            <h3 id="price" class="text-red">$@product.Price</h3>
+            <h3 id="price" class="text-red">@product.Price.ToString("C2")</h3>
         }
         else
         {
-            <h3 id="price" class="text-red">@product.Price</h3>
-            <h4 id="oldPrice"><del>@oldPrice</del></h4>
+            <h3 id="price" class="text-red">@product.Price.ToString("C2")</h3>
+            <h4 id="oldPrice"><del>@oldPrice.Value.ToString("C2")</del></h4>
 
         }
         <p class="small">Item #@product.PartId</p>

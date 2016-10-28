@@ -70,9 +70,81 @@ namespace CodeRedCreations.Controllers
         [HttpGet]
         public async Task<IActionResult> ManagePromos()
         {
-            var promoCodes = await _context.Promos.ToListAsync();
+            var promoCodes = await _context.Promos.Include(x => x.ApplicableParts).ToListAsync();
 
             return View(promoCodes);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> UpsertPromo(int? id)
+        {
+            PromoModel promo;
+
+            if (id == null)
+            {
+                promo = new PromoModel();
+            }
+            else
+            {
+                promo = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == id);
+            }
+            ViewData["AllParts"] = await _context.Part.ToListAsync();
+
+            return View(promo);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpsertPromo(PromoModel promo, IEnumerable<int> PartIds)
+        {
+            promo.Code = promo.Code.ToUpper();
+            if (await _context.Promos.AnyAsync(x => x.Code.ToUpper() == promo.Code))
+            {
+                TempData["Message"] = $"A promo already exists with the code: {promo.Code.ToUpper()}";
+                ModelState.AddModelError("Promo Code", "Promo code already exists.");
+                return RedirectToAction("UpsertPromo");
+            }
+
+            if (promo.ExpirationDate.HasValue)
+            {
+                promo.ExpirationDate = promo.ExpirationDate.Value.ToUniversalTime();
+            }
+            promo.ApplicableParts = new List<PartModel>();
+            if (PartIds.Count() > 0)
+            {
+                foreach (var id in PartIds)
+                {
+                    var part = await _context.Part.Include(x => x.Brand)
+                        .Include(x => x.CompatibleCars).Include(x => x.Images)
+                        .FirstOrDefaultAsync(x => x.PartId == id);
+                    promo.ApplicableParts.Add(part);
+                }
+            }
+
+            var existing = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == promo.Id);
+
+            if (existing != null)
+            {
+                existing.Code = promo.Code;
+                existing.Enabled = promo.Enabled;
+                existing.ExpirationDate = promo.ExpirationDate;
+                existing.ApplicableParts = promo.ApplicableParts;
+                existing.DiscountPercentage = promo.DiscountPercentage;
+                existing.DiscountAmount = promo.DiscountAmount;
+                TempData["Message"] = "Promo successfully updated.";
+            }
+            else
+            {
+                _context.Promos.Add(promo);
+                TempData["Message"] = "Promo successfully added.";
+            }
+            await _context.SaveChangesAsync();
+
+            if (promo.Id == 0)
+            {
+                return RedirectToAction("ManagePromos", "Admin");
+            }
+            return RedirectToAction("UpsertPromo", new { id = promo.Id });
+
         }
 
         [HttpGet]
@@ -185,6 +257,8 @@ namespace CodeRedCreations.Controllers
             }
             newPart.Images = images;
 
+            newPart.Price = priceWithTax(newPart.Price, 8);
+
             if (existing != null)
             {
                 existing.Name = newPart.Name;
@@ -199,7 +273,7 @@ namespace CodeRedCreations.Controllers
             }
             else
             {
-                TempData["SuccessMessage"] = $"Added {newPart.Brand} {newPart.Name}.";
+                TempData["SuccessMessage"] = $"Added {newPart.Brand.Name} {newPart.Name}.";
                 _context.Part.Add(newPart);
             }
             _context.Brand.Update(newPart.Brand);
@@ -266,6 +340,24 @@ namespace CodeRedCreations.Controllers
 
             return RedirectToAction("ManageUsers", "Admin");
         }
+        
+        public async Task<IActionResult> TogglePromo(int id)
+        {
+            var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Id == id);
+            promo.Enabled = !promo.Enabled;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("ManagePromos", "Admin");
+        }
+        
+        public async Task<IActionResult> DeletePromo(int id)
+        {
+            var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Id == id);
+            _context.Promos.Remove(promo);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("ManagePromos", "Admin");
+        }
 
         private byte[] ConvertToBytes(IFormFile file)
         {
@@ -275,6 +367,15 @@ namespace CodeRedCreations.Controllers
                 stream.CopyTo(memoryStream);
                 return memoryStream.ToArray();
             }
+        }
+
+        private decimal priceWithTax(decimal price, int taxRate)
+        {
+            decimal taxPercent = (taxRate / 100m);
+            decimal taxedAmount = (price * taxPercent);
+            decimal totalAfterTax = Math.Round(price + taxedAmount, 2);
+
+            return totalAfterTax;
         }
     }
 }

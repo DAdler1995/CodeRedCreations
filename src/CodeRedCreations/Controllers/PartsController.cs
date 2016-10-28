@@ -66,11 +66,13 @@ namespace CodeRedCreations.Controllers
 
             if (TempData["Promo"] != null)
             {
-                ViewData["OldPrice"] = viewModel.PartModel.Price;
                 int promoId = int.Parse(TempData["Promo"].ToString());
                 viewModel.PromoModel = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == promoId);
-
-                viewModel.PartModel.Price = ApplyPromoCode(viewModel);
+                if (viewModel.PartModel.Price != ApplyPromoCode(viewModel))
+                {
+                    ViewData["OldPrice"] = viewModel.PartModel.Price;
+                    viewModel.PartModel.Price = ApplyPromoCode(viewModel);
+                }
             }
 
             viewModel.PartModel.Price = Math.Round(viewModel.PartModel.Price, 2);
@@ -101,7 +103,6 @@ namespace CodeRedCreations.Controllers
                 using (var smtp = new SmtpClient())
                 {
                     smtp.Connect("smtp.gmail.com", 587);
-                    await smtp.AuthenticateAsync("dadler1995@gmail.com", "Gwhatdoesthefoxsay95");
                     await smtp.SendAsync(email);
                     smtp.Disconnect(true);
                 }
@@ -170,26 +171,31 @@ namespace CodeRedCreations.Controllers
 
             if (promo.Enabled)
             {
-                if (promo.ApplicableParts.Count() == 0 || promo.ApplicableParts.FirstOrDefault(x => x.PartId == part.PartId) != null)
+                if (promo.ExpirationDate == null || promo.ExpirationDate > DateTime.UtcNow)
                 {
-                    if (promo.DiscountAmount != null)
+                    if (promo.ApplicableParts.Count() == 0 || promo.ApplicableParts.FirstOrDefault(x => x.PartId == part.PartId) != null)
                     {
-                        price = (price - (decimal)promo.DiscountAmount);
-                    }
-                    else
-                    {
-                        var percent = ((decimal)promo.DiscountPercentage / 100);
-                        var discount = (price * percent);
+                        if (promo.DiscountAmount != null)
+                        {
+                            price = (price - (decimal)promo.DiscountAmount);
+                        }
+                        else
+                        {
+                            var percent = ((decimal)promo.DiscountPercentage / 100);
+                            var discount = (price * percent);
 
-                        price = (price - discount);
-                    }
+                            price = (price - discount);
+                        }
 
-                    TempData["Message"] = "Promo code applied successfully.";
-                    return price;
+                        TempData["Message"] = "The promo code has been successfully applied.";
+                        return price;
+                    }
                 }
+                TempData["Message"] = "This promo code has expired.";
+                return price;
             }
 
-            TempData["Message"] = "Promo code entered is invalid.";
+            TempData["Message"] = "This promo code is invalid.";
             return price;
         }
     }

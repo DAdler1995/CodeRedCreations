@@ -176,7 +176,8 @@ else
                             </div>
                         </div>
                         <div class="panel-footer" style="position: absolute; bottom: 1px; left: 16px; right: 16px;">
-                            <a asp-area="" asp-controller="Parts" asp-action="Details" asp-route-id="@item.PartId">Order Now</a>
+                            <a asp-area="" asp-controller="Parts" asp-action="Details" asp-route-id="@item.PartId">View Details</a>
+                            <span class="pull-right">@item.Price.ToString("C2")</span>
                         </div>
                     </div>
                 </div>

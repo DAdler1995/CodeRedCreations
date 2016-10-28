@@ -1,0 +1,125 @@
+﻿@model CodeRedCreations.Models.PromoModel
+
+@{
+    ViewData["Title"] = "Add & Edit Promos";
+    List<CodeRedCreations.Models.PartModel> allParts = (List<CodeRedCreations.Models.PartModel>)ViewData["AllParts"];
+}
+<h2>@ViewData["Title"]</h2>
+<p class="text-success">@TempData["Message"]</p>
+<a asp-area="" asp-controller="Admin" asp-action="ManagePromos">Return to Manage Promos</a>
+
+<form asp-controller="Admin" asp-action="UpsertPromo" id="UpsertPromoForm" method="post" class="form-horizontal">
+    <h4>Upsert promos.</h4>
+    <hr />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Code" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <input asp-for="Code" class="form-control" />
+            <span asp-validation-for="Code" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Enabled" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <select asp-for="Enabled" class="form-control">
+                <option value="true">True</option>
+                <option value="false">False</option>
+            </select>
+            <span asp-validation-for="Enabled" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-md-2 control-label">Days till promo expires</label>
+        <div class="col-md-10">
+            <input asp-for="ExpirationDate" class="form-control datepicker" value="@((Model.ExpirationDate.HasValue) ? Model.ExpirationDate.Value.ToLocalTime().ToString("MM/dd/yyyy") : "") " />
+            <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+            @if (Model.ExpirationDate != null)
+            {
+                var expirationDate = Model.ExpirationDate.Value.ToLocalTime().Date;
+                var timeTill = (Model.ExpirationDate.Value.ToLocalTime() - DateTime.Now);
+                var timeTillExpiration = $"{timeTill.Days}days, {timeTill.Hours}hours, {timeTill.Minutes}minutes";
+
+                <p class="small">Promo Expires in: <strong>@expirationDate</strong> days, on <strong>@timeTillExpiration</strong></p>
+            }
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ApplicableParts" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <select id="PartIds" name="PartIds" multiple="multiple" class="form-control">
+                @foreach (var part in allParts)
+                {
+                    if (Model.ApplicableParts != null && Model.ApplicableParts.FirstOrDefault(x => x.PartId == part.PartId) != null)
+                    {
+                        <option selected="selected" value="@part.PartId">@part.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@part.PartId">@part.Name</option>
+                    }
+                }
+            </select>
+            <span asp-validation-for="ApplicableParts" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="DiscountPercentage" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <div class="input-group">
+                <input id="DiscountPercentage" type="number" asp-for="DiscountPercentage" class="form-control" />
+                <span class="input-group-addon">%</span>
+            </div>
+            <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
+        </div>
+
+        <label asp-for="DiscountAmount" class="col-md-2 control-label"></label>
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-addon">$</span>
+                <input id="DiscountAmount" type="number" asp-for="DiscountAmount" class="form-control" />
+            </div>
+            <span asp-validation-for="DiscountAmount" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <button type="submit" class="btn btn-default">Upsert Promo</button>
+        </div>
+    </div>
+</form>
+<script>
+    var DiscountPercentage = $('#DiscountPercentage');
+    var DiscountAmount = $('#DiscountAmount');
+
+    function DiscountType() {
+        if (DiscountPercentage.val().length > 0) {
+            DiscountPercentage.prop('disabled', false);
+            DiscountAmount.prop('disabled', true);
+        } else if (DiscountAmount.val().length > 0) {
+            DiscountPercentage.prop('disabled', true);
+            DiscountAmount.prop('disabled', false);
+        } else {
+            DiscountPercentage.prop('disabled', false);
+            DiscountAmount.prop('disabled', false);
+        }
+    }
+
+    $(function () {
+        DiscountType();
+    })
+
+    DiscountPercentage.keyup(function () {
+        DiscountType();
+    });
+    DiscountAmount.keyup(function () {
+        DiscountType();
+    });
+
+    $('.datepicker').datepicker().format("dd/mm/yyyy");
+</script>
