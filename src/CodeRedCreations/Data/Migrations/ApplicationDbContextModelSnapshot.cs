@@ -110,16 +110,16 @@ namespace CodeRedCreations.Data.Migrations
 
                     b.Property<string>("Name");
 
-                    b.Property<int?>("PartModelPartId");
+                    b.Property<int?>("ProductModelPartId");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PartModelPartId");
+                    b.HasIndex("ProductModelPartId");
 
                     b.ToTable("Images");
                 });
 
-            modelBuilder.Entity("CodeRedCreations.Models.PartModel", b =>
+            modelBuilder.Entity("CodeRedCreations.Models.ProductModel", b =>
                 {
                     b.Property<int>("PartId")
                         .ValueGeneratedOnAdd();
@@ -151,7 +151,7 @@ namespace CodeRedCreations.Data.Migrations
 
                     b.HasIndex("PromoModelId");
 
-                    b.ToTable("Part");
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("CodeRedCreations.Models.PromoModel", b =>
@@ -284,12 +284,12 @@ namespace CodeRedCreations.Data.Migrations
 
             modelBuilder.Entity("CodeRedCreations.Models.ImageModel", b =>
                 {
-                    b.HasOne("CodeRedCreations.Models.PartModel")
+                    b.HasOne("CodeRedCreations.Models.ProductModel")
                         .WithMany("Images")
-                        .HasForeignKey("PartModelPartId");
+                        .HasForeignKey("ProductModelPartId");
                 });
 
-            modelBuilder.Entity("CodeRedCreations.Models.PartModel", b =>
+            modelBuilder.Entity("CodeRedCreations.Models.ProductModel", b =>
                 {
                     b.HasOne("CodeRedCreations.Models.BrandModel", "Brand")
                         .WithMany("Parts")

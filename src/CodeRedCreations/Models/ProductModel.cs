@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CodeRedCreations.Models
 {
-    public class PartModel
+    public class ProductModel
     {
         [Key]
         public int PartId { get; set; }

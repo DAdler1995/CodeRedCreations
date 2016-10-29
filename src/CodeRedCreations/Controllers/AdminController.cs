@@ -14,8 +14,6 @@ using Microsoft.AspNetCore.Http;
 using System.IO;
 using System.IO.Compression;
 
-// For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace CodeRedCreations.Controllers
 {
     [Authorize(Roles = "Admin")]
@@ -88,7 +86,7 @@ namespace CodeRedCreations.Controllers
             {
                 promo = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == id);
             }
-            ViewData["AllParts"] = await _context.Part.ToListAsync();
+            ViewData["AllParts"] = await _context.Products.ToListAsync();
 
             return View(promo);
         }
@@ -108,12 +106,12 @@ namespace CodeRedCreations.Controllers
             {
                 promo.ExpirationDate = promo.ExpirationDate.Value.ToUniversalTime();
             }
-            promo.ApplicableParts = new List<PartModel>();
+            promo.ApplicableParts = new List<ProductModel>();
             if (PartIds.Count() > 0)
             {
                 foreach (var id in PartIds)
                 {
-                    var part = await _context.Part.Include(x => x.Brand)
+                    var part = await _context.Products.Include(x => x.Brand)
                         .Include(x => x.CompatibleCars).Include(x => x.Images)
                         .FirstOrDefaultAsync(x => x.PartId == id);
                     promo.ApplicableParts.Add(part);
@@ -158,7 +156,7 @@ namespace CodeRedCreations.Controllers
             {
                 if (string.IsNullOrEmpty(section) || section.Normalize() == "PART")
                 {
-                    AddNewProduct.Part = await _context.Part.Include(x => x.Brand)
+                    AddNewProduct.Part = await _context.Products.Include(x => x.Brand)
                         .Include(x => x.Images)
                         .Include(x => x.CompatibleCars)
                         .FirstOrDefaultAsync(x => x.PartId == id);
@@ -234,9 +232,9 @@ namespace CodeRedCreations.Controllers
             var images = new List<ImageModel>();
             var newPart = model.Part;
 
-            var existing = await _context.Part.Include(x => x.Brand)
-                .Include(x => x.Images).Include(x => x.CompatibleCars)
-                .FirstOrDefaultAsync(x => (x.Brand == newPart.Brand && x.Name == newPart.Name) || x.PartId == newPart.PartId);
+            var existing = await _context.Products.Include(x => x.Brand)
+                                             .Include(x => x.Images).Include(x => x.CompatibleCars)
+                                            .FirstOrDefaultAsync(x => (x.Brand == newPart.Brand && x.Name == newPart.Name) || x.PartId == newPart.PartId);
 
             model.Part.CompatibleCars = await _context.Car.FirstOrDefaultAsync(x => x.CarId == model.Part.CompatibleCars.CarId);
             model.Part.Brand = await _context.Brand.Include(x => x.Parts).FirstOrDefaultAsync(x => x.BrandId == model.Part.Brand.BrandId);
@@ -274,7 +272,7 @@ namespace CodeRedCreations.Controllers
             else
             {
                 TempData["SuccessMessage"] = $"Added {newPart.Brand.Name} {newPart.Name}.";
-                _context.Part.Add(newPart);
+                _context.Products.Add(newPart);
             }
             _context.Brand.Update(newPart.Brand);
             await _context.SaveChangesAsync();
@@ -284,11 +282,11 @@ namespace CodeRedCreations.Controllers
 
         public async Task<IActionResult> DeletePart(int id)
         {
-            var partFound = await _context.Part.Include(x => x.Images).FirstOrDefaultAsync(x => x.PartId == id);
+            var partFound = await _context.Products.Include(x => x.Images).FirstOrDefaultAsync(x => x.PartId == id);
             if (partFound != null)
             {
                 _context.Images.RemoveRange(partFound.Images);
-                var remove = _context.Part.Remove(partFound);
+                var remove = _context.Products.Remove(partFound);
                 await _context.SaveChangesAsync();
             }
 
@@ -340,7 +338,7 @@ namespace CodeRedCreations.Controllers
 
             return RedirectToAction("ManageUsers", "Admin");
         }
-        
+
         public async Task<IActionResult> TogglePromo(int id)
         {
             var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Id == id);
@@ -349,7 +347,7 @@ namespace CodeRedCreations.Controllers
 
             return RedirectToAction("ManagePromos", "Admin");
         }
-        
+
         public async Task<IActionResult> DeletePromo(int id)
         {
             var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Id == id);

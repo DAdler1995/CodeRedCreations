@@ -8,8 +8,8 @@ using CodeRedCreations.Data;
 namespace CodeRedCreations.Data.Migrations
 {
     [DbContext(typeof(CodeRedContext))]
-    [Migration("20161017224445_UpdatePartImageSystem")]
-    partial class UpdatePartImageSystem
+    [Migration("20161029010336_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -71,9 +71,11 @@ namespace CodeRedCreations.Data.Migrations
                     b.Property<int>("BrandId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Description");
+                    b.Property<string>("Description")
+                        .IsRequired();
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .IsRequired();
 
                     b.HasKey("BrandId");
 
@@ -85,9 +87,11 @@ namespace CodeRedCreations.Data.Migrations
                     b.Property<int>("CarId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Make");
+                    b.Property<string>("Make")
+                        .IsRequired();
 
-                    b.Property<string>("Model");
+                    b.Property<string>("Model")
+                        .IsRequired();
 
                     b.Property<string>("TrimLevel");
 
@@ -96,32 +100,49 @@ namespace CodeRedCreations.Data.Migrations
                     b.ToTable("Car");
                 });
 
-            modelBuilder.Entity("CodeRedCreations.Models.PartModel", b =>
+            modelBuilder.Entity("CodeRedCreations.Models.ImageModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<byte[]>("Bytes");
+
+                    b.Property<string>("Description");
+
+                    b.Property<string>("Name");
+
+                    b.Property<int?>("ProductModelPartId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductModelPartId");
+
+                    b.ToTable("Images");
+                });
+
+            modelBuilder.Entity("CodeRedCreations.Models.ProductModel", b =>
                 {
                     b.Property<int>("PartId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("BrandId");
+                    b.Property<int?>("BrandId")
+                        .IsRequired();
 
                     b.Property<int?>("CompatibleCarsCarId");
 
-                    b.Property<string>("Description");
+                    b.Property<string>("Description")
+                        .IsRequired();
 
-                    b.Property<string>("ImageStrings");
-
-                    b.Property<string>("Name");
-
-                    b.Property<bool>("OnSale");
+                    b.Property<string>("Name")
+                        .IsRequired();
 
                     b.Property<int>("PartType");
 
-                    b.Property<string>("PaypalUrl");
-
                     b.Property<decimal>("Price");
 
-                    b.Property<decimal>("Shipping");
+                    b.Property<int?>("PromoModelId");
 
-                    b.Property<int>("Stock");
+                    b.Property<decimal>("Shipping");
 
                     b.HasKey("PartId");
 
@@ -129,7 +150,30 @@ namespace CodeRedCreations.Data.Migrations
 
                     b.HasIndex("CompatibleCarsCarId");
 
-                    b.ToTable("Part");
+                    b.HasIndex("PromoModelId");
+
+                    b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("CodeRedCreations.Models.PromoModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Code")
+                        .IsRequired();
+
+                    b.Property<decimal?>("DiscountAmount");
+
+                    b.Property<decimal?>("DiscountPercentage");
+
+                    b.Property<bool>("Enabled");
+
+                    b.Property<DateTime?>("ExpirationDate");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Promos");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole", b =>
@@ -239,15 +283,27 @@ namespace CodeRedCreations.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("CodeRedCreations.Models.PartModel", b =>
+            modelBuilder.Entity("CodeRedCreations.Models.ImageModel", b =>
+                {
+                    b.HasOne("CodeRedCreations.Models.ProductModel")
+                        .WithMany("Images")
+                        .HasForeignKey("ProductModelPartId");
+                });
+
+            modelBuilder.Entity("CodeRedCreations.Models.ProductModel", b =>
                 {
                     b.HasOne("CodeRedCreations.Models.BrandModel", "Brand")
                         .WithMany("Parts")
-                        .HasForeignKey("BrandId");
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("CodeRedCreations.Models.CarModel", "CompatibleCars")
                         .WithMany()
                         .HasForeignKey("CompatibleCarsCarId");
+
+                    b.HasOne("CodeRedCreations.Models.PromoModel")
+                        .WithMany("ApplicableParts")
+                        .HasForeignKey("PromoModelId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRoleClaim<string>", b =>

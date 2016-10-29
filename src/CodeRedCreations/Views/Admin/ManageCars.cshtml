@@ -17,8 +17,8 @@
 <a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-section="CAR">+ Add New Car</a>
 
 <div class="row">
-    <div class="col-sm-12">
-        <ul>
+    <div class="col-md-6">
+        <ul class="list-unstyled">
 
             @foreach (var car in dictionary)
             {
@@ -34,7 +34,7 @@
                         }
                     }
                     carMakes.Add(car.Value);
-                    <li class="divider"></li>
+                    <li class="divider"><hr style="margin: 2px;" /></li>
                 }
 
             }

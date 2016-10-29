@@ -3,6 +3,6 @@
     public class BuyNowModel
     {
         public int Quantity { get; set; }
-        public PartModel Part { get; set; }
+        public ProductModel Part { get; set; }
     }
 }

@@ -12,8 +12,6 @@ using MimeKit;
 using MimeKit.Text;
 using MailKit.Net.Smtp;
 
-// For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace CodeRedCreations.Controllers
 {
     public class PartsController : Controller
@@ -27,6 +25,7 @@ namespace CodeRedCreations.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string part, string brand, string car)
         {
+
             var carDict = new Dictionary<string, string>();
             foreach (var c in _context.Car.OrderBy(x => x.Make))
             {
@@ -37,19 +36,27 @@ namespace CodeRedCreations.Controllers
             ViewData["allCars"] = carDict;
 
 
-            var foundParts = await _context.Part.Include(x => x.Images).Include(x => x.Brand).Include(x => x.CompatibleCars).ToListAsync();
-            if (part != "All")
+            var foundParts = await _context.Products.Include(x => x.Images).Include(x => x.Brand).Include(x => x.CompatibleCars).ToListAsync();
+            if (string.IsNullOrEmpty(part) || string.IsNullOrEmpty(brand) || string.IsNullOrEmpty(car))
             {
-                PartTypeEnum partType = (PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), part);
-                foundParts.RemoveAll(x => x.PartType != partType);
+                ViewData["partCount"] = foundParts.Count;
+                return View(foundParts);
             }
-            if (brand != "All")
+            else
             {
-                foundParts.RemoveAll(x => x.Brand.Name.ToUpper() != brand.ToUpper());
-            }
-            if (car != "All")
-            {
-                foundParts.RemoveAll(x => x.CompatibleCars.Model.ToUpper() != car.ToUpper());
+                if (part != "All")
+                {
+                    PartTypeEnum partType = (PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), part);
+                    foundParts.RemoveAll(x => x.PartType != partType);
+                }
+                if (brand != "All")
+                {
+                    foundParts.RemoveAll(x => x.Brand.Name.ToUpper() != brand.ToUpper());
+                }
+                if (car != "All")
+                {
+                    foundParts.RemoveAll(x => x.CompatibleCars.Model.ToUpper() != car.ToUpper());
+                }
             }
             ViewData["partCount"] = foundParts.Count;
 
@@ -60,34 +67,38 @@ namespace CodeRedCreations.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var viewModel = new ProductDetailsView();
-            var product = await _context.Part.Include(x => x.Images).Include(x => x.Brand).FirstOrDefaultAsync(x => x.PartId == id);
-            viewModel.PartModel = product;
+            var product = await _context.Products.Include(x => x.Images).Include(x => x.Brand).FirstOrDefaultAsync(x => x.PartId == id);
+            viewModel.ProductModel = product;
             viewModel.Images = product.Images;
 
             if (TempData["Promo"] != null)
             {
                 int promoId = int.Parse(TempData["Promo"].ToString());
                 viewModel.PromoModel = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == promoId);
-                if (viewModel.PartModel.Price != ApplyPromoCode(viewModel))
+                if (viewModel.ProductModel.Price != ApplyPromoCode(viewModel))
                 {
-                    ViewData["OldPrice"] = viewModel.PartModel.Price;
-                    viewModel.PartModel.Price = ApplyPromoCode(viewModel);
+                    ViewData["OldPrice"] = viewModel.ProductModel.Price;
+                    viewModel.ProductModel.Price = ApplyPromoCode(viewModel);
                 }
             }
 
-            viewModel.PartModel.Price = Math.Round(viewModel.PartModel.Price, 2);
+            viewModel.ProductModel.Price = Math.Round(viewModel.ProductModel.Price, 2);
 
             return View(viewModel);
         }
 
         [HttpGet]
-        public IActionResult RequestPart()
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
+        public IActionResult Request()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
         {
-            return View(new PartRequestModel());
+            return View(new ProductRequestModel());
         }
 
         [HttpPost]
-        public async Task<IActionResult> RequestPart(PartRequestModel request)
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
+        public async Task<IActionResult> Request(ProductRequestModel request)
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
         {
             if (ModelState.IsValid)
             {
@@ -115,12 +126,15 @@ namespace CodeRedCreations.Controllers
 
         public async Task<IActionResult> BuyNow(ProductDetailsView model)
         {
-            var part = await _context.Part.Include(x => x.Brand).FirstOrDefaultAsync(x => x.PartId == model.PartModel.PartId);
-            var promo = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == model.PromoModel.Id);
-
-            if (part != null)
+            model.ProductModel = await _context.Products.Include(x => x.Brand).FirstOrDefaultAsync(x => x.PartId == model.ProductModel.PartId);
+            if (model.PromoModel != null)
             {
-                part.Price = ApplyPromoCode(model);
+                model.PromoModel = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == model.PromoModel.Id);
+                model.ProductModel.Price = ApplyPromoCode(model);
+            }
+
+            if (model.ProductModel != null)
+            {
 
 
                 var url = (HttpContext.Request.Host.Host.Normalize().Contains("LOCALHOST")) ?
@@ -131,18 +145,18 @@ namespace CodeRedCreations.Controllers
 
                 builder.Append($"?cmd=_xclick&business={UrlEncoder.Default.Encode("zeketiki@gmail.com")}");
                 builder.Append($"&lc=US&no_note=0&currency_code=USD");
-                builder.Append($"&item_name={UrlEncoder.Default.Encode($"{part.Brand.Name} - {part.Name}")}");
-                builder.Append($"&amount={UrlEncoder.Default.Encode(part.Price.ToString())}");
-                builder.Append($"&return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Parts/Details?id={part.PartId}")}");
-                builder.Append($"&cancel_return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Parts/Details?id={part.PartId}")}");
+                builder.Append($"&item_name={UrlEncoder.Default.Encode($"{model.ProductModel.Brand.Name} - {model.ProductModel.Name}")}");
+                builder.Append($"&amount={UrlEncoder.Default.Encode(model.ProductModel.Price.ToString())}");
+                builder.Append($"&return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Parts/Details?id={model.ProductModel.PartId}")}");
+                builder.Append($"&cancel_return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Parts/Details?id={model.ProductModel.PartId}")}");
                 builder.Append($"&quantity={UrlEncoder.Default.Encode(model.Quantity.ToString())}");
-                builder.Append($"&shipping={UrlEncoder.Default.Encode((model.Quantity * part.Shipping).ToString())}");
-                builder.Append($"&item_number={UrlEncoder.Default.Encode(part.PartId.ToString())}");
+                builder.Append($"&shipping={UrlEncoder.Default.Encode((model.Quantity * model.ProductModel.Shipping).ToString())}");
+                builder.Append($"&item_number={UrlEncoder.Default.Encode(model.ProductModel.PartId.ToString())}");
 
                 return Redirect(builder.ToString());
             }
 
-            return RedirectToAction("Details", model.PartModel.PartId);
+            return RedirectToAction("Details", model.ProductModel.PartId);
         }
 
         public async Task<IActionResult> PromoCode(ProductDetailsView model)
@@ -160,16 +174,16 @@ namespace CodeRedCreations.Controllers
                 }
             }
 
-            return RedirectToAction("Details", new { id = model.PartModel.PartId });
+            return RedirectToAction("Details", new { id = model.ProductModel.PartId });
         }
 
         public decimal ApplyPromoCode(ProductDetailsView model)
         {
             var promo = model.PromoModel;
-            var part = model.PartModel;
+            var part = model.ProductModel;
             var price = part.Price;
 
-            if (promo.Enabled)
+            if (promo != null && promo.Enabled)
             {
                 if (promo.ExpirationDate == null || promo.ExpirationDate > DateTime.UtcNow)
                 {
@@ -177,12 +191,12 @@ namespace CodeRedCreations.Controllers
                     {
                         if (promo.DiscountAmount != null)
                         {
-                            price = (price - (decimal)promo.DiscountAmount);
+                            price = Math.Round((price - (decimal)promo.DiscountAmount), 2);
                         }
                         else
                         {
                             var percent = ((decimal)promo.DiscountPercentage / 100);
-                            var discount = (price * percent);
+                            var discount = Math.Round((price * percent), 2);
 
                             price = (price - discount);
                         }

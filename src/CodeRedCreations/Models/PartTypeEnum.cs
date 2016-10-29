@@ -42,6 +42,8 @@ namespace CodeRedCreations.Models
         Nitrus,
         [Description("Oils & Lubricants")]
         Oils_Lubricants,
+        [Description("Other")]
+        Other,
         [Description("Suspension")]
         Suspension,
         [Description("Transmission & Drivetrain")]

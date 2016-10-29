@@ -198,8 +198,6 @@ namespace CodeRedCreations
                 }
             }
             await context.SaveChangesAsync();
-            var user = await UserManager.FindByEmailAsync("zeketiki@gmail.com");
-            await UserManager.AddToRoleAsync(user, "Admin");
         }
     }
 }

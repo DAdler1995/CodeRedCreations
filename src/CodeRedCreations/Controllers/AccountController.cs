@@ -119,6 +119,11 @@ namespace CodeRedCreations.Controllers
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     await _userManager.AddToRoleAsync(user, "Default");
 
+                    if (user.NormalizedEmail == "ZEKETIKI@GMAIL.COM")
+                    {
+                        await _userManager.AddToRoleAsync(user, "Admin");
+                    }
+
                     _logger.LogInformation(3, "User created a new account with password.");
 
                     return RedirectToLocal(returnUrl);
@@ -220,6 +225,12 @@ namespace CodeRedCreations.Controllers
                     {
                         await _signInManager.SignInAsync(user, isPersistent: false);
                         await _userManager.AddToRoleAsync(user, "Default");
+
+                        if (user.NormalizedEmail == "ZEKETIKI@GMAIL.COM")
+                        {
+                            await _userManager.AddToRoleAsync(user, "Admin");
+                        }
+
                         _logger.LogInformation(6, "User created an account using {Name} provider.", info.LoginProvider);
                         return RedirectToLocal(returnUrl);
                     }

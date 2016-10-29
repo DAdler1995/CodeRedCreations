@@ -1,9 +1,10 @@
-﻿@model IEnumerable<PartModel>
+﻿@model IEnumerable<ProductModel>
 @using CodeRedCreations.Models;
+@using System.Globalization;
 @{
+    ViewData["Title"] = "Products";
 
     int columns = 3;
-
 
     var col = $"col-sm-{12 / columns}";
 
@@ -162,7 +163,7 @@ else
                 <div class="@col">
                     <div class="panel panel-default" style="height: 100%">
                         <div class="panel-heading">
-                            <h3 style="margin: 5px 0 0 0;">@item.Name</h3>
+                            <h4 style="margin: 5px 0 0 0;">@item.Name</h4>
                             <p class="small text-capitalize" style="margin: 0;">Brand: @item.Brand.Name <span class="pull-right">Car: @item.CompatibleCars.Make @item.CompatibleCars.Model</span></p>
                         </div>
                         <div class="panel-body" style="margin-bottom: 37px;">
@@ -176,8 +177,11 @@ else
                             </div>
                         </div>
                         <div class="panel-footer" style="position: absolute; bottom: 1px; left: 16px; right: 16px;">
-                            <a asp-area="" asp-controller="Parts" asp-action="Details" asp-route-id="@item.PartId">View Details</a>
-                            <span class="pull-right">@item.Price.ToString("C2")</span>
+                            <span>
+                                <a asp-area="" asp-controller="Parts" asp-action="Details" asp-route-id="@item.PartId">View Details</a> |
+                                <a asp-area="" asp-controller="ShoppingCart" asp-action="AddToCart" asp-route-id="@item.PartId">Add to Cart</a>
+                            </span>
+                            <span class="pull-right">@item.Price.ToString("C2", new CultureInfo("en-US"))</span>
                         </div>
                     </div>
                 </div>

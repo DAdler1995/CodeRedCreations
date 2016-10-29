@@ -1,0 +1,139 @@
+﻿@model CodeRedCreations.Models.ShoppingCartViewModel
+@using System.Globalization;
+@{
+    ViewData["Title"] = "Shopping Cart";
+    decimal shipping = 0m;
+    decimal subTotal = 0m;
+
+    var oldTotal = (double?)TempData["OldTotal"];
+    var newTotal = (double?)TempData["NewTotal"];
+}
+<h3>
+    @ViewData["Title"]
+    @if (Model.Parts != null)
+    {
+        if (Model.Parts.Count() == 1)
+        {
+            <span>
+                (@Model.Parts.Count() item)
+            </span>
+        }
+        else
+        {
+
+            <span>
+                (@Model.Parts.Count() items)
+            </span>
+        }
+    }
+</h3>
+<p>@TempData["Message"]</p>
+@if (Model.ShoppingCartStarted.Year != 0001)
+{
+    <p class="small">Shopping cart started on: @Model.ShoppingCartStarted.ToString("MM/dd/yyyy")</p>
+}
+
+@if (Model.Parts != null && Model.Parts.Count > 0)
+{
+    <p><a asp-area="" asp-controller="Parts" asp-action="Index">Continue Shopping</a> <a class="pull-right" asp-area="" asp-controller="ShoppingCart" asp-action="ClearCart" onclick="return confirm('Are you sure you wish to remove all ' + @Model.Parts.Count + ' product(s) from your cart?')">Clear Cart</a></p>
+    <hr />
+        <table class="table table-responsive">
+            <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th class="text-center">Brand</th>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>&nbsp;</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var product in Model.Parts)
+                {
+                    shipping += product.Shipping;
+                    subTotal += product.Price;
+
+                    string imgSrc;
+                    if (product.Images.Count > 0)
+                    {
+                        var imageBase64 = Convert.ToBase64String(product.Images.FirstOrDefault().Bytes);
+                        imgSrc = $"data:image/gif;base64, {imageBase64}";
+                    }
+                    else
+                    {
+                        imgSrc = "/images/Photo-Not-Available.png";
+                    }
+                    <tr>
+                        <td style="width: 100px;"><img class="img-responsive" src="@imgSrc" style="height: 50px; width: 100%" /></td>
+                        <td>@product.Brand.Name</td>
+                        <td>@product.Name</td>
+                        <td>@product.Price</td>
+                        <td class="text-right"><a asp-area="" asp-controller="ShoppingCart" asp-action="RemoveFromCart" asp-route-id="@product.PartId">Remove</a></td>
+                    </tr>
+                }
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <th colspan="2">&nbsp;</th>
+                    <th class="text-right">Subtotal</th>
+
+                    @if (newTotal != null && oldTotal != null)
+                {
+                        <th>
+                            @newTotal.Value.ToString("C2", new CultureInfo("en-US"))
+                            <br />
+                            <del>@subTotal.ToString("C2", new CultureInfo("en-US"))</del>
+                        </th>
+                    }
+                    else
+                    {
+                        <th>@subTotal.ToString("C2", new CultureInfo("en-US"))</th>
+                    }
+
+                    <th></th>
+                </tr>
+                <tr>
+                    <th colspan="2"></th>
+                    <th class="text-right">Shipping</th>
+                    <th>@shipping.ToString("C2", new CultureInfo("en-US"))</th>
+                    <th>&nbsp;</th>
+                </tr>
+                <tr>
+                    <th colspan="2"></th>
+                    <th class="text-right">Total</th>
+
+                    @if (newTotal != null && oldTotal != null)
+                {
+                        <th>
+                            @((shipping + (decimal)newTotal).ToString("C2", new CultureInfo("en-US")))
+                            <br />
+                            <del>@((shipping + subTotal).ToString("C2", new CultureInfo("en-US")))</del>
+                        </th>
+                    }
+                    else
+                    {
+                        <th>@((shipping + subTotal).ToString("C2", new CultureInfo("en-US")))</th>
+                    }
+
+                    <th>
+                        <form asp-controller="ShoppingCart" asp-action="PromoCode" method="post">
+                            <div class="input-group">
+                                <input placeholder="Promo Code" id="promoCode" name="promoCode" type="text" class="form-control" />
+                                <span class="input-group-btn">
+                                    <button type="submit" class="btn btn-default">Apply Promo Code</button>
+                                    <a class="btn btn-default" asp-area="" asp-controller="ShoppingCart" asp-action="Checkout"><span class="glyphicon glyphicon-shopping-cart"></span> Checkout</a>
+                                </span>
+                            </div>
+                        </form>
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
+}
+else
+{
+    <hr />
+    <p>You don't have any items in your cart currently. Please see our catalog of parts <a asp-area="" asp-controller="Parts" asp-action="Index">HERE</a> or use the navigation bar at the top of the page to find the part you're looking for.</p>
+}

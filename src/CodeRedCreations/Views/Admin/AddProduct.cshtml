@@ -91,7 +91,7 @@
                 <label asp-for="Part.CompatibleCars" class="col-md-2 control-label"></label>
                 <div class="col-md-10">
                     <select asp-for="Part.CompatibleCars.CarId" class="form-control">
-                        @foreach (var item in Model.Cars)
+                        @foreach (var item in Model.Cars.OrderBy(x => x.Make).ThenBy(x => x.Model))
                         {
                             <option value="@item.CarId">@item.Make - @item.Model</option>
                         }

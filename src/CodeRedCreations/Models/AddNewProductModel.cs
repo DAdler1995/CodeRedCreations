@@ -9,6 +9,6 @@ namespace CodeRedCreations.Models
         public IList<BrandModel> Brands { get; set; }
         public CarModel NewCar { get; set; }
         public IList<CarModel> Cars { get; set; }
-        public PartModel Part { get; set; }
+        public ProductModel Part { get; set; }
     }
 }

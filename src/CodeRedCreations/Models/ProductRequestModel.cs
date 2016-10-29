@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace CodeRedCreations.Models
 {
-    public class PartRequestModel
+    public class ProductRequestModel
     {
         [Key]
         public int RequestId { get; set; }
         [Required]
-        public virtual PartModel Part { get; set; }
+        public virtual ProductModel Part { get; set; }
 
         [EmailAddress, Display(Name = "Email Address")]
         public string FromEmail { get; set; }

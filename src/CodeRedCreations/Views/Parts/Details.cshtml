@@ -1,9 +1,10 @@
 ﻿@model ProductDetailsView
 @using CodeRedCreations.Models;
+@using System.Globalization;
 @{
     decimal? oldPrice = (decimal?)ViewData["OldPrice"];
-    var product = Model.PartModel;
-    ViewData["Title"] = $"{Model.PartModel.Brand.Name} - {Model.PartModel.Name}";
+    var product = Model.ProductModel;
+    ViewData["Title"] = $"{Model.ProductModel.Brand.Name} - {Model.ProductModel.Name}";
 }
 <div class="row row-eq-height">
     <div class="col-sm-6">
@@ -59,20 +60,21 @@
 
         @if (oldPrice == null)
         {
-            <h3 id="price" class="text-red">@product.Price.ToString("C2")</h3>
+            <h3 id="price" class="text-red">@product.Price.ToString("C2", new CultureInfo("en-US"))</h3>
         }
         else
         {
-            <h3 id="price" class="text-red">@product.Price.ToString("C2")</h3>
-            <h4 id="oldPrice"><del>@oldPrice.Value.ToString("C2")</del></h4>
+            <h3 id="price" class="text-red">@product.Price.ToString("C2", new CultureInfo("en-US"))</h3>
+            <h4 id="oldPrice"><del>@oldPrice.Value.ToString("C2", new CultureInfo("en-US"))</del></h4>
 
         }
+        <p>+@product.Shipping.ToString("C2", new CultureInfo("en-US")) shipping</p>
         <p class="small">Item #@product.PartId</p>
 
         <hr />
 
         <form asp-controller="Parts" asp-action="PromoCode">
-            <input hidden asp-for="PartModel.PartId" value="@product.PartId" />
+            <input hidden asp-for="ProductModel.PartId" value="@product.PartId" />
             <div class="input-group">
                 <input asp-for="PromoModel.Code" class="form-control" type="text" placeholder="Promo Code" />
                 <span class="input-group-btn">
@@ -85,21 +87,25 @@
         <br />
 
         <form asp-controller="Parts" asp-action="BuyNow">
-            <input hidden asp-for="PartModel.PartId" value="@product.PartId" />
+            <input hidden asp-for="ProductModel.PartId" value="@product.PartId" />
             @if (Model.PromoModel != null)
             {
                 <input hidden asp-for="PromoModel.Id" value="@Model.PromoModel.Id" />
             }
 
             <div class="input-group">
-                <input asp-for="Quantity" class="form-control" type="number" value="1" />
+                <input id="quantity" asp-for="Quantity" class="form-control" type="number" value="1" />
                 <span class="input-group-btn">
-                    <button type="submit" class="btn btn-default btn-block" onclick="$(this).addClass('disabled'); $('#buyNowResults').show('slow');">Buy Now</button>
+                    <button type="submit" class="btn btn-default" onclick="$(this).addClass('disabled'); $('#buyNowResults').show('slow');">Buy Now</button>
+                    <a id="addToCart" class="btn btn-default" asp-area="" asp-controller="ShoppingCart" asp-action="AddToCart" asp-route-id="@product.PartId" onclick="AddQuantity()"><span class="glyphicon glyphicon-shopping-cart"></span> Add to Cart</a>
                 </span>
             </div>
             <p style="display: none" id="buyNowResults">Redirecting to PayPal checkout. Please wait.</p>
         </form>
 
+        @*<br />
+
+        <a style="width: 100%;" class="btn btn-default" asp-area="" asp-controller="ShoppingCart" asp-action="AddToCart">Add to Cart</a>*@
 
     </div>
 </div>
@@ -141,6 +147,15 @@
 </div>
 
 <script>
+    function AddQuantity() {
+        var quantity = $('#quantity').val();
+        alert(quantity)
+
+        $('#addToCart').attr('href', function () {
+            return this.href + '?quantity=' + quantity;
+        });
+    }
+
     $('.carousel').hover(
         function () {
             $('.carousel-control').show('slow');
