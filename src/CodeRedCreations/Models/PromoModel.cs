@@ -21,5 +21,8 @@ namespace CodeRedCreations.Models
         public decimal? DiscountPercentage { get; set; }
         [Display(Name = "Discount Amount")]
         public decimal? DiscountAmount { get; set; }
+        public int TimesUsed { get; set; }
+        [Display(Name = "How many times can the promo be used")]
+        public int? UsageLimit { get; set; }
     }
 }

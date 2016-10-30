@@ -103,10 +103,6 @@
             <p style="display: none" id="buyNowResults">Redirecting to PayPal checkout. Please wait.</p>
         </form>
 
-        @*<br />
-
-        <a style="width: 100%;" class="btn btn-default" asp-area="" asp-controller="ShoppingCart" asp-action="AddToCart">Add to Cart</a>*@
-
     </div>
 </div>
 
@@ -149,7 +145,6 @@
 <script>
     function AddQuantity() {
         var quantity = $('#quantity').val();
-        alert(quantity)
 
         $('#addToCart').attr('href', function () {
             return this.href + '?quantity=' + quantity;

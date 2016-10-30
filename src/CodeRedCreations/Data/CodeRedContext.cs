@@ -6,7 +6,7 @@ namespace CodeRedCreations.Data
 {
     public class CodeRedContext : IdentityDbContext<ApplicationUser>
     {
-        public CodeRedContext(DbContextOptions options)
+        public CodeRedContext(DbContextOptions<CodeRedContext> options)
             : base(options)
         {
         }

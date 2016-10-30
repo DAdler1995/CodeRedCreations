@@ -23,7 +23,7 @@ namespace CodeRedCreations.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string part, string brand, string car)
+        public async Task<IActionResult> Index(string part = "All", string brand = "All", string car = "All")
         {
 
             var carDict = new Dictionary<string, string>();
@@ -131,10 +131,14 @@ namespace CodeRedCreations.Controllers
             {
                 model.PromoModel = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == model.PromoModel.Id);
                 model.ProductModel.Price = ApplyPromoCode(model);
+
             }
 
             if (model.ProductModel != null)
             {
+                var promo = model.PromoModel;
+                promo.TimesUsed++;
+                await _context.SaveChangesAsync();
 
 
                 var url = (HttpContext.Request.Host.Host.Normalize().Contains("LOCALHOST")) ?
@@ -185,30 +189,34 @@ namespace CodeRedCreations.Controllers
 
             if (promo != null && promo.Enabled)
             {
-                if (promo.ExpirationDate == null || promo.ExpirationDate > DateTime.UtcNow)
+                if (promo.UsageLimit == null || promo.TimesUsed <= promo.UsageLimit)
                 {
-                    if (promo.ApplicableParts.Count() == 0 || promo.ApplicableParts.FirstOrDefault(x => x.PartId == part.PartId) != null)
+                    if (promo.ExpirationDate == null || promo.ExpirationDate > DateTime.UtcNow)
                     {
-                        if (promo.DiscountAmount != null)
+                        if (promo.ApplicableParts.Count() == 0 || promo.ApplicableParts.FirstOrDefault(x => x.PartId == part.PartId) != null)
                         {
-                            price = Math.Round((price - (decimal)promo.DiscountAmount), 2);
-                        }
-                        else
-                        {
-                            var percent = ((decimal)promo.DiscountPercentage / 100);
-                            var discount = Math.Round((price * percent), 2);
+                            if (promo.DiscountAmount != null)
+                            {
+                                price = Math.Round((price - (decimal)promo.DiscountAmount), 2);
+                            }
+                            else
+                            {
+                                var percent = ((decimal)promo.DiscountPercentage / 100);
+                                var discount = Math.Round((price * percent), 2);
 
-                            price = (price - discount);
-                        }
+                                price = (price - discount);
+                            }
 
-                        TempData["Message"] = "The promo code has been successfully applied.";
+                            TempData["Message"] = "The promo code has been successfully applied.";
+                            return price;
+                        }
+                        TempData["Message"] = $"The promo has already reached its limit of {promo.UsageLimit}";
                         return price;
                     }
+                    TempData["Message"] = "This promo code has expired.";
+                    return price;
                 }
-                TempData["Message"] = "This promo code has expired.";
-                return price;
             }
-
             TempData["Message"] = "This promo code is invalid.";
             return price;
         }

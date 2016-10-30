@@ -17,7 +17,9 @@
             <th>Discount Percentage</th>
             <th>Discount Amount</th>
             <th>Expiration Date</th>
+            <th class="text-center">Times Used</th>
             <th class="text-center">Enabled Status</th>
+
             <th></th>
             <th class="text-right"><a asp-controller="Admin" asp-action="UpsertPromo">+</a></th>
         </tr>
@@ -47,6 +49,14 @@
                 <td>@((code.DiscountPercentage != null) ? $"{code.DiscountPercentage}%" : "N/A")</td>
                 <td>@((code.DiscountAmount != null) ? $"${code.DiscountAmount}" : "N/A")</td>
                 <td>@((code.ExpirationDate != null) ? $"{code.ExpirationDate.Value.ToLocalTime().Date}" : "N/A")</td>
+                <td class="text-center">
+                    @code.TimesUsed 
+                    @if (code.UsageLimit != null)
+                    {
+                        <span> / @code.UsageLimit</span>
+                    }
+                </td>
+
                 <td class="text-center">
                     <a asp-controller="Admin" asp-action="TogglePromo" asp-route-id="@code.Id">@(code.Enabled ? "Disable" : "Enable")</a>
                 </td>

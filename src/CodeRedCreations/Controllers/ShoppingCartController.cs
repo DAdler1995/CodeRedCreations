@@ -144,6 +144,14 @@ namespace CodeRedCreations.Controllers
             {
                 int productCount = 1;
                 var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
+
+                if (cart.PromoId != null)
+                {
+                    var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Id == cart.PromoId);
+                    promo.TimesUsed++;
+                    await _context.SaveChangesAsync();
+                }
+
                 var builder = new StringBuilder();
                 builder.Append(url);
                 builder.Append($"?cmd=_cart&upload=1&business={UrlEncoder.Default.Encode("zeketiki@gmail.com")}");
@@ -174,28 +182,46 @@ namespace CodeRedCreations.Controllers
         {
             var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Code.ToUpper().Replace(" ", "") == promoCode.ToUpper().Replace(" ", ""));
             var session = HttpContext.Session.GetString(sessionKey);
+
             if (promo != null && session != null)
             {
                 if (promo.Enabled)
                 {
-                    if (promo.ExpirationDate == null || promo.ExpirationDate > DateTime.UtcNow)
+                    if (promo.UsageLimit == null || promo.TimesUsed <= promo.UsageLimit)
                     {
-                        var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
-
-                        if (cart.PromoId != null)
+                        if (promo.ExpirationDate == null || promo.ExpirationDate > DateTime.UtcNow)
                         {
+                            var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
+
+                            if (cart.PromoId != null)
+                            {
+                                foreach (var product in cart.Parts)
+                                {
+                                    product.Price = (await _context.Products.FirstOrDefaultAsync(x => x.PartId == product.PartId)).Price;
+                                }
+                            }
+
+                            cart.PromoId = promo.Id;
                             foreach (var product in cart.Parts)
                             {
-                                product.Price = (await _context.Products.FirstOrDefaultAsync(x => x.PartId == product.PartId)).Price;
-                            }
-                        }
+                                if (promo.ApplicableParts != null)
+                                {
+                                    if (promo.ApplicableParts.FirstOrDefault(x => x.PartId == product.PartId) != null)
+                                    {
+                                        if (promo.DiscountAmount != null)
+                                        {
+                                            product.Price = (product.Price - (decimal)promo.DiscountAmount);
+                                        }
+                                        else
+                                        {
+                                            var percent = ((decimal)promo.DiscountPercentage / 100);
+                                            var discount = (product.Price * percent);
 
-                        cart.PromoId = promo.Id;
-                        foreach (var product in cart.Parts)
-                        {
-                            if (promo.ApplicableParts != null)
-                            {
-                                if (promo.ApplicableParts.FirstOrDefault(x => x.PartId == product.PartId) != null)
+                                            product.Price = Math.Round((product.Price - discount), 2);
+                                        }
+                                    }
+                                }
+                                else
                                 {
                                     if (promo.DiscountAmount != null)
                                     {
@@ -210,37 +236,24 @@ namespace CodeRedCreations.Controllers
                                     }
                                 }
                             }
-                            else
-                            {
-                                if (promo.DiscountAmount != null)
-                                {
-                                    product.Price = (product.Price - (decimal)promo.DiscountAmount);
-                                }
-                                else
-                                {
-                                    var percent = ((decimal)promo.DiscountPercentage / 100);
-                                    var discount = (product.Price * percent);
 
-                                    product.Price = Math.Round((product.Price - discount), 2);
-                                }
-                            }
+                            var serializedCart = await Task.Factory.StartNew(() => JsonConvert.SerializeObject(cart, Formatting.Indented,
+                                new JsonSerializerSettings
+                                {
+                                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                                }));
+                            HttpContext.Session.SetString(sessionKey, serializedCart);
+
+                            TempData["Message"] = "This promo code has been successfully applied.";
+                            return RedirectToAction("Index");
                         }
-
-                        var serializedCart = await Task.Factory.StartNew(() => JsonConvert.SerializeObject(cart, Formatting.Indented,
-                            new JsonSerializerSettings
-                            {
-                                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                            }));
-                        HttpContext.Session.SetString(sessionKey, serializedCart);
-
-                        TempData["Message"] = "This promo code has been successfully applied.";
+                        TempData["Message"] = "This promo code has expired.";
                         return RedirectToAction("Index");
                     }
                     TempData["Message"] = "This promo code has expired.";
+                    return RedirectToAction("Index");
                 }
-                TempData["Message"] = "This promo code has expired.";
             }
-
             return RedirectToAction("Index");
         }
 

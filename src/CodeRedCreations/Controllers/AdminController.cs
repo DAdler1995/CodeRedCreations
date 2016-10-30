@@ -95,13 +95,7 @@ namespace CodeRedCreations.Controllers
         public async Task<IActionResult> UpsertPromo(PromoModel promo, IEnumerable<int> PartIds)
         {
             promo.Code = promo.Code.ToUpper();
-            if (await _context.Promos.AnyAsync(x => x.Code.ToUpper() == promo.Code))
-            {
-                TempData["Message"] = $"A promo already exists with the code: {promo.Code.ToUpper()}";
-                ModelState.AddModelError("Promo Code", "Promo code already exists.");
-                return RedirectToAction("UpsertPromo");
-            }
-
+            promo.UsageLimit = (promo.UsageLimit != null && promo.UsageLimit == 0) ? null : promo.UsageLimit;
             if (promo.ExpirationDate.HasValue)
             {
                 promo.ExpirationDate = promo.ExpirationDate.Value.ToUniversalTime();
@@ -128,10 +122,18 @@ namespace CodeRedCreations.Controllers
                 existing.ApplicableParts = promo.ApplicableParts;
                 existing.DiscountPercentage = promo.DiscountPercentage;
                 existing.DiscountAmount = promo.DiscountAmount;
+                existing.UsageLimit = promo.UsageLimit;
                 TempData["Message"] = "Promo successfully updated.";
             }
             else
             {
+                if (await _context.Promos.AnyAsync(x => x.Code.ToUpper() == promo.Code))
+                {
+                    TempData["Message"] = $"A promo already exists with the code: {promo.Code.ToUpper()}";
+                    ModelState.AddModelError("Promo Code", "Promo code already exists.");
+                    return RedirectToAction("UpsertPromo");
+                }
+
                 _context.Promos.Add(promo);
                 TempData["Message"] = "Promo successfully added.";
             }

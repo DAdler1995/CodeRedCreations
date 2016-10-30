@@ -1,4 +1,5 @@
 ﻿@model CodeRedCreations.Models.NavbarViewModel
+@using System.Text.Encodings.Web;
 @{
     var dictionary = new Dictionary<string, string>();
 
@@ -125,7 +126,7 @@
                     </li>
                 </ul>
             </li>
-            <li><a asp-controller="Parts" asp-action="Request">Request a Part</a></li>
+            <li><a href="mailto:Request@CodeRedPerformance.com?subject=Request%20A%20Part">Request a Part</a></li>
             <li><a asp-controller="Home" asp-action="About">About</a></li>
             <li class="hidden"><a asp-controller="Home" asp-action="">Media</a></li>
             <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>

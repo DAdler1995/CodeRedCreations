@@ -8,9 +8,10 @@ using CodeRedCreations.Data;
 namespace CodeRedCreations.Data.Migrations
 {
     [DbContext(typeof(CodeRedContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20161029185703_PromoTimesUsedAdded")]
+    partial class PromoTimesUsedAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.1")
@@ -171,8 +172,6 @@ namespace CodeRedCreations.Data.Migrations
                     b.Property<DateTime?>("ExpirationDate");
 
                     b.Property<int>("TimesUsed");
-
-                    b.Property<int?>("UsageLimit");
 
                     b.HasKey("Id");
 

@@ -1,5 +1,6 @@
-﻿@model CodeRedCreations.Models.ShoppingCartViewModel
+﻿@model ShoppingCartViewModel
 @using System.Globalization;
+@using CodeRedCreations.Models;
 @{
     ViewData["Title"] = "Shopping Cart";
     decimal shipping = 0m;
@@ -66,9 +67,10 @@
                     }
                     <tr>
                         <td style="width: 100px;"><img class="img-responsive" src="@imgSrc" style="height: 50px; width: 100%" /></td>
-                        <td>@product.Brand.Name</td>
-                        <td>@product.Name</td>
-                        <td>@product.Price</td>
+                        <td><a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="@product.Brand.Name" asp-route-car="All">@product.Brand.Name</a></td>
+                        <td><a asp-controller="Parts" asp-action="Details" asp-route-id="@product.PartId">@product.Name</a></td>
+
+                        <td>@product.Price.ToString("C2", new CultureInfo("en-US"))</td>
                         <td class="text-right"><a asp-area="" asp-controller="ShoppingCart" asp-action="RemoveFromCart" asp-route-id="@product.PartId">Remove</a></td>
                     </tr>
                 }
