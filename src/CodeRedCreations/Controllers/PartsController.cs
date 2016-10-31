@@ -11,15 +11,24 @@ using System.Text.Encodings.Web;
 using MimeKit;
 using MimeKit.Text;
 using MailKit.Net.Smtp;
+using CodeRedCreations.Services;
+using Microsoft.AspNetCore.Identity;
 
 namespace CodeRedCreations.Controllers
 {
     public class PartsController : Controller
     {
         private CodeRedContext _context;
-        public PartsController(CodeRedContext context)
+        private readonly IEmailSender _emailSender;
+        private readonly UserManager<ApplicationUser> _userManager;
+        public PartsController(
+            CodeRedContext context,
+            UserManager<ApplicationUser> userManager,
+            IEmailSender emailSender)
         {
             _context = context;
+            _userManager = userManager;
+            _emailSender = emailSender;
         }
 
         [HttpGet]
@@ -90,7 +99,6 @@ namespace CodeRedCreations.Controllers
         [HttpGet]
 #pragma warning disable CS0108 // Member hides inherited member; missing new keyword
         public IActionResult Request()
-#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
         {
             return View(new ProductRequestModel());
         }
@@ -98,30 +106,20 @@ namespace CodeRedCreations.Controllers
         [HttpPost]
 #pragma warning disable CS0108 // Member hides inherited member; missing new keyword
         public async Task<IActionResult> Request(ProductRequestModel request)
-#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
         {
             if (ModelState.IsValid)
             {
-                var email = new MimeMessage();
-
-                var body = $"<p>New part request from: {request.FromEmail}</p><dl><dt>Brand Name</dt><dd>{request.Part.Brand.Name}</dd><dt>Part Name</dt><dd>{request.Part.Name}</dd><dt>Part Type</dt><dd>{request.Part.PartType}</dd></dl>";
-
-                email.From.Add(new MailboxAddress(request.FromEmail, request.FromEmail));
-                email.To.Add(new MailboxAddress("Dakota", "Zeketiki@gmail.com"));
-                email.Subject = "New Part Request";
-                email.Body = new TextPart(TextFormat.Html) { Text = body };
-
-                using (var smtp = new SmtpClient())
-                {
-                    smtp.Connect("smtp.gmail.com", 587);
-                    await smtp.SendAsync(email);
-                    smtp.Disconnect(true);
-                }
+                var from = (request.FromEmail != null) ? request.FromEmail : "Anonymous";
+                var body = $"<p>New part request from: {from}</p><dl><dt>Brand Name:</dt><dd>{request.Part.Brand.Name}</dd><dt>Part Name:</dt><dd>{request.Part.Name}</dd><dt>Part Type:</dt><dd>{request.Part.PartType}</dd></dl>";
+                await _emailSender.SendEmailAsync("Zeketiki@gmail.com", "Product Request","Part Request", body);
 
                 TempData["Message"] = "Request sent!";
+                return RedirectToAction("Request");
             }
 
+            TempData["Message"] = "Request failed to send.";
             return View(request);
+
         }
 
         public async Task<IActionResult> BuyNow(ProductDetailsView model)
@@ -130,17 +128,15 @@ namespace CodeRedCreations.Controllers
             if (model.PromoModel != null)
             {
                 model.PromoModel = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == model.PromoModel.Id);
+                var promo = model.PromoModel;
+                var timesUsed = promo.TimesUsed;
                 model.ProductModel.Price = ApplyPromoCode(model);
-
+                timesUsed++;
+                await _context.SaveChangesAsync();
             }
 
             if (model.ProductModel != null)
             {
-                var promo = model.PromoModel;
-                promo.TimesUsed++;
-                await _context.SaveChangesAsync();
-
-
                 var url = (HttpContext.Request.Host.Host.Normalize().Contains("LOCALHOST")) ?
                     "https://www.sandbox.paypal.com/us/cgi-bin/webscr" : "https://www.paypal.com/us/cgi-bin/webscr";
 

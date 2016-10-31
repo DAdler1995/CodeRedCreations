@@ -1,4 +1,4 @@
-﻿@model PartRequestModel
+﻿@model ProductRequestModel
 @using CodeRedCreations.Models;
 @{
     ViewData["Title"] = "Request a Product";
@@ -14,13 +14,15 @@
     <hr />
 
     <form asp-controller="Parts" asp-action="Request" method="post" class="form-horizontal">
+        <input value="tempValue" asp-for="Part.Description" hidden="hidden" class="hidden" />
+        <input value="tempValue" asp-for="Part.Brand.Description" hidden="hidden" class="hidden" />
         <div asp-validation-summary="All" class="text-danger"></div>
         <div class="form-group">
             <label asp-for="FromEmail" class="control-label col-md-2"></label>
             <div class="col-md-10">
                 <div class="input-group">
                     <input asp-for="FromEmail" type="email" class="form-control" />
-                    <a class="input-group-addon" data-html="true" data-placement="left" href="#" data-toggle="popover" data-trigger="hover" title="What We Do With Your Email" data-content="The email address is simply used so that we can let you know if your suggestion has been successful. In the future when a suggestion is successful we'll supply a promocode to you. <hr /><strong>NOT A REQUIRED TO REQUEST A PART</strong>"><span class="glyphicon glyphicon-question-sign"></span></a>
+                    <a class="input-group-addon" data-html="true" data-placement="left" href="#" data-toggle="popover" data-trigger="hover" title="What We Do With Your Email" data-content="The email address is simply used so that we can let you know if your suggestion has been successful. If your suggestion is successful we'll supply you with a promo code for that product. <hr /><strong>NOT A REQUIRED TO REQUEST A PART</strong>"><span class="glyphicon glyphicon-question-sign"></span></a>
                 </div>
                 <span asp-validation-for="FromEmail"></span>
             </div>

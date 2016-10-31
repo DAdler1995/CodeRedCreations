@@ -19,6 +19,8 @@ namespace CodeRedCreations
 {
     public class Startup
     {
+        public IConfigurationRoot Configuration { get; set; }
+
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -39,8 +41,6 @@ namespace CodeRedCreations
             Configuration = builder.Build();
         }
 
-        public IConfigurationRoot Configuration { get; }
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -55,7 +55,7 @@ namespace CodeRedCreations
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<CodeRedContext>()
                 .AddDefaultTokenProviders();
-
+            
             services.Configure<MvcOptions>(options =>
             {
                 options.Filters.Add(new RequireHttpsAttribute());
@@ -90,6 +90,8 @@ namespace CodeRedCreations
             {
                 options.Filters.Add(new RequireHttpsAttribute());
             });
+
+            services.Configure<CodeRedPerformanceSettings>(Configuration.GetSection("AppSettings:CodeRedPerformanceSettings"));
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
