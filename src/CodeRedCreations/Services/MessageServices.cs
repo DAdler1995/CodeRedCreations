@@ -29,11 +29,8 @@ namespace CodeRedCreations.Services
 
             using (var client = new SmtpClient())
             {
-                //var username = _settings.Value.SendGridUsername;
-                //var password = _settings.Value.SendGridPassword;
-
-                var username = "azure_b058dcf0c8d19e3a31d9bc5529eed72d@azure.com";
-                var password = "albert26";
+                var username = _settings.Value.SendGridUsername;
+                var password = _settings.Value.SendGridPassword;
 
                 var localDomain = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
 
