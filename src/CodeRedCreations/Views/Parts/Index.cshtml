@@ -1,14 +1,16 @@
 ﻿@model IEnumerable<ProductModel>
 @using CodeRedCreations.Models;
 @using System.Globalization;
+@using System.Text;
 @{
     ViewData["Title"] = "Products";
 
-    int columns = 3;
+    var allCars = (List<CarModel>)ViewData["allCars"];
+    var columns = 3;
+    var col = $"col-md-{12 / columns}";
+    var allMakes = allCars.OrderBy(x => x.Make).Select(x => x.Make).Distinct();
 
-    var col = $"col-sm-{12 / columns}";
-
-    var partType = (ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : EnumString.GetEnumDescription((PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), ViewContext.RouteData.Values["part"].ToString()));
+    var partType = (ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : ViewContext.RouteData.Values["part"].ToString();
     var brand = ViewContext.RouteData.Values["brand"];
     var car = ViewContext.RouteData.Values["car"];
 
@@ -19,20 +21,22 @@
     }
 
     var allBrands = (List<string>)ViewData["allBrands"];
-    var allCars = (Dictionary<string, string>)ViewData["allCars"];
     var carMakes = new List<string>();
+    var carModels = new List<string>();
 
+    int page = (int)ViewData["page"];
+    int partCount = (int)ViewData["partCount"];
 }
 
-<div class="row">
+<div class="row yamm">
     <div class="col-xs-12">
         <ul class="list-inline">
             <li style="width: 100%;">
-                <h3 style="margin-top: 0;">Filter Parts<span class="pull-right">@ViewData["partCount"] parts found</span></h3>
+                <h3 style="margin-top: 0;">Filter Parts<span class="pull-right">@partCount parts found</span></h3>
                 <ul class="list-inline">
                     <li class="dropdown">
                         Part Type:
-                        <a href="#partType" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@partType <span class="caret"></span></strong></a>
+                        <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@((ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : EnumString.GetEnumDescription((PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), ViewContext.RouteData.Values["part"].ToString()))) <span class="caret"></span></strong></a>
                         <ul class="dropdown-menu" role="menu">
                             <li>
                                 <div class="yamm-content">
@@ -41,12 +45,10 @@
                                             <ul class="list-unstyled">
                                                 <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="@brand" asp-route-car="@car">All</a></strong></li>
                                                 <li class="divider"></li>
-
                                                 @foreach (var type in allPartTypes)
                                                 {
                                                     <li><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@type.Key" asp-route-brand="@brand" asp-route-car="@car">@type.Value</a></li>
                                                 }
-
                                             </ul>
                                         </div>
                                     </div>
@@ -54,10 +56,9 @@
                             </li>
                         </ul>
                     </li>
-
                     <li class="dropdown">
                         Brand:
-                        <a href="#brand" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@brand <span class="caret"></span></strong></a>
+                        <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@brand <span class="caret"></span></strong></a>
                         <ul class="dropdown-menu" role="menu">
                             <li>
                                 <div class="yamm-content">
@@ -66,12 +67,10 @@
                                             <ul class="list-unstyled">
                                                 <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="All" asp-route-car="@car">All</a></strong></li>
                                                 <li class="divider"></li>
-
                                                 @foreach (var b in allBrands)
                                                 {
                                                     <li><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@b" asp-route-car="@car">@b</a></li>
                                                 }
-
                                             </ul>
                                         </div>
                                     </div>
@@ -79,38 +78,73 @@
                             </li>
                         </ul>
                     </li>
-
                     <li class="dropdown">
                         Car:
-                        <a href="#car" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@car <span class="caret"></span></strong></a>
-                        <ul class="dropdown-menu" role="menu">
+                        <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@car <span class="caret"></span></strong></a>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="dCars">
                             <li>
                                 <div class="yamm-content">
                                     <div class="row">
-                                        <div class="col-xs-12">
+                                        <div class="col-md-12">
                                             <ul class="list-unstyled">
                                                 <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="All">All</a></strong></li>
                                                 <li class="divider"></li>
-                                                @foreach (var c in allCars)
-                                                {
-                                                    if (!carMakes.Contains(c.Value))
-                                                    {
-                                                        <li class="dropdown-header">@c.Value</li>
-                                                        foreach (var item in allCars.Where(x => x.Value == c.Value).OrderBy(x => x.Key))
-                                                        {
-                                                            <li><a asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="@item.Key">@item.Key</a></li>
-                                                        }
-                                                        carMakes.Add(c.Value);
-                                                        <li class="divider"></li>
-                                                    }
-
-                                                }
                                             </ul>
                                         </div>
+                                    </div>
+                                    <div class="row">
+                                        @foreach (var split in allMakes.Split(4))
+                                        {
+                                            <div class="col-md-3">
+                                                <ul class="list-unstyled">
+                                                    @foreach (var make in split)
+                                                    {
+                                                        <li>&nbsp;</li>
+                                                        <li class="dropdown-header" style="min-width: 150px"><strong>@make</strong></li>
+                                                            <li class="divider"></li>
+
+                                                            @foreach (var item in allCars.Where(x => x.Make == make).OrderBy(x => x.Model).Select(x => x.Model))
+                                                            {
+                                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="@item">@item</a></li>
+                                                            }
+                                                    }
+                                                </ul>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                             </li>
                         </ul>
+                    </li>
+
+                    <li>
+                        <div class="col-md-3" style="padding: 0; margin-top: 3px;">
+                            <form asp-action="Index" asp-controller="Parts" method="get">
+                                <input hidden="hidden" class="hidden" name="part" id="part" value="@((ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : EnumString.GetEnumDescription((PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), ViewContext.RouteData.Values["part"].ToString())))" />
+                                <input hidden="hidden" class="hidden" name="brand" id="brand" value="@brand" />
+                                <input hidden="hidden" class="hidden" name="car" id="car" value="@car" />
+                                <div class="input-group">
+                                    <input name="search" id="search" placeholder="Search" class="form-control" value="@((ViewData["Search"] != null) ? ViewData["Search"].ToString() : "")" />
+                                    <span class="input-group-btn">
+                                        <button type="submit" class="btn btn-default">Search</button>
+                                    </span>
+                                </div>
+                            </form>
+                        </div>
+                        @if ((int)((partCount + 1) / 54) > 1)
+                        {
+                            <div class="col-md-3 col-md-offset-6" style="padding: 0; margin-top: 3px;">
+                                <ul class="pagination pull-right" style="margin-top: 0;">
+                                    @for (int i = 1; i < Math.Ceiling((double)(partCount / 53)) + 2; i++)
+                                    {
+                                        <li class="@((page == i) ? "active" : "")">
+                                            <a asp-controller="Parts" asp-action="Index"
+                                               asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="@car" asp-route-page="@i">@i</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
                     </li>
                 </ul>
             </li>
@@ -118,21 +152,17 @@
     </div>
 </div>
 
-
 @if (Model.Count() == 0)
 {
     <div class="row">
         <div class="col-xs-12">
             <h3>No products found.</h3>
-
             <p>Hello there, it seems like there are no products found in the store that matched:</p>
             <dl class="dl-horizontal">
                 <dt>Part Type:</dt>
                 <dd>@partType</dd>
-
                 <dt>Brand:</dt>
                 <dd>@brand</dd>
-
                 <dt>Car:</dt>
                 <dd>@car</dd>
             </dl>
@@ -145,47 +175,93 @@
 }
 else
 {
-    @for (int i = 0; i < Model.Count(); i += columns)
-    {
-        <div class="row row-eq-height">
-            @foreach (var item in Model.OrderBy(x => x.Name).ThenBy(x => x.Brand.Name).Skip(i).Take(columns))
-            {
-                string imgSrc;
-                if (item.Images.Count > 0)
-                {
-                    var imageBase64 = Convert.ToBase64String(item.Images.FirstOrDefault().Bytes);
-                    imgSrc = $"data:image/gif;base64, {imageBase64}";
-                }
-                else
-                {
-                    imgSrc = "/images/Photo-Not-Available.png";
-                }
-                <div class="@col">
-                    <div class="panel panel-default" style="height: 100%">
-                        <div class="panel-heading">
-                            <h4 style="margin: 5px 0 0 0;">@item.Name</h4>
-                            <p class="small text-capitalize" style="margin: 0;">Brand: @item.Brand.Name <span class="pull-right">Car: @item.CompatibleCars.Make @item.CompatibleCars.Model</span></p>
-                        </div>
-                        <div class="panel-body" style="margin-bottom: 37px;">
-                            <div class="row row-eq-height">
-                                <div class="col-sm-4">
-                                    <img class="img-responsive" src="@imgSrc">
+    <cache expires-after="@TimeSpan.FromHours(12)" vary-by="@($"{Context.Request.Path}{Context.Request.QueryString}")">
+        @for (int i = 0; i < Model.Count(); i += columns)
+        {
+            <div class="row row-eq-height">
+                @foreach (var item in Model.OrderBy(x => x.Name).ThenBy(x => x.Brand.Name).Skip(i).Take(columns))
+                    {
+                        string imgSrc;
+                        if (item.Images.Count > 0)
+                        {
+                            var imageBase64 = Convert.ToBase64String(item.Images.FirstOrDefault().Bytes);
+                            imgSrc = $"data:image/gif;base64, {imageBase64}";
+                        }
+                        else
+                        {
+                            imgSrc = "/images/Photo-Not-Available.png";
+                        }
+                        <div class="@col">
+                            <div class="panel panel-default" style="height: 100%">
+                                <div class="panel-heading">
+                                    <h5 style="margin: 5px 0 0 0;">@item.Name</h5>
+                                    <p class="small text-capitalize" style="margin: 0;">
+                                        Brand: @item.Brand.Name
+                                    </p>
+                                    <p class="small" style="margin: 0;">
+                                        @if (item.CarProducts.Select(x => x.Car).Count() == 0)
+                                        {
+                                            <span>Car: All</span>
+                                        }
+                                        else if (item.CarProducts.Select(x => x.Car).Count() == 1)
+                                        {
+                                            var onlyCar = item.CarProducts.Select(x => x.Car).FirstOrDefault();
+                                            <span>
+                                                Car: <span class="text-red" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" data-trigger="hover" data-content="@item.Years">@onlyCar.Make @onlyCar.Model</span>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            var builder = new StringBuilder();
+                                            foreach (var compatible in item.CarProducts.Select(x => x.Car).OrderBy(x => x.Make).ThenBy(x => x.Model))
+                                            {
+                                                builder.Append($"{compatible.Make} {compatible.Model}: {item.Years}<br />");
+                                            }
+
+                                            <span>
+                                                Car: <a href="#" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" data-trigger="hover" data-content="@builder.ToString()">See all</a>
+                                            </span>
+                                        }
+                                    </p>
                                 </div>
-                                <div class="col-sm-8">
-                                    <p class="truncate">@item.Description</p>
+                                <div class="panel-body" style="margin-bottom: 37px;">
+                                    <div class="row row-eq-height">
+                                        <div class="col-sm-4">
+                                            <img class="img-responsive" src="@imgSrc">
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <p class="truncate">@item.Description</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel-footer" style="position: absolute; bottom: 1px; left: 16px; right: 16px;">
+                                    <span>
+                                        <a asp-area="" asp-controller="Parts" asp-action="Details" asp-route-id="@item.PartId">View Details</a> |
+                                        <a asp-area="" asp-controller="ShoppingCart" asp-action="AddToCart" asp-route-id="@item.PartId">Add to Cart</a>
+                                    </span>
+                                    <span class="pull-right">@item.Price.ToString("C2", new CultureInfo("en-US"))</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="panel-footer" style="position: absolute; bottom: 1px; left: 16px; right: 16px;">
-                            <span>
-                                <a asp-area="" asp-controller="Parts" asp-action="Details" asp-route-id="@item.PartId">View Details</a> |
-                                <a asp-area="" asp-controller="ShoppingCart" asp-action="AddToCart" asp-route-id="@item.PartId">Add to Cart</a>
-                            </span>
-                            <span class="pull-right">@item.Price.ToString("C2", new CultureInfo("en-US"))</span>
-                        </div>
-                    </div>
+                }
+            </div>
+        }
+    </cache>
+
+        @if ((int)((partCount + 1) / 54) > 1)
+        {
+            <div class="row">
+                <div style="text-align: center;">
+                    <ul class="pagination">
+                        @for (int i = 1; i < Math.Ceiling((double)(partCount / 53)) + 2; i++)
+                    {
+                            <li class="@((page == i) ? "active" : "")">
+                                <a asp-controller="Parts" asp-action="Index"
+                                   asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="@car" asp-route-page="@i">@i</a>
+                            </li>
+                        }
+                    </ul>
                 </div>
-            }
-        </div>
-    }
+            </div>
+        }
 }

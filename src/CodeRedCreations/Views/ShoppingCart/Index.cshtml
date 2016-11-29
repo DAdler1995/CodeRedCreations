@@ -1,13 +1,16 @@
 ﻿@model ShoppingCartViewModel
 @using System.Globalization;
 @using CodeRedCreations.Models;
+@using System.Text;
 @{
     ViewData["Title"] = "Shopping Cart";
     decimal shipping = 0m;
     decimal subTotal = 0m;
+    decimal tax = 0m;
+    decimal taxRate = Math.Round((decimal)8 / 100, 2);
 
-    var oldTotal = (double?)TempData["OldTotal"];
-    var newTotal = (double?)TempData["NewTotal"];
+    decimal? oldTotal = (decimal?)TempData["OldTotal"];
+    decimal? newTotal = (decimal?)TempData["NewTotal"];
 }
 <h3>
     @ViewData["Title"]
@@ -28,32 +31,31 @@
         }
     }
 </h3>
-<p>@TempData["Message"]</p>
 @if (Model.ShoppingCartStarted.Year != 0001)
 {
     <p class="small">Shopping cart started on: @Model.ShoppingCartStarted.ToString("MM/dd/yyyy")</p>
 }
-
 @if (Model.Parts != null && Model.Parts.Count > 0)
 {
     <p><a asp-area="" asp-controller="Parts" asp-action="Index">Continue Shopping</a> <a class="pull-right" asp-area="" asp-controller="ShoppingCart" asp-action="ClearCart" onclick="return confirm('Are you sure you wish to remove all ' + @Model.Parts.Count + ' product(s) from your cart?')">Clear Cart</a></p>
     <hr />
-        <table class="table table-responsive">
-            <thead>
-                <tr>
-                    <th>&nbsp;</th>
-                    <th class="text-center">Brand</th>
-                    <th>Product</th>
-                    <th>Price</th>
-                    <th>&nbsp;</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var product in Model.Parts)
+    <table class="table table-responsive">
+        <thead>
+            <tr>
+                <th>&nbsp;</th>
+                <th class="text-center">Brand</th>
+                <th>Product</th>
+                <th>Price</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Model.Parts)
                 {
                     shipping += product.Shipping;
                     subTotal += product.Price;
+
+                    var cars = product.CarProducts.Select(x => x.Car);
 
                     string imgSrc;
                     if (product.Images.Count > 0)
@@ -68,71 +70,124 @@
                     <tr>
                         <td style="width: 100px;"><img class="img-responsive" src="@imgSrc" style="height: 50px; width: 100%" /></td>
                         <td><a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="@product.Brand.Name" asp-route-car="All">@product.Brand.Name</a></td>
-                        <td><a asp-controller="Parts" asp-action="Details" asp-route-id="@product.PartId">@product.Name</a></td>
-
+                        <td>
+                            <a asp-controller="Parts" asp-action="Details" asp-route-id="@product.PartId">@product.Name</a>
+                            <p class="small">
+                                <span>Compatible with: </span>
+                                @if (cars.Count() == 0)
+                                {
+                                    <span>All</span>
+                                }
+                                else if (cars.Count() == 1)
+                                {
+                                    var car = cars.FirstOrDefault();
+                                    <span>@car.Make @car.Model: @product.Years</span>
+                                }
+                                else
+                                {
+                                    var builder = new StringBuilder();
+                                    foreach (var car in cars)
+                                    {
+                                        builder.Append($"{car.Make} {car.Model}: {product.Years}<br />");
+                                    }
+                                    <a href="#" data-container="body" data-toggle="popover" data-placement="right" data-html="true" data-trigger="hover" data-content="@builder.ToString()">See all (@cars.Count())</a>
+                                }
+                            </p>
+                        </td>
                         <td>@product.Price.ToString("C2", new CultureInfo("en-US"))</td>
                         <td class="text-right"><a asp-area="" asp-controller="ShoppingCart" asp-action="RemoveFromCart" asp-route-id="@product.PartId">Remove</a></td>
                     </tr>
-                }
-            </tbody>
-
-            <tfoot>
-                <tr>
-                    <th colspan="2">&nbsp;</th>
-                    <th class="text-right">Subtotal</th>
-
-                    @if (newTotal != null && oldTotal != null)
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="2">&nbsp;</th>
+                <th class="text-right">Subtotal</th>
+                @if (newTotal != null && oldTotal != null)
                 {
-                        <th>
-                            @newTotal.Value.ToString("C2", new CultureInfo("en-US"))
-                            <br />
-                            <del>@subTotal.ToString("C2", new CultureInfo("en-US"))</del>
-                        </th>
-                    }
-                    else
-                    {
-                        <th>@subTotal.ToString("C2", new CultureInfo("en-US"))</th>
-                    }
-
-                    <th></th>
-                </tr>
-                <tr>
-                    <th colspan="2"></th>
-                    <th class="text-right">Shipping</th>
-                    <th>@shipping.ToString("C2", new CultureInfo("en-US"))</th>
-                    <th>&nbsp;</th>
-                </tr>
-                <tr>
-                    <th colspan="2"></th>
-                    <th class="text-right">Total</th>
-
-                    @if (newTotal != null && oldTotal != null)
-                {
-                        <th>
-                            @((shipping + (decimal)newTotal).ToString("C2", new CultureInfo("en-US")))
-                            <br />
-                            <del>@((shipping + subTotal).ToString("C2", new CultureInfo("en-US")))</del>
-                        </th>
-                    }
-                    else
-                    {
-                        <th>@((shipping + subTotal).ToString("C2", new CultureInfo("en-US")))</th>
-                    }
-
                     <th>
-                        <form asp-controller="ShoppingCart" asp-action="PromoCode" method="post">
+                        @newTotal.Value.ToString("C2", new CultureInfo("en-US"))
+                        <br />
+                        <del>@subTotal.ToString("C2", new CultureInfo("en-US"))</del>
+                    </th>
+                }
+                else
+                {
+                    <th>@subTotal.ToString("C2", new CultureInfo("en-US"))</th>
+                }
+                <th></th>
+            </tr>
+            <tr>
+                <th colspan="2">&nbsp;</th>
+                <th class="text-right">Shipping</th>
+                <th>@shipping.ToString("C2", new CultureInfo("en-US"))</th>
+                <th>&nbsp;</th>
+            </tr>
+            <tr>
+                <th colspan="2">&nbsp;</th>
+                <th class="text-right">Tax</th>
+
+                @if (newTotal != null && oldTotal != null)
+                {
+                    tax = Math.Round((decimal)oldTotal * taxRate, 2);
+                }
+                else
+                {
+                    tax = Math.Round(subTotal * taxRate, 2);
+                }
+
+                <th>@tax.ToString("C2", new CultureInfo("en-US"))</th>
+                <th>&nbsp;</th>
+            </tr>
+            <tr>
+                <th colspan="2"></th>
+                <th class="text-right">Total</th>
+                @if (newTotal != null && oldTotal != null)
+                {
+                    <th>
+                        @((shipping + (decimal)newTotal + tax).ToString("C2", new CultureInfo("en-US")))
+                        <br />
+                        <del>@((shipping + subTotal + tax).ToString("C2", new CultureInfo("en-US")))</del>
+                    </th>
+                }
+                else
+                {
+                    <th>@((shipping + subTotal + tax).ToString("C2", new CultureInfo("en-US")))</th>
+                }
+                <th>
+                    <form asp-controller="ShoppingCart" asp-action="PromoCode" method="get">
+                        <div class="input-group">
+                            <input placeholder="Promo Code" id="promoCode" name="promoCode" type="text" class="form-control" value="@((TempData["PromoCode"] != null) ? TempData["PromoCode"].ToString() : "" )" />
+                            <span class="input-group-btn">
+                                <button type="submit" class="btn btn-default">Apply Promo Code</button>
+                                <a class="btn btn-default" asp-area="" asp-controller="ShoppingCart" asp-action="Checkout" asp-route-id="@TempData["ReferralAmount"]"><span class="glyphicon glyphicon-shopping-cart"></span> Checkout</a>
+                            </span>
+                        </div>
+                    </form>
+                </th>
+            </tr>
+
+            @if (Model.UserReferral != null && Model.UserReferral.Enabled && Model.UserReferral.Earnings > 1m)
+            {
+                <tr>
+                    <td colspan="3"></td>
+                    <td colspan="2">
+                        <form asp-controller="ShoppingCart" asp-action="ApplyStoreCredit" method="post">
+                            <input hidden="hidden" class="hidden" asp-for="UserReferral.Id" />
                             <div class="input-group">
-                                <input placeholder="Promo Code" id="promoCode" name="promoCode" type="text" class="form-control" />
+                                <input asp-for="UserReferral.Earnings" type="number" max="@Model.UserReferral.Earnings" min="1.00" class="form-control" />
                                 <span class="input-group-btn">
-                                    <button type="submit" class="btn btn-default">Apply Promo Code</button>
-                                    <a class="btn btn-default" asp-area="" asp-controller="ShoppingCart" asp-action="Checkout"><span class="glyphicon glyphicon-shopping-cart"></span> Checkout</a>
+                                    <button type="submit" class="btn btn-default">Apply Store Credit</button>
                                 </span>
                             </div>
                         </form>
-                    </th>
+                    </td>
                 </tr>
-            </tfoot>
-        </table>
+            }
+            <tr>
+            </tr>
+        </tfoot>
+    </table>
 }
 else
 {

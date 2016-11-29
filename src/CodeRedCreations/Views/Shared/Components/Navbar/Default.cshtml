@@ -1,13 +1,9 @@
 ﻿@model CodeRedCreations.Models.NavbarViewModel
-@using System.Text.Encodings.Web;
+@using CodeRedCreations;
 @{
-    var dictionary = new Dictionary<string, string>();
-
-    foreach (var car in Model.Cars.OrderBy(x => x.Make))
-    {
-        dictionary.Add(car.Model, car.Make);
-    }
-    var carMakes = new List<string>();
+    var columns = 4;
+    var col = $"col-md-{12 / columns}";
+    var allMakes = Model.Cars.OrderBy(x => x.Make).Select(x => x.Make).Distinct();
 }
 
 <div class="container">
@@ -18,7 +14,7 @@
         </button>
         <a asp-controller="Home" asp-action="Index" class="navbar-brand visible-xs"><img src="~/images/Logo.png" height="35" /></a>
     </div>
-    <div class="navbar-collapse collapse">
+    <div class="navbar-collapse collapse yamm">
         <ul class="nav navbar-nav">
             <li id="ddCars" class="dropdown">
                 <a id="dCars" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Cars</a>
@@ -26,26 +22,24 @@
                     <li>
                         <div class="yamm-content">
                             <div class="row">
-                                <div class="col-sm-12">
-                                    <ul class="list-unstyled">
-
-                                        @foreach (var car in dictionary)
-                                        {
-                                            if (!carMakes.Contains(car.Value))
+                                @foreach (var split in allMakes.Split(columns))
+                                {
+                                    <div class="@col">
+                                        <ul class="list-unstyled">
+                                            @foreach (var make in split)
                                             {
-                                                <li class="dropdown-header">@car.Value</li>
-                                                foreach (var item in dictionary.Where(x => x.Value == car.Value).OrderBy(x => x.Key))
-                                                {
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="All" asp-route-car="@item.Key">@item.Key</a></li>
-                                                }
-                                                carMakes.Add(car.Value);
+                                                <li>&nbsp;</li>
+                                                <li class="dropdown-header" style="min-width: 150px"><strong>@make</strong></li>
                                                 <li class="divider"></li>
+
+                                                @foreach (var item in Model.Cars.Where(x => x.Make == make).OrderBy(x => x.Model))
+	                                            {
+		                                             <li><a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="All" asp-route-car="@item.Model">@item.Model @((item.CarProducts.Select(c => c.Product) != null) ? $"({item.CarProducts.Select(c => c.Product).Count()})" : "")</a></li>
+	                                            }
                                             }
-
-                                        }
-
-                                    </ul>
-                                </div>
+                                        </ul>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </li>

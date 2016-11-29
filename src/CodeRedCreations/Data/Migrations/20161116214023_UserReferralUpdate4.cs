@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace CodeRedCreations.Data.Migrations
+namespace coderedcreations.Data.Migrations
 {
-    public partial class PromoTimesUsedAdded : Migration
+    public partial class UserReferralUpdate4 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
-                name: "TimesUsed",
-                table: "Promos",
+                name: "PayoutPercent",
+                table: "UserReferral",
                 nullable: false,
                 defaultValue: 0);
         }
@@ -18,8 +18,8 @@ namespace CodeRedCreations.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "TimesUsed",
-                table: "Promos");
+                name: "PayoutPercent",
+                table: "UserReferral");
         }
     }
 }

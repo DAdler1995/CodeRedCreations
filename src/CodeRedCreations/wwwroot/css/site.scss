@@ -3,6 +3,7 @@
 @import 'flexbox';
 @import 'datepicker';
 @import 'scrollableTable';
+@import 'jquery-ui';
 
 body,
 html {
@@ -57,6 +58,7 @@ h1, h2, h3, h4, h5, h6, strong, th, thead, dt {
 
 a,
 .btn-link {
+    cursor: pointer !important;
     color: $red;
     text-decoration: none !important;
     @include transition(color .5s ease-in-out, border-color 1s ease-in-out);
@@ -68,7 +70,47 @@ a,
         color: $red-dark;
     }
 }
+.loadedContent {
+    display: none;
+}
+img.loading {
+    position: fixed;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    top: 50%;
+    bottom: 50%;
+    -webkit-animation: spin 4s linear infinite;
+    -moz-animation: spin 4s linear infinite;
+    animation: spin 4s linear infinite;
+}
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
 
+/*hr {
+    margin: 3px 0;
+}*/
+
+.tempMessage {
+    display: none;
+}
+
+.copy-notification {
+    color: #ffffff;
+    background-color: rgba(0,0,0,0.8);
+    padding: 20px;
+    border-radius: 30px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 200px;
+    margin-top: -30px;
+    margin-left: -110px;
+    display: none;
+    text-align: center;
+}
 
 //-----------------------------
 //  Yamm Styles
@@ -139,15 +181,7 @@ a,
 }
 
 .background.bg-one {
-    background-image: url("https://images5.alphacoders.com/499/499290.jpg");
-}
-
-.background.bg-two {
-    background-image: url("https://images5.alphacoders.com/499/499290.jpg");
-}
-
-.background.bg-three {
-    background-image: url("https://images5.alphacoders.com/499/499290.jpg");
+    background-image: url(../images/HomeIndex/AS-206701.jpg);
 }
 
 .truncate {
@@ -170,4 +204,17 @@ a,
         line-height: 1.2em; /* fallback */
         max-height: 1.2em * 3; /* fallback */
     }
+}
+
+@import 'https://fonts.googleapis.com/css?family=Hind:500|Open+Sans:300';
+
+
+$open: 'Open Sans', sans-serif;
+$hind: 'Hind', sans-serif;
+
+.text-open {
+    font-family: $open;
+}
+.text-hind {
+    font-family: $hind;
 }

@@ -2,23 +2,23 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace CodeRedCreations.Data.Migrations
+namespace coderedcreations.Data.Migrations
 {
-    public partial class PromoTimesUsageLimit : Migration
+    public partial class PartNumber : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "UsageLimit",
-                table: "Promos",
+            migrationBuilder.AddColumn<string>(
+                name: "PartNumber",
+                table: "Products",
                 nullable: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "UsageLimit",
-                table: "Promos");
+                name: "PartNumber",
+                table: "Products");
         }
     }
 }

@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 using CodeRedCreations.Models;
 using CodeRedCreations.Services;
 using CodeRedCreations.Models.AccountViewModels;
+using CodeRedCreations.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace CodeRedCreations.Controllers
 {
@@ -22,19 +25,22 @@ namespace CodeRedCreations.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
+        private readonly CodeRedContext _context;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender,
             ISmsSender smsSender,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            CodeRedContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<AccountController>();
+            _context = context;
         }
 
         //
@@ -123,8 +129,15 @@ namespace CodeRedCreations.Controllers
                     {
                         await _userManager.AddToRoleAsync(user, "Admin");
                     }
-
                     _logger.LogInformation(3, "User created a new account with password.");
+
+                    _context.UserReferral.Add(new Models.Account.UserReferral
+                    {
+                        UserId = user.Id,
+                        Enabled = false,
+                        ReferralCode = $"{user.Email.Split('@')[0]}"
+                    });
+                    await _context.SaveChangesAsync();
 
                     return RedirectToLocal(returnUrl);
                 }
@@ -231,6 +244,14 @@ namespace CodeRedCreations.Controllers
                             await _userManager.AddToRoleAsync(user, "Admin");
                         }
 
+                        _context.UserReferral.Add(new Models.Account.UserReferral
+                        {
+                            UserId = user.Id,
+                            Enabled = false,
+                            ReferralCode = $"{user.Email.Split('@')[0]}"
+                        });
+                        await _context.SaveChangesAsync();
+
                         _logger.LogInformation(6, "User created an account using {Name} provider.", info.LoginProvider);
                         return RedirectToLocal(returnUrl);
                     }
@@ -285,12 +306,20 @@ namespace CodeRedCreations.Controllers
                     return View("ForgotPasswordConfirmation");
                 }
 
-                // For more information on how to enable account confirmation and password reset please visit http://go.microsoft.com/fwlink/?LinkID=532713
+                // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=532713
                 // Send an email with this link
                 var code = await _userManager.GeneratePasswordResetTokenAsync(user);
                 var callbackUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-                await _emailSender.SendEmailAsync(model.Email, "Account Recovery", "Reset Password",
-                   $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
+
+                var builder = new StringBuilder();
+                builder.Append($"<h1>Code Red Performance Reset Accoount Password</h1>");
+                builder.Append($"<p>Hello, you requested a password reset on your account.</p>");
+                builder.Append($"<p>Please reset your password by clicking here: <a href='{callbackUrl}'>link</a></p><br />");
+                builder.Append($"<p>Thank you from all of us at Code Red Performance.</p><hr />");
+                builder.Append($"<p>If you did <strong>NOT</strong> request a password reset please contact our support team at <a href='mailto:Support@CodeRedPerformance.com'>Support@CodeRedPerformance.com</a></p>");
+
+
+                await _emailSender.SendEmailAsync(model.Email, "Account Recovery", "Code Red Performance Reset Password", builder.ToString());
                 return View("ForgotPasswordConfirmation");
             }
 

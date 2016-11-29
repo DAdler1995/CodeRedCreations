@@ -5,17 +5,41 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using CodeRedCreations.Data;
 
-namespace CodeRedCreations.Data.Migrations
+namespace coderedcreations.Data.Migrations
 {
     [DbContext(typeof(CodeRedContext))]
-    [Migration("20161029010336_Initial")]
-    partial class Initial
+    [Migration("20161116214023_UserReferralUpdate4")]
+    partial class UserReferralUpdate4
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.1")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("CodeRedCreations.Models.Account.UserReferral", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<decimal>("Earnings");
+
+                    b.Property<bool>("Enabled");
+
+                    b.Property<string>("PayPalAccount");
+
+                    b.Property<int>("PayoutPercent");
+
+                    b.Property<string>("ReferralCode");
+
+                    b.Property<bool>("RequestedPayout");
+
+                    b.Property<string>("UserId");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserReferral");
+                });
 
             modelBuilder.Entity("CodeRedCreations.Models.ApplicationUser", b =>
                 {
@@ -93,11 +117,24 @@ namespace CodeRedCreations.Data.Migrations
                     b.Property<string>("Model")
                         .IsRequired();
 
-                    b.Property<string>("TrimLevel");
-
                     b.HasKey("CarId");
 
                     b.ToTable("Car");
+                });
+
+            modelBuilder.Entity("CodeRedCreations.Models.CarProduct", b =>
+                {
+                    b.Property<int>("ProductId");
+
+                    b.Property<int>("CarId");
+
+                    b.HasKey("ProductId", "CarId");
+
+                    b.HasIndex("CarId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("CarProduct");
                 });
 
             modelBuilder.Entity("CodeRedCreations.Models.ImageModel", b =>
@@ -128,13 +165,13 @@ namespace CodeRedCreations.Data.Migrations
                     b.Property<int?>("BrandId")
                         .IsRequired();
 
-                    b.Property<int?>("CompatibleCarsCarId");
-
                     b.Property<string>("Description")
                         .IsRequired();
 
                     b.Property<string>("Name")
                         .IsRequired();
+
+                    b.Property<string>("PartNumber");
 
                     b.Property<int>("PartType");
 
@@ -144,11 +181,11 @@ namespace CodeRedCreations.Data.Migrations
 
                     b.Property<decimal>("Shipping");
 
+                    b.Property<string>("Years");
+
                     b.HasKey("PartId");
 
                     b.HasIndex("BrandId");
-
-                    b.HasIndex("CompatibleCarsCarId");
 
                     b.HasIndex("PromoModelId");
 
@@ -170,6 +207,10 @@ namespace CodeRedCreations.Data.Migrations
                     b.Property<bool>("Enabled");
 
                     b.Property<DateTime?>("ExpirationDate");
+
+                    b.Property<int>("TimesUsed");
+
+                    b.Property<int?>("UsageLimit");
 
                     b.HasKey("Id");
 
@@ -283,6 +324,19 @@ namespace CodeRedCreations.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("CodeRedCreations.Models.CarProduct", b =>
+                {
+                    b.HasOne("CodeRedCreations.Models.CarModel", "Car")
+                        .WithMany("CarProducts")
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("CodeRedCreations.Models.ProductModel", "Product")
+                        .WithMany("CarProducts")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("CodeRedCreations.Models.ImageModel", b =>
                 {
                     b.HasOne("CodeRedCreations.Models.ProductModel")
@@ -293,13 +347,9 @@ namespace CodeRedCreations.Data.Migrations
             modelBuilder.Entity("CodeRedCreations.Models.ProductModel", b =>
                 {
                     b.HasOne("CodeRedCreations.Models.BrandModel", "Brand")
-                        .WithMany("Parts")
+                        .WithMany("Products")
                         .HasForeignKey("BrandId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("CodeRedCreations.Models.CarModel", "CompatibleCars")
-                        .WithMany()
-                        .HasForeignKey("CompatibleCarsCarId");
 
                     b.HasOne("CodeRedCreations.Models.PromoModel")
                         .WithMany("ApplicableParts")

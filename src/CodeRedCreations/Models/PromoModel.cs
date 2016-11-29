@@ -15,7 +15,7 @@ namespace CodeRedCreations.Models
         public string Code { get; set; }
         public bool Enabled { get; set; }
         public DateTime? ExpirationDate { get; set; }
-        public virtual IList<ProductModel> ApplicableParts { get; set; }
+        public virtual ICollection<ProductModel> ApplicableParts { get; set; }
         [Range(1, 100, ErrorMessage = "The percent must be between 1 and 100%.")]
         [Display(Name = "Discount Percentage")]
         public decimal? DiscountPercentage { get; set; }

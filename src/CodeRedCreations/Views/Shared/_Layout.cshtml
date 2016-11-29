@@ -1,46 +1,58 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+@using Newtonsoft.Json
+@using CodeRedCreations.Models
+@{
+    int itemCount = 0;
+    var session = Context.Session.GetString("ShoppingCart");
+    if (session != null)
+    {
+        var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
+        itemCount = cart.Parts.Count();
+    }
+}
+<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Code Red Performance - @ViewData["Title"]</title>
-    <link rel="icon" type="image/png" href="~/images/favicon.ico" sizes="16x16">
-    <link rel="icon" type="image/png" href="~/images/favicon.ico" sizes="32x32">
-    <link rel="icon" type="image/png" href="~/images/favicon.ico" sizes="96x96">
+    <meta name="twitter:title" content="Code Red Performance - @ViewData["Title"]" />
+    <meta property="og:title" content="Code Red Performance - @ViewData["Title"]" />
+    <cache expires-after="@TimeSpan.FromHours(24)">
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Code Red Performance is your one stop auto shop for all your automotive performance needs. We carry aftermarket parts for all of the top makes and models from well know performance part manufacturers.">
+        <meta name="distribution" content="web">
+        <meta name="keywords" content="auto,parts,store,aftermarket,Nissan,Subaru,Scion,Toyota,Ford,Mazda,Mitsubishi,Hyundai">
+        <meta name="author" content="Dakota Adler">
 
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:site" content="@@CRP_Dakota" />
+        <meta name="twitter:description" content="Code Red Performance is your one stop auto shop for all your automotive performance needs." />
+        <meta name="twitter:image" content="https://coderedperformance.com/images/Logo.png" />
+
+        <!-- Open Graph -->
+        <meta property="og:url" content="@Context.Request.Host.Value" />
+        <meta property="og:image" content="https://coderedperformance.com/images/Logo.png" />
+
+        <!-- Cache Control -->
+        <meta http-equiv="cache-control" content="max-age=60" />
+        <meta http-equiv="cache-control" content="public" />
+        <meta http-equiv="expires" content="@DateTime.Now.Add(TimeSpan.FromDays(1))" />
+
+        <link rel="icon" type="image/png" href="~/images/favicon.ico" sizes="16x16">
+        <link rel="icon" type="image/png" href="~/images/favicon.ico" sizes="32x32">
+        <link rel="icon" type="image/png" href="~/images/favicon.ico" sizes="96x96">
+    </cache>
     <environment names="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
         <link rel="stylesheet" href="~/css/site.css" />
-        <script src="~/lib/jquery/dist/jquery.js"></script>
-        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
-        <script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
-        <script src="~/js/site.js" asp-append-version="true"></script>
     </environment>
     <environment names="Staging,Production">
-        <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/css/bootstrap.min.css"
-              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+              asp-fallback-href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
-        <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-2.2.0.min.js"
-                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
-                asp-fallback-test="window.jQuery">
-        </script>
-        <script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/bootstrap.min.js"
-                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
-                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
-        </script>
-        <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"
-                asp-fallback-src="~/lib/jquery-validation/dist/jquery.validate.min.js"
-                asp-fallback-test="window.jQuery && window.jQuery.validator">
-        </script>
-        <script src="https://ajax.aspnetcdn.com/ajax/mvc/5.2.3/jquery.validate.unobtrusive.min.js"
-                asp-fallback-src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"
-                asp-fallback-test="window.jQuery && window.jQuery.validator && window.jQuery.validator.unobtrusive">
-        </script>
-        <script src="~/js/site.min.js" asp-append-version="true"></script>
     </environment>
-
     @Html.ApplicationInsightsJavaScript(TelemetryConfiguration)
 </head>
 <body>
@@ -54,9 +66,9 @@
                 </div>
                 <div class="item">
                     <ul class="list-unstyled">
-                        <li>Email: <a href="mailto:zeketiki@gmail.com">Customer Support</a></li>
+                        <li>Email: <a href="mailto:Dakota@CodeRedPerformance.com">Customer Support</a></li>
                         <li>Monday to Friday: 9:00AM - 6:00PM</li>
-                        <li><a asp-area="" asp-controller="ShoppingCart" asp-action="Index">View Cart</a></li>
+                        <li><a asp-area="" asp-controller="ShoppingCart" asp-action="Index">View Cart (@itemCount)</a></li>
                         <li class="divider"><hr style="margin: 2px" /></li>
                     </ul>
                     @await Html.PartialAsync("_LoginPartial")
@@ -64,21 +76,104 @@
             </div>
         </div>
     </div>
-    <nav class="navbar yamm navbar-default">
-        @await Component.InvokeAsync("Navbar")
-
-    </nav>
+    <cache expires-after="@TimeSpan.FromDays(7)">
+        <nav class="navbar yamm navbar-default">
+            @await Component.InvokeAsync("Navbar")
+        </nav>
+    </cache>
     <div class="container body-content">
-        @RenderBody()
-    </div>
-    <footer>
-        <div class="container">
-            <div class="flexbox-container">
-                <p class="item item-left">&copy; 2016 - Code Red Performance</p>
-                <img class="item item-right" src="~/images/Logo.png" height="35" />
-            </div>
+        @if (TempData["Message"] != null)
+        {
+            <p class="small tempMessage">@TempData["Message"]</p>
+        }
+        @if (ViewData["Message"] != null)
+        {
+            <p class="small tempMessage">@TempData["Message"]</p>
+        }
+        <img class="loading img-responsive img-rounded" src="~/images/Logo-small.png" />
+        <div class="loadedContent">
+            @RenderBody()
         </div>
-    </footer>
+    </div>
+
+    <cache expires-after="@TimeSpan.FromDays(30)">
+        <footer>
+            <div class="container">
+                <div class="flexbox-container">
+                    <p class="item item-left">&copy; 2016 - Code Red Performance</p>
+                    <img class="item item-right" src="~/images/Logo.png" height="35" />
+                </div>
+            </div>
+        </footer>
+    </cache>
     @RenderSection("scripts", required: false)
+    <environment names="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/css/site.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/css/bootstrap-select.min.css" />
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+        <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+        <script src="~/js/jquery-ui.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/js/bootstrap-select.min.js"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/css/bootstrap-select.min.css" />
+
+        <script src="~/lib/jquery/dist/jquery.min.js"
+                asp-fallback-src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-2.2.0.min.js"
+                asp-fallback-test="window.jQuery">
+        </script>
+        <script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/bootstrap.min.js"
+                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
+        </script>
+        <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"
+                asp-fallback-src="~/lib/jquery-validation/dist/jquery.validate.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.validator">
+        </script>
+        <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"
+                asp-fallback-src="https://ajax.aspnetcdn.com/ajax/mvc/5.2.3/jquery.validate.unobtrusive.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.validator && window.jQuery.validator.unobtrusive">
+        </script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+                asp-fallback-src="~/js/jquery-ui.min.js">
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/js/bootstrap-select.min.js"></script>
+        <script src="~/js/site.min.js" asp-append-version="true"></script>
+        <!-- Facebook Pixel Code -->
+        <script>
+            !function (f, b, e, v, n, t, s) {
+                if (f.fbq) return; n = f.fbq = function () {
+                    n.callMethod ?
+                    n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+                }; if (!f._fbq) f._fbq = n;
+                n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0;
+                t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s)
+            }(window,
+            document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '1853829424845634'); // Insert your pixel ID here.
+            fbq('track', 'PageView');
+        </script>
+        <noscript>
+            <img height="1" width="1" style="display:none"
+                 src="https://www.facebook.com/tr?id=1853829424845634&ev=PageView&noscript=1" />
+        </noscript>
+        <!-- DO NOT MODIFY -->
+        <!-- End Facebook Pixel Code -->
+        <script>
+            (function (i, s, o, g, r, a, m) {
+                i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+                    (i[r].q = i[r].q || []).push(arguments)
+                }, i[r].l = 1 * new Date(); a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+            })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+            ga('create', 'UA-86970025-1', 'auto');
+            ga('send', 'pageview');
+        </script>
+    </environment>
 </body>
 </html>

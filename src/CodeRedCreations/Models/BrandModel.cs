@@ -13,6 +13,6 @@ namespace CodeRedCreations.Models
 
         [Required, Display(Name = "Brand Description")]
         public string Description { get; set; }
-        public virtual ICollection<ProductModel> Parts { get; set; }
+        public virtual ICollection<ProductModel> Products { get; set; }
     }
 }

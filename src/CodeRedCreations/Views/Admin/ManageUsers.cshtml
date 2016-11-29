@@ -1,58 +1,93 @@
 ﻿@model List<CodeRedCreations.Models.ApplicationUser>
 @inject Microsoft.AspNetCore.Identity.UserManager<CodeRedCreations.Models.ApplicationUser> _userManager;
+@using CodeRedCreations.Models.Account;
 @{
     ViewData["Title"] = "Manage Users";
+    var allUserRefs = (List<UserReferral>)ViewData["AllUserRefs"];
 }
-
 <h2>@ViewData["Title"]</h2>
 <p class="text-success">@ViewData["SuccessMessage"]</p>
+<table class="table table-hover table-responsive" id="ManageUsers">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Set Role</th>
+            <th colspan="2">Referrals</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            var userRef = allUserRefs.FirstOrDefault(x => x.UserId == item.Id);
+            var roles = _userManager.GetRolesAsync(await _userManager.FindByEmailAsync(item.Email)).Result;
+            <tr class="@((roles.Contains(UserRoles.Sponsor.ToString())) ? "info" : "")">
+                <td>
+                    @item.UserName
+                </td>
+                <td>
+                    <ul class="list-unstyled">
+                        @foreach (var role in roles)
+                        {
+                            <li>@role</li>
+                        }
+                    </ul>
+                </td>
+                <td>
+                    <div class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            New Role
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu" role="menu">
+                            @foreach (var role in Enum.GetValues(typeof(UserRoles)))
+                            {
+                                <li>
+                                    <a href="#" onclick="UpdateRole('@item.Email', '@role')">@role</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </td>
 
-    <table class="table table-hover table-responsive" id="ManageUsers">
-        <thead>
-            <tr>
-                <th>User</th>
-                <th>Role</th>
-                <th>Set Role</th>
-                <th></th>
+                @if (userRef != null)
+                {
+                    <td class="@((userRef.Enabled) ? "success" : "danger")">
+                        <a asp-controller="Admin" asp-action="ToggleReferral" asp-route-id="@item.Id">@((userRef.Enabled) ? "Disable" : "Enable")</a>
+                    </td>
+                    <td>
+                        <form asp-controller="Admin" asp-action="SetRefPercent" method="post">
+                            <input hidden="hidden" class="hidden" name="UserId" id="UserId" value="@item.Id" />
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="RefPercent" id="RefPercent" value="@userRef.PayoutPercent" />
+                                <span class="input-group-btn">
+                                    <button type="submit" class="btn btn-default">Change Percent</button>
+                                </span>
+                            </div>
+                        </form>
+                    </td>
+                }
+                else
+                {
+                    <td colspan="2"></td>
+
+                }
+                <td class="text-right">
+                    @if (!_userManager.GetRolesAsync(await _userManager.FindByEmailAsync(item.Email)).Result.Contains("Admin"))
+                    {
+                        <a href="#" onclick="DeleteUser('@item.Email')">Delete User</a>
+                    }
+                    else
+                    {
+                        <span>Cannot delete admins.</span>
+
+                    }
+                </td>
             </tr>
-        </thead>
-
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.UserName</td>
-                    <td>
-                        @_userManager.GetRolesAsync(await _userManager.FindByEmailAsync(item.Email)).Result.FirstOrDefault()
-                    </td>
-                    <td>
-                        <div class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                New Role
-                                <span class="caret"></span>
-                            </a>
-                            <ul class="dropdown-menu" role="menu">
-                                <li><a href="#" onclick="UpdateRole('@item.Email', 'Default')">Default</a></li>
-                                <li><a href="#" onclick="UpdateRole('@item.Email', 'Admin')">Admin</a></li>
-                            </ul>
-                        </div>
-                    </td>
-                    <td class="text-right">
-                        @if (!_userManager.GetRolesAsync(await _userManager.FindByEmailAsync(item.Email)).Result.Contains("Admin"))
-                        {
-                            <a href="#" onclick="DeleteUser('@item.Email')">Delete User</a>
-                        }
-                        else
-                        {
-                            <span>Cannot delete admins.</span>
-
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
+        }
+    </tbody>
+</table>
 <script>
     function UpdateRole(email, newRole) {
         $.ajax({
@@ -60,8 +95,7 @@
             url: '@Url.Action("UpdateRole", "Admin")',
             data: { email: email, newRole: newRole },
             success: function (response, textStatus, jqXHR) {
-                var updatedTable = $($.parseHTML(response)).find('#ManageUsers');
-                $('#ManageUsers').html(updatedTable);
+                location.reload();
             }
         });
     }
@@ -73,11 +107,9 @@
                 url: '@Url.Action("DeleteUser", "Admin")',
                 data: { email: email },
                 success: function (response, textStatus, jqXHR) {
-                    var updatedTable = $($.parseHTML(response)).find('#ManageUsers');
-                    $('#ManageUsers').html(updatedTable);
+                    location.reload();
                 }
             });
         }
-
     }
 </script>

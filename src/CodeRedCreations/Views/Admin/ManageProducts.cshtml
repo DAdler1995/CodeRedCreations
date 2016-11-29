@@ -5,26 +5,72 @@
 <h2>@ViewData["Title"]</h2>
 <p class="text-success">@ViewData["SuccessMessage"]</p>
 <a asp-area="" asp-controller="Admin" asp-action="AddProduct">+ Add New Product</a>
-
+<a class="pull-right" asp-area="" asp-controller="Admin" asp-action="AdjustShipping">Adjust Shipping</a>
 <div class="row">
-    <div class="col-md-4">
-        <ul>
-            @foreach (var item in Model)
-            {
-                <li>
-                    @item.Name 
-                    <span class="pull-right"><a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@item.BrandId" asp-route-section="BRAND">Edit</a></span>
-                    @if (item.Parts != null)
-                    {
-                        <ul>
-                            @foreach (var part in item.Parts)
+    <div class="col-md-12">
+        <table class="table table-responsive table-hover table-condensed">
+            <thead>
+                <tr>
+                    <th>Brand</th>
+                    <th></th>
+                    <th>Product Name</th>
+                    <th>Price/Shipping</th>
+                    <th colspan="2"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderBy(x => x.Name))
+                {
+                    <tr data-toggle="collapse" href=".@item.Name.Replace(" ", "")" aria-expanded="false" aria-controls="@item.Name.Replace(" ", "")" style="cursor: pointer">
+                        <td colspan="2"><strong>@item.Name</strong> (@item.Products.Count())</td>
+                        <td colspan="2"></td>
+                        <td><a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@item.BrandId" asp-route-section="BRAND">Edit</a></td>
+                        <td>
+                            @if (item.Products.Count == 0)
                             {
-                                <li>@part.Name <span class="pull-right"><a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@part.PartId" asp-route-section="PART">Edit</a> | <a asp-controller="Admin" asp-action="DeletePart" asp-route-id="@part.PartId" onclick="return confirm('Are you sure you want to delete: @part.Name?');">Delete</a></span></li>
+                                <a asp-controller="Admin" asp-action="DeleteBrand" asp-route-id="@item.BrandId" onclick="return confirm('Are you sure you wish to delete this brand?')">Delete</a>
                             }
-                        </ul>
+                        </td>
+                    </tr>
+                    @if (item.Products != null)
+                    {
+                        foreach (var part in item.Products.OrderBy(x => x.PartId))
+                        {
+                            string imgSrc;
+                            if (part.Images.Count > 0)
+                            {
+                                var imageBase64 = Convert.ToBase64String(part.Images.FirstOrDefault().Bytes);
+                                imgSrc = $"data:image/gif;base64, {imageBase64}";
+                            }
+                            else
+                            {
+                                imgSrc = "/images/Photo-Not-Available.png";
+                            }
+                            var cars = part.CarProducts.Where(x => x.ProductId == part.PartId).Select(x => x.Car);
+                            <cache enabled="true" expires-after="@TimeSpan.FromDays(7)" vary-by="@part.PartId">
+                                <tr class="collapse @item.Name.Replace(" ", "")">
+                                    <td><img class="img-responsive" src="@imgSrc" width="100" /></td>
+                                    <td>#@part.PartNumber</td>
+                                    <td>
+                                        @part.Name - @part.PartType
+                                        <ul class="small">
+                                            @foreach (var car in cars)
+                                            {
+                                                <li>
+                                                    @car.Make @car.Model: @part.Years
+                                                </li>
+                                            }
+                                        </ul>
+                                    </td>
+                                    <td>@part.Price.ToString("C2") <p>+@part.Shipping.ToString("C2") s/h</p></td>
+                                    <td><a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@part.PartId" asp-route-section="PART">Edit</a></td>
+                                    <td><a class="pull-right" asp-controller="Admin" asp-action="DeletePart" asp-route-id="@part.PartId" onclick="return confirm('Are you sure you want to delete: @part.Name?');">Delete</a></td>
+                                </tr>
+                            </cache>
+                        }
                     }
-                </li>
-            }
-        </ul>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

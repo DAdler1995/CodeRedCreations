@@ -1,0 +1,23 @@
+﻿@{ 
+    ViewData["Title"] = "Thank You";
+}
+
+<cache enabled="true" expires-after="@TimeSpan.FromDays(30)">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Thank you for your order!</h2>
+            <p>
+                Your order is being processed right now and you'll recieve an email once your order has been
+                shipped with your tracking number.
+            </p>
+            <p>
+                Please remember that all returns are handeled with the actual manufacturer of the product,
+                <strong>NOT</strong> Code Red Performance. Though we can help and supply you show proof of
+                payment and when the product was ordered.
+            </p>
+
+            <p>Once again, thank you for your order and for choosing Code Red Performance.</p>
+            <p><a asp-controller="Home" asp-action="Index">Return Home.</a></p>
+        </div>
+    </div>
+</cache>

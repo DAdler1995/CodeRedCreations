@@ -11,8 +11,11 @@ using CodeRedCreations.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Text.Encodings.Web;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Identity;
+using CodeRedCreations.Models.Account;
 
-// For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+// For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace CodeRedCreations.Controllers
 {
@@ -20,11 +23,17 @@ namespace CodeRedCreations.Controllers
     {
         const string sessionKey = "ShoppingCart";
         private CodeRedContext _context;
+        private readonly AppSettings _settings;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public ShoppingCartController(
-            CodeRedContext context)
+            CodeRedContext context,
+            IOptions<AppSettings> settings,
+            UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _settings = settings.Value;
+            _userManager = userManager;
         }
 
 
@@ -32,6 +41,7 @@ namespace CodeRedCreations.Controllers
         public async Task<IActionResult> Index()
         {
             var session = HttpContext.Session.GetString(sessionKey);
+            var user = await _userManager.GetUserAsync(HttpContext.User);
 
             if (session == null)
             {
@@ -40,6 +50,45 @@ namespace CodeRedCreations.Controllers
             else
             {
                 var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
+
+                UserReferral referralCookie = null;
+                PromoModel refPromo = null;
+                if (HttpContext.Request.Cookies["Referral"] != null)
+                {
+                    referralCookie = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<UserReferral>(HttpContext.Request.Cookies["Referral"]));
+                    if (referralCookie != null)
+                    {
+                        refPromo = await _context.Promos.FirstOrDefaultAsync(x => x.Code == referralCookie.ReferralCode);
+                    }
+                }
+
+                if (user != null)
+                {
+                    var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == user.Id);
+                    cart.UserReferral = userRef;
+                }
+
+                if (TempData["ReferralAmount"] != null)
+                {
+                    decimal ReferralAmount = decimal.Parse(TempData["ReferralAmount"].ToString());
+                    decimal total = 0m;
+                    foreach (var product in cart.Parts)
+                    {
+                        total += product.Price;
+                    }
+                    TempData["OldTotal"] = total;
+
+                    decimal newTotal = ((total - ReferralAmount) <= 0) ? 0.01m : (total - ReferralAmount);
+                    TempData["NewTotal"] = newTotal;
+                }
+                else if (TempData["RefPromo"] == null && refPromo != null)
+                {
+                    if ((user != null && referralCookie.UserId != user.Id) || user == null)
+                    {
+                        return RedirectToAction("PromoCode", "ShoppingCart", new { promoCode = refPromo.Code });
+                    }
+                }
+
                 return View(cart);
             }
 
@@ -50,7 +99,7 @@ namespace CodeRedCreations.Controllers
         {
             var session = HttpContext.Session.GetString(sessionKey);
             var part = await _context.Products
-                    .Include(x => x.Brand).Include(x => x.CompatibleCars).Include(x => x.Images)
+                    .Include(x => x.Brand).Include(x => x.CarProducts).ThenInclude(x => x.Car).Include(x => x.Images)
                     .FirstOrDefaultAsync(x => x.PartId == id);
 
             if (session == null)
@@ -135,11 +184,13 @@ namespace CodeRedCreations.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Checkout()
+        public async Task<IActionResult> Checkout(string id)
         {
             var session = HttpContext.Session.GetString(sessionKey);
             var url = (HttpContext.Request.Host.Host.ToUpper().Contains("LOCALHOST")) ?
                 "https://www.sandbox.paypal.com/us/cgi-bin/webscr" : "https://www.paypal.com/us/cgi-bin/webscr";
+            var paypalBusiness = _settings.PaypalBusiness;
+
             if (session != null)
             {
                 int productCount = 1;
@@ -154,34 +205,58 @@ namespace CodeRedCreations.Controllers
 
                 var builder = new StringBuilder();
                 builder.Append(url);
-                builder.Append($"?cmd=_cart&upload=1&business={UrlEncoder.Default.Encode("zeketiki@gmail.com")}");
+                builder.Append($"?cmd=_cart&upload=1&business={UrlEncoder.Default.Encode(paypalBusiness)}");
                 builder.Append($"&lc=US&no_note=0&currency_code=USD");
-                builder.Append($"&custom=PromoCode:{cart.PromoId}");
+                builder.Append($"&custom=PromoCode:{cart.PromoId.ToString()}");
 
+                var totalValue = 0m;
+                decimal taxRate = Math.Round((decimal)8 / 100, 2);
                 foreach (var product in cart.Parts)
                 {
-                    builder.Append($"&item_name_{productCount}={UrlEncoder.Default.Encode($"{product.Brand.Name} - {product.Name}")}");
-                    builder.Append($"&item_number_{productCount}={UrlEncoder.Default.Encode(product.PartId.ToString())}");
+                    totalValue += product.Price;
+                    builder.Append($"&item_name_{productCount}={UrlEncoder.Default.Encode($"{product.Brand.Name} - {product.Name}: #{product.PartNumber}")}");
+                    builder.Append($"&item_number_{productCount}={UrlEncoder.Default.Encode(product.PartNumber)}");
                     builder.Append($"&amount_{productCount}={UrlEncoder.Default.Encode(product.Price.ToString())}");
                     builder.Append($"&shipping_{productCount}={UrlEncoder.Default.Encode(product.Shipping.ToString())}");
 
                     productCount++;
                 }
+                decimal originalTotal = totalValue;
+
+                if (!string.IsNullOrEmpty(id))
+                {
+                    var amount = decimal.Parse(id);
+
+                    var user = await _userManager.GetUserAsync(HttpContext.User);
+                    if (user != null)
+                    {
+                        var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == user.Id);
+                        amount = (amount > userRef.Earnings) ? userRef.Earnings : amount;
+                        amount = (amount > originalTotal) ? (originalTotal - 0.01m) : amount;
+                        TempData["RefAmount"] = amount.ToString();
+
+                        builder.Append($"&discount_amount_cart={amount.ToString()}");
+                    }
+                }
+                decimal tax = Math.Round((originalTotal * taxRate), 2);
+                builder.Append($"&tax_cart={UrlEncoder.Default.Encode(tax.ToString())}");
 
 
-                builder.Append($"&return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/ShoppingCart")}");
+                builder.Append($"&return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Home/ThankYou")}");
                 builder.Append($"&cancel_return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/ShoppingCart")}");
 
+                TempData["ThankYouValidation"] = true;
                 return Redirect(builder.ToString());
             }
             return RedirectToAction("Index");
         }
 
-        [HttpPost]
+        [HttpGet]
         public async Task<IActionResult> PromoCode(string promoCode)
         {
             var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Code.ToUpper().Replace(" ", "") == promoCode.ToUpper().Replace(" ", ""));
             var session = HttpContext.Session.GetString(sessionKey);
+            TempData["RefPromo"] = true;
 
             if (promo != null && session != null)
             {
@@ -244,6 +319,7 @@ namespace CodeRedCreations.Controllers
                                 }));
                             HttpContext.Session.SetString(sessionKey, serializedCart);
 
+                            TempData["PromoCode"] = promoCode;
                             TempData["Message"] = "This promo code has been successfully applied.";
                             return RedirectToAction("Index");
                         }
@@ -257,5 +333,27 @@ namespace CodeRedCreations.Controllers
             return RedirectToAction("Index");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ApplyStoreCredit(ShoppingCartViewModel model)
+        {
+            var amount = model.UserReferral.Earnings;
+
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            if (user != null)
+            {
+                var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == model.UserReferral.Id && x.UserId == user.Id);
+
+                if (userRef != null && userRef.Enabled)
+                {
+                    if (amount > userRef.Earnings)
+                    {
+                        amount = userRef.Earnings;
+                    }
+                    TempData["ReferralAmount"] = amount.ToString();
+                }
+            }
+
+            return RedirectToAction("Index");
+        }
     }
 }

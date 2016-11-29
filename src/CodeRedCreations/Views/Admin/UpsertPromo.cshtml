@@ -5,7 +5,6 @@
     List<CodeRedCreations.Models.ProductModel> allParts = (List<CodeRedCreations.Models.ProductModel>)ViewData["AllParts"];
 }
 <h2>@ViewData["Title"]</h2>
-<p class="text-success">@TempData["Message"]</p>
 <a asp-area="" asp-controller="Admin" asp-action="ManagePromos">Return to Manage Promos</a>
 
 <form asp-controller="Admin" asp-action="UpsertPromo" id="UpsertPromoForm" method="post" class="form-horizontal">

@@ -13,24 +13,33 @@ using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using System.IO.Compression;
+using CodeRedCreations.Models.Account;
+using Microsoft.Extensions.Options;
+using CodeRedCreations.Services;
+using System.Text.Encodings.Web;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace CodeRedCreations.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin"), ResponseCache(CacheProfileName = "Default")]
     public class AdminController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
-        private CodeRedContext _context;
+        private readonly CodeRedContext _context;
 
         public AdminController(
             UserManager<ApplicationUser> userManager,
             ILoggerFactory loggerFactory,
-            CodeRedContext context)
+            CodeRedContext context,
+            IEmailSender emailSender)
         {
             _userManager = userManager;
             _logger = loggerFactory.CreateLogger<AccountController>();
             _context = context;
+            _emailSender = emailSender;
         }
 
         // GET: /<controller>/
@@ -44,15 +53,31 @@ namespace CodeRedCreations.Controllers
         [HttpGet]
         public async Task<IActionResult> ManageUsers()
         {
-            var allUsers = await _context.Users.ToListAsync();
+            var allUsers = await _context.Users.OrderBy(x => x.UserName).ToListAsync();
+            var allUserRefs = await _context.UserReferral.ToListAsync();
+            ViewData["AllUserRefs"] = allUserRefs;
 
             return View(allUsers);
+        }
+
+        public async Task<IActionResult> ToggleReferral(string id)
+        {
+            var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == id);
+            if (userRef != null)
+            {
+                userRef.Enabled = !userRef.Enabled;
+                _context.UserReferral.Update(userRef);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("ManageUsers");
         }
 
         [HttpGet]
         public async Task<IActionResult> ManageProducts()
         {
-            var allProducts = await _context.Brand.Include(x => x.Parts).ToListAsync();
+            var allProducts = await _context.Brand.Include(x => x.Products).ThenInclude(x => x.Images)
+                .Include(x => x.Products).ThenInclude(x => x.CarProducts).ThenInclude(x => x.Car).ToListAsync();
 
             return View(allProducts);
         }
@@ -60,7 +85,7 @@ namespace CodeRedCreations.Controllers
         [HttpGet]
         public async Task<IActionResult> ManageCars()
         {
-            IList<CarModel> cars = await _context.Car.ToListAsync();
+            IList<CarModel> cars = await _context.Car.Include(x => x.CarProducts).ThenInclude(x => x.Product).ToListAsync();
 
             return View(cars);
         }
@@ -71,6 +96,53 @@ namespace CodeRedCreations.Controllers
             var promoCodes = await _context.Promos.Include(x => x.ApplicableParts).ToListAsync();
 
             return View(promoCodes);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ManagePayouts(int? id)
+        {
+            if (id != null)
+            {
+                var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == id);
+                var user = await _userManager.FindByIdAsync(userRef.UserId);
+                var payoutAmount = Math.Round((userRef.Earnings / 3), 2);
+                ViewData["Message"] = $"{user.NormalizedEmail} has been successfully paid: {payoutAmount.ToString("C2")}.";
+
+                userRef.Earnings = 0m;
+                userRef.RequestedPayout = false;
+                await _context.SaveChangesAsync();
+            }
+
+            var allReferrals = await _context.UserReferral.Where(x => x.Enabled).OrderBy(x => x.RequestedPayout).ToListAsync();
+            ViewData["AllUsers"] = await _context.Users.ToListAsync();
+            return View(allReferrals);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SendPayment(int id)
+        {
+            var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == id);
+            var user = await _userManager.FindByIdAsync(userRef.UserId);
+            var payoutAmount = Math.Round(userRef.Earnings * (userRef.PayoutPercent / 100), 2);
+
+            var url = (HttpContext.Request.Host.Host.ToUpper().Contains("LOCALHOST")) ?
+                    "https://www.sandbox.paypal.com/us/cgi-bin/webscr" : "https://www.paypal.com/us/cgi-bin/webscr";
+
+            var builder = new StringBuilder();
+            builder.Append(url);
+
+            builder.Append($"?cmd=_xclick&business={UrlEncoder.Default.Encode(userRef.PayPalAccount)}");
+            builder.Append($"&lc=US&no_note=0&currency_code=USD");
+            builder.Append($"&custom={UrlEncoder.Default.Encode(userRef.Id.ToString())}");
+            builder.Append($"&item_name={UrlEncoder.Default.Encode($"Referral Payment - {user.NormalizedEmail}")}");
+            builder.Append($"&amount={UrlEncoder.Default.Encode(payoutAmount.ToString())}");
+            builder.Append($"&return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Admin/ManagePayouts?id={userRef.Id}")}");
+            builder.Append($"&cancel_return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Admin/ManagePayouts")}");
+            builder.Append($"&quantity=1");
+            builder.Append($"&shipping=0");
+            builder.Append($"&item_number={UrlEncoder.Default.Encode(userRef.Id.ToString())}");
+
+            return Redirect(builder.ToString());
         }
 
         [HttpGet]
@@ -106,7 +178,7 @@ namespace CodeRedCreations.Controllers
                 foreach (var id in PartIds)
                 {
                     var part = await _context.Products.Include(x => x.Brand)
-                        .Include(x => x.CompatibleCars).Include(x => x.Images)
+                        .Include(x => x.CarProducts).Include(x => x.Images)
                         .FirstOrDefaultAsync(x => x.PartId == id);
                     promo.ApplicableParts.Add(part);
                 }
@@ -148,11 +220,13 @@ namespace CodeRedCreations.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> AddProduct(int? id, string section)
+        public async Task<IActionResult> AddProduct(int? id, string section, bool newSimilarProduct = false)
         {
+            id = (id == 0) ? null : id;
             var AddNewProduct = new AddNewProductModel();
             AddNewProduct.Cars = await _context.Car.ToListAsync();
             AddNewProduct.Brands = await _context.Brand.ToListAsync();
+            AddNewProduct.Part = new ProductModel();
 
             if (id != null)
             {
@@ -160,8 +234,18 @@ namespace CodeRedCreations.Controllers
                 {
                     AddNewProduct.Part = await _context.Products.Include(x => x.Brand)
                         .Include(x => x.Images)
-                        .Include(x => x.CompatibleCars)
+                        .Include(x => x.CarProducts)
                         .FirstOrDefaultAsync(x => x.PartId == id);
+
+                    if (newSimilarProduct)
+                    {
+                        AddNewProduct.Part.PartNumber = null;
+                        AddNewProduct.Part.PartId = 0;
+                        AddNewProduct.Part.Images = null;
+                        AddNewProduct.Part.Years = null;
+                        AddNewProduct.Part.CarProducts = null;
+                        AddNewProduct.Part.Shipping = 0m;
+                    }
 
                     AddNewProduct.Brand = AddNewProduct.Part.Brand;
                 }
@@ -181,7 +265,7 @@ namespace CodeRedCreations.Controllers
         public async Task<IActionResult> AddBrand(AddNewProductModel model)
         {
             var newBrand = model.Brand;
-            var existing = _context.Brand.FirstOrDefault(x => x.Name == newBrand.Name);
+            var existing = _context.Brand.FirstOrDefault(x => x.Name == newBrand.Name || x.BrandId == newBrand.BrandId);
 
             if (existing != null)
             {
@@ -196,21 +280,22 @@ namespace CodeRedCreations.Controllers
             }
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("AddProduct", new { id = newBrand.BrandId, section = "BRAND" });
+            return RedirectToAction("AddProduct", new { id = newBrand.BrandId, section = "BRAND", newSimilarProduct = false });
         }
 
         public async Task<IActionResult> AddCar(AddNewProductModel model)
         {
             var newCar = model.NewCar;
+            newCar.Make = newCar.Make.ToUpper();
+            newCar.Model = newCar.Model.ToUpper();
 
-            var existing = await _context.Car
+            var existing = await _context.Car.Include(x => x.CarProducts).ThenInclude(x => x.Car)
                 .FirstOrDefaultAsync(x => (x.Make == newCar.Make && x.Model == newCar.Model) || x.CarId == newCar.CarId);
 
             if (existing != null)
             {
                 existing.Make = newCar.Make;
                 existing.Model = newCar.Model;
-                existing.TrimLevel = newCar.TrimLevel;
                 TempData["SuccessMessage"] = $"Updated {newCar.Make} {newCar.Model}.";
             }
             else
@@ -219,27 +304,20 @@ namespace CodeRedCreations.Controllers
                 TempData["SuccessMessage"] = $"Added {newCar.Make} {newCar.Model}.";
             }
             await _context.SaveChangesAsync();
-
-            if (existing != null)
-            {
-                return RedirectToAction("ManageCars", new { id = existing.CarId, section = "CAR" });
-            }
-
-            return RedirectToAction("AddProduct");
+            
+            return RedirectToAction("AddProduct", new { section = "CAR", newSimilarProduct = false });
         }
 
-        public async Task<IActionResult> AddPart(AddNewProductModel model)
+        public async Task<IActionResult> AddPart(AddNewProductModel model, ICollection<int> CompatibleCarIds)
         {
             int imgCount = 0;
             var images = new List<ImageModel>();
-            var newPart = model.Part;
-
-            var existing = await _context.Products.Include(x => x.Brand)
-                                             .Include(x => x.Images).Include(x => x.CompatibleCars)
-                                            .FirstOrDefaultAsync(x => (x.Brand == newPart.Brand && x.Name == newPart.Name) || x.PartId == newPart.PartId);
-
-            model.Part.CompatibleCars = await _context.Car.FirstOrDefaultAsync(x => x.CarId == model.Part.CompatibleCars.CarId);
-            model.Part.Brand = await _context.Brand.Include(x => x.Parts).FirstOrDefaultAsync(x => x.BrandId == model.Part.Brand.BrandId);
+            var carProducts = new List<CarProduct>();
+            var newProduct = model.Part;
+            newProduct.Brand = await _context.Brand.Include(x => x.Products).FirstOrDefaultAsync(x => x.BrandId == model.Part.Brand.BrandId);
+            newProduct.PartNumber = (string.IsNullOrEmpty(newProduct.PartNumber)) ? DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") : newProduct.PartNumber;
+            newProduct.Years = (!string.IsNullOrEmpty(model.Part.Years)) ? model.Part.Years.Replace(" ", "").Replace("-", " - ") : null;
+            newProduct.Shipping = (newProduct.Shipping == 0m) ? await CalculateShippingAsync(newProduct.Price) : newProduct.Shipping;
 
             foreach (var file in Request.Form.Files)
             {
@@ -249,37 +327,69 @@ namespace CodeRedCreations.Controllers
 
                     images.Add(new ImageModel
                     {
-                        Name = $"{newPart.Name} ({imgCount})",
+                        Name = $"{newProduct.Name} ({imgCount})",
                         Description = file.FileName,
                         Bytes = ConvertToBytes(file)
                     });
                 }
             }
-            newPart.Images = images;
+            newProduct.Images = images;
 
-            newPart.Price = priceWithTax(newPart.Price, 8);
+            foreach (var carId in CompatibleCarIds)
+            {
+                var car = await _context.Car.Include(x => x.CarProducts).FirstOrDefaultAsync(x => x.CarId == carId);
+                carProducts.Add(new CarProduct
+                {
+                    CarId = car.CarId,
+                    Car = car,
+                    ProductId = newProduct.PartId,
+                    Product = newProduct
+                });
+            }
+            newProduct.CarProducts = carProducts;
 
+            var existing = await _context.Products
+                                            .Include(x => x.Brand).Include(x => x.Images).Include(x => x.CarProducts).ThenInclude(x => x.Car)
+                                            .FirstOrDefaultAsync(x => x.PartId == newProduct.PartId);
             if (existing != null)
             {
-                existing.Name = newPart.Name;
-                existing.Description = newPart.Description;
-                existing.Brand = newPart.Brand;
-                existing.PartType = newPart.PartType;
-                existing.CompatibleCars = newPart.CompatibleCars;
-                existing.Price = newPart.Price;
-                existing.Shipping = newPart.Shipping;
-                existing.Images = (newPart.Images.Count() > 0) ? newPart.Images : existing.Images;
-                TempData["SuccessMessage"] = $"Successfully updated {existing.Name} ({existing.PartId})";
+                foreach (var existingCarProduct in existing.CarProducts)
+                {
+                    _context.CarProduct.Remove(existingCarProduct);
+                }
+                await _context.SaveChangesAsync();
+                foreach (var newCarProduct in newProduct.CarProducts)
+                {
+                    existing.CarProducts = newProduct.CarProducts;
+                    await _context.SaveChangesAsync();
+                }
+
+                existing.PartNumber = newProduct.PartNumber;
+                existing.Years = newProduct.Years;
+                existing.Name = newProduct.Name;
+                existing.Description = newProduct.Description;
+                existing.Brand = newProduct.Brand;
+                existing.PartType = newProduct.PartType;
+                existing.Price = newProduct.Price;
+                existing.Shipping = newProduct.Shipping;
+                existing.Images = (newProduct.Images.Count() > 0) ? newProduct.Images : existing.Images;
+                
+                TempData["SuccessMessage"] = $"Successfully updated {existing.Name} ({existing.PartNumber})";
             }
             else
             {
-                TempData["SuccessMessage"] = $"Added {newPart.Brand.Name} {newPart.Name}.";
-                _context.Products.Add(newPart);
+                _context.Products.Add(newProduct);
+
+                TempData["SuccessMessage"] = $"Added {newProduct.Brand.Name} {newProduct.Name} ({newProduct.PartNumber}).";
             }
-            _context.Brand.Update(newPart.Brand);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("AddProduct", new { id = newPart.PartId, section = "PART" });
+            return RedirectToAction("AddProduct", new { id = newProduct.PartId, section = "PART", newSimilarProduct = false });
+        }
+
+        public IActionResult NewSimilarProduct(int id)
+        {
+            return RedirectToAction("AddProduct", new { id = id, section = "PART", newSimilarProduct = true });
         }
 
         public async Task<IActionResult> DeletePart(int id)
@@ -294,6 +404,59 @@ namespace CodeRedCreations.Controllers
 
             return RedirectToAction("ManageProducts");
         }
+        public async Task<IActionResult> DeleteCar(int id)
+        {
+            var carFound = await _context.Car.FirstOrDefaultAsync(x => x.CarId == id);
+            if (carFound != null)
+            {
+                _context.Car.Remove(carFound);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("ManageCars");
+        }
+
+        public async Task<IActionResult> DeleteBrand(int id)
+        {
+            var brand = await _context.Brand.FirstOrDefaultAsync(x => x.BrandId == id);
+            var brandName = brand.Name;
+            if (brand != null)
+            {
+                _context.Brand.Remove(brand);
+                await _context.SaveChangesAsync();
+                TempData["Message"] = $"Successfully deleted: {brandName}.";
+            }
+            return RedirectToAction("ManageProducts");
+        }
+
+        public async Task<IActionResult> AdjustShipping()
+        {
+            var allProducts = _context.Products;
+            foreach (var product in allProducts)
+            {
+                product.Shipping = await CalculateShippingAsync(product.Price);
+            }
+            _context.Products.UpdateRange(allProducts);
+            await _context.SaveChangesAsync();
+            TempData["Message"] = "All product shipping prices were adjusted.";
+            return RedirectToAction("ManageProducts");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SetRefPercent(string UserId, string RefPercent)
+        {
+            var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == UserId);
+            var percent = int.Parse(RefPercent);
+            if (userRef != null)
+            {
+                userRef.PayoutPercent = percent;
+                _context.UserReferral.Update(userRef);
+                await _context.SaveChangesAsync();
+                TempData["Message"] = $"Payout percentage successfully set to: {percent} %.";
+            }
+
+            return RedirectToAction("ManageUsers", "Admin");
+        }
 
         // Called via ajax
         [HttpPost]
@@ -303,12 +466,23 @@ namespace CodeRedCreations.Controllers
             {
                 var user = await _userManager.FindByEmailAsync(email);
                 var currentRole = await _userManager.GetRolesAsync(user);
+                var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == user.Id);
+                var refPromo = await _context.Promos.FirstOrDefaultAsync(x => x.Code == user.Email.Split('@')[0]);
 
                 if (currentRole.Count > 0)
                 {
                     var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRole);
                     if (removeResult.Succeeded)
                     {
+                        if (userRef != null && currentRole.Contains(UserRoles.Sponsor.ToString()))
+                        {
+                            userRef.Enabled = false;
+
+                            if (refPromo != null)
+                            {
+                                refPromo.Enabled = false;
+                            }
+                        }
                         _logger.LogInformation($"{user.Email} has had their roles removed.");
                     }
                 }
@@ -317,10 +491,42 @@ namespace CodeRedCreations.Controllers
                 if (addResult.Succeeded)
                 {
                     _logger.LogInformation($"{user.Email} was given {newRole} roles.");
-                }
+                    if (await _userManager.IsInRoleAsync(user, UserRoles.Sponsor.ToString()))
+                    {
+                        if (refPromo == null)
+                        {
+                            _context.Promos.Add(new PromoModel
+                            {
+                                Code = userRef.ReferralCode,
+                                DiscountPercentage = 5,
+                                Enabled = true
+                            });
+                        }
+                        else
+                        {
+                            refPromo.Enabled = true;
+                        }
 
+                        if (userRef != null)
+                        {
+                            userRef.Enabled = true;
+                            userRef.PayoutPercent = 100;
+                            _context.UserReferral.Update(userRef);
+                        }
+                        else
+                        {
+                            _context.UserReferral.Add(new UserReferral
+                            {
+                                UserId = user.Id,
+                                Enabled = true,
+                                ReferralCode = user.Email.Split('@')[0]
+                            });
+                        }
+                    }
+                }
             }
 
+            await _context.SaveChangesAsync();
             return RedirectToAction("ManageUsers", "Admin");
         }
 
@@ -359,6 +565,20 @@ namespace CodeRedCreations.Controllers
             return RedirectToAction("ManagePromos", "Admin");
         }
 
+        public async Task<IActionResult> CapAll()
+        {
+            var cars = await _context.Car.ToListAsync();
+            foreach (var car in cars)
+            {
+                car.Make = car.Make.ToUpper();
+                car.Model = car.Model.ToUpper();
+
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("ManageCars");
+        }
+
         private byte[] ConvertToBytes(IFormFile file)
         {
             Stream stream = file.OpenReadStream();
@@ -369,13 +589,32 @@ namespace CodeRedCreations.Controllers
             }
         }
 
-        private decimal priceWithTax(decimal price, int taxRate)
+        public string FirstCharToUpper(string input)
         {
-            decimal taxPercent = (taxRate / 100m);
-            decimal taxedAmount = (price * taxPercent);
-            decimal totalAfterTax = Math.Round(price + taxedAmount, 2);
+            if (string.IsNullOrEmpty(input))
+            {
+                throw new ArgumentException("String is empty or null.");
+            }
+            return input.First().ToString().ToUpper() + input.Substring(1);
+        }
 
-            return totalAfterTax;
+        private async Task<decimal> CalculateShippingAsync(decimal productPrice)
+        {
+            decimal shipping = 0m;
+
+            await Task.Run(() =>
+            {
+                if (productPrice <= 750m)
+                {
+                    shipping = (Math.Round(productPrice * 0.10m, 2)) + 5m;
+                }
+                else
+                {
+                    shipping = Math.Round(productPrice * 0.08m, 2);
+                }
+            });
+
+            return shipping;
         }
     }
 }

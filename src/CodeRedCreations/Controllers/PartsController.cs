@@ -13,72 +13,74 @@ using MimeKit.Text;
 using MailKit.Net.Smtp;
 using CodeRedCreations.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using CodeRedCreations.Models.Account;
+using Newtonsoft.Json;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CodeRedCreations.Controllers
 {
     public class PartsController : Controller
     {
         private CodeRedContext _context;
+        private readonly AppSettings _settings;
         private readonly IEmailSender _emailSender;
         private readonly UserManager<ApplicationUser> _userManager;
+        private IMemoryCache _cache;
         public PartsController(
             CodeRedContext context,
+            IOptions<AppSettings> settings,
             UserManager<ApplicationUser> userManager,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IMemoryCache cache)
         {
             _context = context;
+            _settings = settings.Value;
             _userManager = userManager;
             _emailSender = emailSender;
+            _cache = cache;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string part = "All", string brand = "All", string car = "All")
+        public async Task<IActionResult> Index(string part = "All", string brand = "All", string car = "All", string search = null, int page = 1)
         {
-
-            var carDict = new Dictionary<string, string>();
-            foreach (var c in _context.Car.OrderBy(x => x.Make))
-            {
-                carDict.Add(c.Model, c.Make);
-            }
-
-            ViewData["allBrands"] = await _context.Brand.OrderBy(x => x.Name).Select(x => x.Name).ToListAsync();
-            ViewData["allCars"] = carDict;
-
-
-            var foundParts = await _context.Products.Include(x => x.Images).Include(x => x.Brand).Include(x => x.CompatibleCars).ToListAsync();
-            if (string.IsNullOrEmpty(part) || string.IsNullOrEmpty(brand) || string.IsNullOrEmpty(car))
-            {
-                ViewData["partCount"] = foundParts.Count;
-                return View(foundParts);
-            }
-            else
-            {
-                if (part != "All")
-                {
-                    PartTypeEnum partType = (PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), part);
-                    foundParts.RemoveAll(x => x.PartType != partType);
-                }
-                if (brand != "All")
-                {
-                    foundParts.RemoveAll(x => x.Brand.Name.ToUpper() != brand.ToUpper());
-                }
-                if (car != "All")
-                {
-                    foundParts.RemoveAll(x => x.CompatibleCars.Model.ToUpper() != car.ToUpper());
-                }
-            }
-            ViewData["partCount"] = foundParts.Count;
-
-            return View(foundParts);
+            ViewData["allBrands"] = await GetAllBrandsAsync();
+            ViewData["allCars"] = await GetAllCarsAsync();
+            ViewData["page"] = page;
+            ViewData["Search"] = search;
+            var products = await GetProductsAsync(part, brand, car, search, page);
+            
+            return View(products);
         }
 
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
             var viewModel = new ProductDetailsView();
-            var product = await _context.Products.Include(x => x.Images).Include(x => x.Brand).FirstOrDefaultAsync(x => x.PartId == id);
+            var product = await _context.Products.Include(x => x.Images).Include(x => x.Brand).Include(x => x.CarProducts).ThenInclude(x => x.Car).FirstOrDefaultAsync(x => x.PartId == id);
+            if (HttpContext.Request.Cookies["Referral"] != null)
+            {
+                var referralCookie = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<UserReferral>(HttpContext.Request.Cookies["Referral"]));
+                if (referralCookie != null)
+                {
+                    var refPromo = await _context.Promos.FirstOrDefaultAsync(x => x.Code == referralCookie.ReferralCode);
+                    if (TempData["Promo"] == null && refPromo != null)
+                    {
+                        if ((user != null && referralCookie.UserId != user.Id) || user == null)
+                        {
+                            TempData["Promo"] = refPromo.Id;
+                        }
+                    }
+                }
+            }
+
             viewModel.ProductModel = product;
             viewModel.Images = product.Images;
+            if (user != null)
+            {
+                viewModel.UserReferral = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == user.Id);
+            }
 
             if (TempData["Promo"] != null)
             {
@@ -89,6 +91,16 @@ namespace CodeRedCreations.Controllers
                     ViewData["OldPrice"] = viewModel.ProductModel.Price;
                     viewModel.ProductModel.Price = ApplyPromoCode(viewModel);
                 }
+            }
+
+            if (TempData["ReferralAmount"] != null)
+            {
+                var refAmount = decimal.Parse(TempData["ReferralAmount"].ToString());
+                ViewData["OldPrice"] = viewModel.ProductModel.Price;
+
+                var newPrice = ((viewModel.ProductModel.Price - refAmount) <= 0 ? 0.01m : (viewModel.ProductModel.Price - refAmount));
+
+                viewModel.ProductModel.Price = newPrice;
             }
 
             viewModel.ProductModel.Price = Math.Round(viewModel.ProductModel.Price, 2);
@@ -111,7 +123,7 @@ namespace CodeRedCreations.Controllers
             {
                 var from = (request.FromEmail != null) ? request.FromEmail : "Anonymous";
                 var body = $"<p>New part request from: {from}</p><dl><dt>Brand Name:</dt><dd>{request.Part.Brand.Name}</dd><dt>Part Name:</dt><dd>{request.Part.Name}</dd><dt>Part Type:</dt><dd>{request.Part.PartType}</dd></dl>";
-                await _emailSender.SendEmailAsync("Zeketiki@gmail.com", "Product Request","Part Request", body);
+                await _emailSender.SendEmailAsync("Dakota@CodeRedPerformance.com", "Product Request", "Part Request", body);
 
                 TempData["Message"] = "Request sent!";
                 return RedirectToAction("Request");
@@ -122,9 +134,11 @@ namespace CodeRedCreations.Controllers
 
         }
 
-        public async Task<IActionResult> BuyNow(ProductDetailsView model)
+        public async Task<IActionResult> BuyNow(ProductDetailsView model, decimal? refAmount)
         {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
             model.ProductModel = await _context.Products.Include(x => x.Brand).FirstOrDefaultAsync(x => x.PartId == model.ProductModel.PartId);
+            var originalPrice = model.ProductModel.Price;
             if (model.PromoModel != null)
             {
                 model.PromoModel = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == model.PromoModel.Id);
@@ -135,24 +149,45 @@ namespace CodeRedCreations.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            if (user != null)
+            {
+                var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == model.UserReferral.Id && x.UserId == user.Id);
+                if (refAmount != null && userRef != null)
+                {
+                    if (refAmount > userRef.Earnings)
+                    {
+                        refAmount = userRef.Earnings;
+                    }
+                    
+                    decimal price = ((model.ProductModel.Price - (decimal)refAmount) <= 0 ? 0.01m : (model.ProductModel.Price - (decimal)refAmount));
+                    model.ProductModel.Price = Math.Round(price, 2);
+                }
+            }
+
             if (model.ProductModel != null)
             {
-                var url = (HttpContext.Request.Host.Host.Normalize().Contains("LOCALHOST")) ?
+                var url = (HttpContext.Request.Host.Host.ToUpper().Contains("LOCALHOST")) ?
                     "https://www.sandbox.paypal.com/us/cgi-bin/webscr" : "https://www.paypal.com/us/cgi-bin/webscr";
+                var paypalBusiness = _settings.PaypalBusiness;
+                
+                decimal tax = Math.Round(originalPrice * 0.08m, 2);
 
                 var builder = new StringBuilder();
                 builder.Append(url);
 
-                builder.Append($"?cmd=_xclick&business={UrlEncoder.Default.Encode("zeketiki@gmail.com")}");
-                builder.Append($"&lc=US&no_note=0&currency_code=USD");
-                builder.Append($"&item_name={UrlEncoder.Default.Encode($"{model.ProductModel.Brand.Name} - {model.ProductModel.Name}")}");
+                builder.Append($"?cmd=_xclick&business={UrlEncoder.Default.Encode(paypalBusiness)}");
+                builder.Append($"&lc=US&no_note=0&currency_code=USD&tax={tax.ToString()}");
+                builder.Append($"&custom={UrlEncoder.Default.Encode(model.ProductModel.PartNumber)}");
+                builder.Append($"&item_name={UrlEncoder.Default.Encode($"{model.ProductModel.Brand.Name} - {model.ProductModel.Name}: #{model.ProductModel.PartNumber}")}");
                 builder.Append($"&amount={UrlEncoder.Default.Encode(model.ProductModel.Price.ToString())}");
-                builder.Append($"&return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Parts/Details?id={model.ProductModel.PartId}")}");
+                builder.Append($"&return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Home/ThankYou?id={model.ProductModel.PartId}")}");
                 builder.Append($"&cancel_return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Parts/Details?id={model.ProductModel.PartId}")}");
                 builder.Append($"&quantity={UrlEncoder.Default.Encode(model.Quantity.ToString())}");
                 builder.Append($"&shipping={UrlEncoder.Default.Encode((model.Quantity * model.ProductModel.Shipping).ToString())}");
-                builder.Append($"&item_number={UrlEncoder.Default.Encode(model.ProductModel.PartId.ToString())}");
+                builder.Append($"&item_number={UrlEncoder.Default.Encode(model.ProductModel.PartNumber)}");
 
+                TempData["ThankYouValidation"] = true;
+                TempData["RefAmount"] = refAmount.ToString();
                 return Redirect(builder.ToString());
             }
 
@@ -215,6 +250,156 @@ namespace CodeRedCreations.Controllers
             }
             TempData["Message"] = "This promo code is invalid.";
             return price;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ApplyStoreCredit(ProductDetailsView model)
+        {
+            var amount = model.UserReferral.Earnings;
+
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            if (user != null)
+            {
+                var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == model.UserReferral.Id && x.UserId == user.Id);
+                if (userRef != null && userRef.Enabled)
+                {
+                    if (amount > userRef.Earnings)
+                    {
+                        amount = userRef.Earnings;
+                    }
+                    TempData["ReferralAmount"] = amount.ToString();
+                }
+            }
+            return RedirectToAction("Details", new { id = model.ProductModel.PartId });
+        }
+
+        public async Task<IQueryable<ProductModel>> SearchProductsAsync(string searchTerm, IQueryable<ProductModel> search)
+        {
+            string s = searchTerm.Replace(" ", "").ToUpper();
+            // Brand Name
+            if (await search.AnyAsync(x => x.Brand.Name.Replace(" ", "").ToUpper().Contains(s)))
+            {
+                search = search.Where(x => x.Brand.Name.Replace(" ", "").ToUpper().Contains(s));
+            }
+
+            // Product Name
+            if (await search.AnyAsync(x => x.Name.Replace(" ", "").ToUpper().Contains(s)))
+            {
+                search = search.Where(x => x.Name.Replace(" ", "").ToUpper().Contains(s));
+            }
+
+            // Product Description
+            if (await search.AnyAsync(x => x.Description.Replace(" ", "").ToUpper().Contains(s)))
+            {
+                search = search.Where(x => x.Description.Replace(" ", "").ToUpper().Contains(s));
+            }
+
+            // Car Make
+            if (await search.AnyAsync(x => x.CarProducts.Any(c => c.Car.Make.Replace(" ", "").ToUpper().Contains(s))))
+            {
+                search = search.Where(x => x.CarProducts.Any(c => c.Car.Make.Replace(" ", "").ToUpper().Contains(s)));
+            }
+
+            // Car Model
+            if (await search.AnyAsync(x => x.CarProducts.Any(c => c.Car.Model.Replace(" ", "").ToUpper().Contains(s))))
+            {
+                search = search.Where(x => x.CarProducts.Any(c => c.Car.Model.Replace(" ", "").ToUpper().Contains(s)));
+            }
+
+            // Product Price
+            if (s.Contains("$"))
+            {
+                if (await search.AnyAsync(x => x.Price.ToString().Replace(" ", "").ToUpper().Contains(s.Replace("$", ""))))
+                {
+                    search = search.Where(x => x.Price.ToString().Replace(" ", "").ToUpper().Contains(s.Replace("$", "")));
+                }
+            }
+
+            // Part Number
+            if (await search.AnyAsync(x => x.PartNumber.Replace(" ", "").ToUpper() == s))
+            {
+                search = search.Where(x => x.PartNumber.Replace(" ", "").ToUpper() == s);
+            }
+
+            // Car Year
+            int ignore = -1;
+            if (int.TryParse(s, out ignore))
+            {
+                int year = int.Parse(s);
+                search = search.Where(x => x.CarProducts.Count() > 0 &&
+                    !string.IsNullOrEmpty(x.Years) &&
+                    year >= int.Parse(x.Years.Replace(" ", "").Split('-')[0].Replace("-", "")) &&
+                    year <= ((x.Years.Replace(" ", "").Split('-')[1].Replace("-", "").ToUpper().Contains("PRESENT")) ? 9999 : int.Parse(x.Years.Replace(" ", "").Split('-')[1].Replace("-", ""))));
+            }
+
+            return search;
+        }
+
+        public async Task<List<string>> GetAllBrandsAsync()
+        {
+            string key = "brands";
+            var brands = _cache.Get<List<string>>(key);
+            if (brands == null)
+            {
+                brands = await _context.Brand.Include(x => x.Products).Where(x => x.Products.Count > 0).OrderBy(x => x.Name).Select(x => x.Name).ToListAsync();
+                _cache.Set(key, brands, TimeSpan.FromDays(7));
+            }
+            
+            return brands;
+        }
+        public async Task<List<CarModel>> GetAllCarsAsync()
+        {
+            string key = "cars";
+            var cars = _cache.Get<List<CarModel>>(key);
+            if (cars == null)
+            {
+                cars = await _context.Car.OrderBy(x => x.Make).ThenBy(x => x.Model).ToListAsync();
+                _cache.Set(key, cars, TimeSpan.FromDays(7));
+            }
+
+            return cars;
+        }
+        public async Task<List<ProductModel>> GetProductsAsync(string part, string brand, string car, string search, int page)
+        {
+            string key = $"{part}{brand}{car}{search}{page}";
+            var products = _cache.Get<List<ProductModel>>(key);
+            if (products == null)
+            {
+                var partsQuery = _context.Products.Include(x => x.Images)
+                   .Include(x => x.Brand).Include(x => x.CarProducts).ThenInclude(x => x.Car)
+                   .Where(x => x.Price > 0m);
+
+                if (car != "All")
+                {
+                    partsQuery = partsQuery.Where(x => x.CarProducts.Any(c => c.Car.Model.ToUpper() == car.ToUpper()));
+                }
+                if (part != "All")
+                {
+                    PartTypeEnum partType = (PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), part);
+                    partsQuery = partsQuery.Where(x => x.PartType == partType);
+                }
+                if (brand != "All")
+                {
+                    partsQuery = partsQuery.Where(x => x.Brand.Name.ToUpper() == brand.ToUpper());
+                }
+                if (!string.IsNullOrEmpty(search))
+                {
+                    partsQuery = await SearchProductsAsync(search, partsQuery);
+                }
+
+                products = await partsQuery
+                    .OrderBy(x => x.Name).ThenBy(x => x.Brand.Name)
+                    .ThenBy(x => x.CarProducts.Select(c => c.Car).OrderBy(c => c.Make).FirstOrDefault())
+                    .ThenBy(x => x.CarProducts.Select(c => c.Car).OrderBy(c => c.Model).FirstOrDefault())
+                    .ThenBy(x => x.Years)
+                    .ThenBy(x => x.Price)
+                    .ToListAsync();
+
+                _cache.Set(key, products, TimeSpan.FromDays(7));
+            }
+
+            ViewData["partCount"] = products.Count();
+            return products.Page(page, 54).ToList();
         }
     }
 }

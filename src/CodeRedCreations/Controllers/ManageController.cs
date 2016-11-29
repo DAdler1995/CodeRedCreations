@@ -8,6 +8,9 @@ using CodeRedCreations.Models;
 using CodeRedCreations.Models.ManageViewModels;
 using CodeRedCreations.Services;
 using CodeRedCreations.Data;
+using Microsoft.EntityFrameworkCore;
+using System;
+using CodeRedCreations.Models.Account;
 
 namespace CodeRedCreations.Controllers
 {
@@ -62,8 +65,38 @@ namespace CodeRedCreations.Controllers
                 PhoneNumber = await _userManager.GetPhoneNumberAsync(user),
                 TwoFactor = await _userManager.GetTwoFactorEnabledAsync(user),
                 Logins = await _userManager.GetLoginsAsync(user),
-                BrowserRemembered = await _signInManager.IsTwoFactorClientRememberedAsync(user)
+                BrowserRemembered = await _signInManager.IsTwoFactorClientRememberedAsync(user),
+                UserReferral = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == user.Id)
             };
+
+            if (model.UserReferral == null)
+            {
+                var userRef = new UserReferral
+                {
+                    UserId = user.Id,
+                    ReferralCode = $"{user.Email.Split('@')[0]}"
+                };
+                _context.UserReferral.Add(userRef);
+
+                var refPromo = await _context.Promos.FirstOrDefaultAsync(x => x.Code == userRef.ReferralCode);
+                if (refPromo == null)
+                {
+                    _context.Promos.Add(new PromoModel
+                    {
+                        Code = userRef.ReferralCode,
+                        DiscountPercentage = 5,
+                        Enabled = true
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+
+                model.UserReferral = userRef;
+            }
+
+
+            ViewData["ReferralUrl"] = $"https://{HttpContext.Request.Host}/Home/Referral/{model.UserReferral.ReferralCode}";
+            ViewData["ReferralEarnings"] = Math.Round(model.UserReferral.Earnings, 2);
             return View(model);
         }
 
@@ -328,6 +361,81 @@ namespace CodeRedCreations.Controllers
             var result = await _userManager.AddLoginAsync(user, info);
             var message = result.Succeeded ? ManageMessageId.AddLoginSuccess : ManageMessageId.Error;
             return RedirectToAction(nameof(ManageLogins), new { Message = message });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangeReferral(IndexViewModel model)
+        {
+            var userReferral = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == model.UserReferral.Id);
+            var existingReferralCode = await _context.UserReferral.FirstOrDefaultAsync(x => x.ReferralCode == model.UserReferral.ReferralCode);
+            if (existingReferralCode == null)
+            {
+                userReferral.ReferralCode = model.UserReferral.ReferralCode;
+                _context.UserReferral.Update(userReferral);
+                await _context.SaveChangesAsync();
+                TempData["ChangeReferralMessage"] = "Sucessfully changed referral code.";
+                return RedirectToAction("Index");
+            }
+            TempData["ChangeReferralMessage"] = "I'm sorry, but this referral code is already in use.";
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AddReferralPaypal(int? id)
+        {
+            if (id == null || id < 1)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var userReferral = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == id);
+            return View(userReferral);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddReferralPaypal(UserReferral model)
+        {
+            var userReferral = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == model.Id);
+            if (userReferral != null)
+            {
+                userReferral.PayPalAccount = model.PayPalAccount;
+                _context.UserReferral.Update(userReferral);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RemoveReferralPaypal(int id)
+        {
+            var userReferral = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == id);
+            if (userReferral != null)
+            {
+                userReferral.PayPalAccount = null;
+                _context.UserReferral.Update(userReferral);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RequestPayout(int id)
+        {
+            var userReferral = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == id);
+            if (userReferral != null)
+            {
+                if (userReferral.Earnings > 10m)
+                {
+                    userReferral.RequestedPayout = !userReferral.RequestedPayout;
+                    _context.UserReferral.Update(userReferral);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return RedirectToAction("Index");
         }
 
         #region Helpers

@@ -4,7 +4,7 @@ namespace CodeRedCreations.Models
 {
     public class NavbarViewModel
     {
-        public IEnumerable<BrandModel> Brand { get; set; }
-        public IEnumerable<CarModel> Cars { get; set; }
+        public ICollection<BrandModel> Brand { get; set; }
+        public ICollection<CarModel> Cars { get; set; }
     }
 }

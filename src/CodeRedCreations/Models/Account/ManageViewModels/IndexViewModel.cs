@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity;
+using CodeRedCreations.Models.Account;
 
 namespace CodeRedCreations.Models.ManageViewModels
 {
@@ -14,5 +15,7 @@ namespace CodeRedCreations.Models.ManageViewModels
         public bool TwoFactor { get; set; }
 
         public bool BrowserRemembered { get; set; }
+
+        public UserReferral UserReferral { get; set; }
     }
 }

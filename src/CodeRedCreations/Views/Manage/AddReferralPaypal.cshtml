@@ -1,0 +1,34 @@
+﻿@model CodeRedCreations.Models.Account.UserReferral
+@{
+    ViewData["Title"] = "Add Referral PayPal";
+}
+<h2>@ViewData["Title"].</h2>
+<div class="row">
+    <div class="col-md-12">
+        <input hidden="hidden" class="hidden" asp-for="Id" />
+        <h4>Add a PayPal Account.</h4>
+        <hr />
+    </div>
+    <div class="col-md-12">
+        <form asp-controller="Manage" asp-action="AddReferralPaypal" method="post" class="form-horizontal">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="PayPalAccount" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    <input type="email" asp-for="PayPalAccount" class="form-control" />
+                    <span asp-validation-for="PayPalAccount" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <button type="submit" class="btn btn-default">Add PayPal Account</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

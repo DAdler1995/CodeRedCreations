@@ -1,11 +1,95 @@
-﻿$(".nav a").on("click", function () {
+﻿// On Page Load \\
+$(document).ready(function () {
+    $('[data-toggle="popover"]').popover();
+
+    $('.tempMessage').show('slow').delay(5000).hide('slow');
+    $('.loading').fadeOut('fast');
+    $('.loadedContent').fadeIn('slow');
+});
+
+$(".nav a").on("click", function () {
     $(".nav").find(".active").removeClass("active");
     $(this).addClass("active");
 });
 
+function AddQuantity() {
+    var quantity = $('#quantity').val();
+
+    $('#addToCart').attr('href', function () {
+        return this.href + '?quantity=' + quantity;
+    });
+}
+
+// Normalize Carousel Heights - pass in Bootstrap Carousel items.
+$.fn.carouselHeights = function () {
+
+    var items = $(this), //grab all slides
+        heights = [], //create empty array to store height values
+        tallest; //create variable to make note of the tallest slide
+
+    var normalizeHeights = function () {
+
+        items.each(function () { //add heights to array
+            heights.push($(this).height());
+        });
+        tallest = Math.max.apply(null, heights); //cache largest value
+        items.each(function () {
+            $(this).css('min-height', tallest + 'px');
+        });
+    };
+
+    normalizeHeights();
+
+    $(window).on('resize orientationchange', function () {
+        //reset vars
+        tallest = 0;
+        heights.length = 0;
+
+        items.each(function () {
+            $(this).css('min-height', '0'); //reset min-height
+        });
+        normalizeHeights(); //run it again
+    });
+
+};
+
+jQuery(function ($) {
+
+    $(window).on('load', function () {
+        $('.carousel .item').carouselHeights();
+    });
+
+});
+
+$(function () {
+    var query = getParameterByName('section');
+    if (query == null || query.toString().toUpperCase() == "BRAND") {
+        $('#tabBrand').addClass('active');
+        $('#addBrand').addClass('active');
+    } else if (query.toString().toUpperCase() == 'PART') {
+        $('#tabPart').addClass('active');
+        $('#addPart').addClass('active');
+    } else if (query.toString().toUpperCase() == "CAR") {
+        $('#tabCar').addClass('active');
+        $('#addCar').addClass('active');
+    }
+});
+
+function getParameterByName(name, url) {
+    if (!url) {
+        url = window.location.href;
+    }
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
 /* =========================================================
  * bootstrap-datepicker.js 
- * http://www.eyecon.ro/bootstrap-datepicker
+ * https://www.eyecon.ro/bootstrap-datepicker
  * =========================================================
  * Copyright 2012 Stefan Petre
  *
@@ -13,7 +97,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -480,9 +564,9 @@
 
 
 /*
-Copyright (c) 2009 Dimas Begunoff, http://www.farinspace.com
+Copyright (c) 2009 Dimas Begunoff, https://www.farinspace.com
 Licensed under the MIT license
-http://en.wikipedia.org/wiki/MIT_License
+https://en.wikipedia.org/wiki/MIT_License
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without
@@ -507,7 +591,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
     var scrollbarWidth = 0;
 
-    // http://jdsharp.us/jQuery/minute/calculate-scrollbar-width.php
+    // https://jdsharp.us/jQuery/minute/calculate-scrollbar-width.php
     function getScrollbarWidth() {
         if (scrollbarWidth) return scrollbarWidth;
         var div = $('<div style="width:50px;height:50px;overflow:hidden;position:absolute;top:-200px;left:-200px;"><div style="height:100px;"></div></div>');

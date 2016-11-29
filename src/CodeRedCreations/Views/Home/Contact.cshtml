@@ -3,19 +3,20 @@
 }
 <h2>@ViewData["Title"]</h2>
 
-<div class="row">
-    <div class="col-md-4">
-        <h3>Contact Us Email Addresses</h3>
-        <address>
-            <ul class="list-unstyled">
-                <li><strong>Support:</strong> <a class="pull-right" href="mailto:Support@CodeRedPerformance.com">Support@CodeRedPerformance.Com</a></li>
-                <li><strong>Marketing:</strong> <a class="pull-right" href="mailto:Marketing@CodeRedPerformance.com">Marketing@CodeRedPerformance.Com</a></li>
-                <li><strong>Request a Product:</strong> <a class="pull-right" asp-controller="Parts" asp-action="Request">Request A Product</a></li>
-                <li><strong>Other:</strong> <a class="pull-right" href="mailto:Other@CodeRedPerformance.com">Other@CodeRedPerformance.Com</a></li>
-            </ul>
-        </address>
+<cache enabled="true" expires-after="@TimeSpan.FromDays(30)">
+    <div class="row">
+        <div class="col-md-4">
+            <h3>Contact Us Email Addresses</h3>
+            <address>
+                <ul class="list-unstyled">
+                    <li><strong>Support:</strong> <a class="pull-right" href="mailto:Support@CodeRedPerformance.com">Support@CodeRedPerformance.Com</a></li>
+                    <li><strong>Marketing:</strong> <a class="pull-right" href="mailto:Marketing@CodeRedPerformance.com">Marketing@CodeRedPerformance.Com</a></li>
+                    <li><strong>Request a Product:</strong> <a class="pull-right" asp-controller="Parts" asp-action="Request">Request A Product</a></li>
+                    <li><strong>Other:</strong> <a class="pull-right" href="mailto:Other@CodeRedPerformance.com">Other@CodeRedPerformance.Com</a></li>
+                </ul>
+            </address>
+        </div>
+        <div class="col-md-8">
+        </div>
     </div>
-
-    <div class="col-md-8">
-    </div>
-</div>
+</cache>

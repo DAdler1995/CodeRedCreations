@@ -1,25 +1,34 @@
 ﻿@model CodeRedCreations.Models.ManageViewModels.IndexViewModel
-@inject Microsoft.AspNetCore.Identity.UserManager<CodeRedCreations.Models.ApplicationUser> _userManager;
+@inject UserManager<ApplicationUser> _userManager;
+@using System.Globalization;
+@using Microsoft.AspNetCore.Identity;
+@using CodeRedCreations.Models;
+@{
+    var user = await _userManager.FindByNameAsync(User.Identity.Name);
+    ViewData["Title"] = "Manage your account";
+    var referralEarnings = (decimal)ViewData["ReferralEarnings"];
+    decimal earningsPercent = (Model.UserReferral.PayoutPercent / 100);
 
-    @{
-        var user = await _userManager.FindByNameAsync(User.Identity.Name);
-        ViewData["Title"] = "Manage your account";
-    }
-
-    <h2>@ViewData["Title"].</h2>
-    <p class="text-success">@ViewData["StatusMessage"]</p>
-
-    <div>
-        <h4>Change your account settings</h4>
+    decimal payout = Math.Round(Model.UserReferral.Earnings * earningsPercent, 2);
+}
+<div class="row">
+    <div class="col-md-12">
+        <h2>@ViewData["Title"].</h2>
+        <p class="text-success">@ViewData["StatusMessage"]</p>
         <hr />
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <h3>Account Settings</h3>
         <dl class="dl-horizontal">
-            <dt>User Roles:</dt>
+            <dt>User Role:</dt>
             <dd>
                 <ul class="list-unstyled">
                     @foreach (var role in await _userManager.GetRolesAsync(user))
-                    {
-                        if (role == "Admin")
-                        {
+            {
+                if (role == "Admin")
+                {
                             <li>
                                 <a asp-area="" asp-controller="Admin" asp-action="Index">@role</a>
                             </li>
@@ -31,7 +40,6 @@
                     }
                 </ul>
             </dd>
-
             <dt>Password:</dt>
             <dd>
                 @if (Model.HasPassword)
@@ -43,12 +51,10 @@
                     <a asp-controller="Manage" asp-action="SetPassword" class="btn-bracketed">Create</a>
                 }
             </dd>
-
             <dt>External Logins:</dt>
             <dd>
                 @Model.Logins.Count <a asp-controller="Manage" asp-action="ManageLogins" class="btn-bracketed">Manage</a>
             </dd>
-
             <dt>Phone Number:</dt>
             <dd>
                 @(Model.PhoneNumber ?? "None")
@@ -71,5 +77,136 @@
                     <a asp-controller="Manage" asp-action="AddPhoneNumber" class="btn-bracketed">Add</a>
                 }
             </dd>
+            @if (Model.UserReferral.Enabled)
+            {
+                <dt>Referral Paypal</dt>
+                <dd>
+                    @(Model.UserReferral.PayPalAccount ?? "None")
+                    @if (!string.IsNullOrEmpty(Model.UserReferral.PayPalAccount))
+                {
+                        <ul class="list-inline">
+                            <li><a asp-controller="Manage" asp-action="AddReferralPaypal" asp-route-id="@Model.UserReferral.Id">Change</a></li>
+                            <li><a asp-controller="Manage" asp-action="RemoveReferralPaypal" asp-route-id="@Model.UserReferral.Id">Remove</a></li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <a asp-controller="Manage" asp-action="AddReferralPaypal" asp-route-id="@Model.UserReferral.Id">Add</a>
+                    }
+                </dd>
+            }
         </dl>
     </div>
+
+    @if (Model.UserReferral.Enabled)
+    {
+        <div class="col-md-6">
+            <h3>Referral Program</h3>
+            <div class="input-group">
+                <input id="referralUrl" readonly="readonly" class="form-control" value="@ViewData["ReferralUrl"]" />
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" onclick="CopyToClipboard($('#referralUrl').val(), true, 'Referral Url Copied')">Copy <span class="glyphicon glyphicon-copy"></span></button>
+                </span>
+            </div>
+
+            <br />
+
+            <form asp-controller="Manage" asp-action="ChangeReferral" method="post">
+                <input hidden="hidden" class="hidden" asp-for="UserReferral.Id" />
+                <div class="form-group">
+                    <div class="input-group">
+                        <input asp-for="UserReferral.ReferralCode" class="form-control" />
+                        <span class="input-group-btn">
+                            <button type="submit" class="btn btn-default">Change Code</button>
+                        </span>
+                    </div>
+                    <span class="tempMessage">@TempData["ChangeReferralMessage"]</span>
+                </div>
+            </form>
+
+            <br />
+
+            <div>
+                <p>
+                    <strong>Referral Earnings:</strong>
+                    <dl class="dl-horizontal">
+                        <dt>
+                            <a href="#" class="glyphicon glyphicon-question-sign small" data-toggle="popover" data-trigger="click" title="Referral Store Credit" data-html="true"
+                               data-content="You can spend your referral earnings in the Code Red Performance store. Simply click the <strong>APPLY STORE CREDIT</strong> button in the product details page or the shopping cart page."></a> Store Credit:
+                        </dt>
+                        <dd>@referralEarnings.ToString("C2", new CultureInfo("en-US"))</dd>
+
+                        <dt>
+                            <a href="#" class="glyphicon glyphicon-question-sign small" data-toggle="popover" data-trigger="click" title="Referral Cash" data-html="true"
+                               data-content="You can choose to recieve cash directly sent to a paypal account of your choice. Simply click the <br /><strong>Request Referral Payout</strong> button and enter in the PayPal account you want the money sent to. At the end of the month your referral earnings will be sent to the PayPal account you entered. <p><hr />Please note that the minimum for a cash payout is $10.00 USD.</p>"></a> Cash:
+                        </dt>
+                        <dd>@(payout.ToString("C2", new CultureInfo("en-US")))</dd>
+                    </dl>
+                </p>
+            </div>
+
+            <br />
+
+            <div>
+                @if (!string.IsNullOrEmpty(Model.UserReferral.PayPalAccount))
+                {
+                    if (payout < 10m)
+                    {
+                        <p>The mimimum cash payout is $10.00 USD, you must wait till you've accured that before you can request a payout.</p>
+                    }
+                    else
+                    {
+                        if (Model.UserReferral.RequestedPayout)
+                        {
+                            <a asp-controller="Manage" asp-action="RequestPayout" asp-route-id="@Model.UserReferral.Id" class="btn btn-danger">Cancel Referral Payout</a>
+                            <span>Payout scheduled for: <strong>@(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)).ToString("MM/dd/yyyy"))</strong></span>
+                        }
+                        else
+                        {
+                            <a asp-controller="Manage" asp-action="RequestPayout" asp-route-id="@Model.UserReferral.Id" class="btn btn-default">Request Referral Payout</a>
+                        }
+                    }
+                }
+                else
+                {
+                    <p>You must add a referral PayPal account before you can request a payout.</p>
+                }
+            </div>
+        </div>
+    }    
+</div>
+
+<script>
+    $('#referralUrl').on('click', function () {
+        $(this).select();
+    });
+
+    function CopyToClipboard(value, showNotification, notificationText) {
+        var $temp = $("<input>");
+        $("body").append($temp);
+        $temp.val(value).select();
+        document.execCommand("copy");
+        $temp.remove();
+
+        if (typeof showNotification === 'undefined') {
+            showNotification = true;
+        }
+        if (typeof notificationText === 'undefined') {
+            notificationText = "Copied to clipboard";
+        }
+
+        var notificationTag = $("div.copy-notification");
+        if (showNotification && notificationTag.length == 0) {
+            notificationTag = $("<div/>", { "class": "copy-notification", text: notificationText });
+            $("body").append(notificationTag);
+
+            notificationTag.fadeIn("slow", function () {
+                setTimeout(function () {
+                    notificationTag.fadeOut("slow", function () {
+                        notificationTag.remove();
+                    });
+                }, 2000);
+            });
+        }
+    }
+</script>

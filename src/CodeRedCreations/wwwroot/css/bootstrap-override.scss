@@ -19,9 +19,12 @@
 .row-eq-height {
     display: block;
 }
+.dropdown-toggle {
+    cursor: pointer;
+}
 
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width: 769px) {
     .row-eq-height {
         display: -webkit-box;
         display: -webkit-flex;
@@ -167,4 +170,39 @@
 .container {
     padding-right: 15px;
     padding-left: 15px;
+}
+.pagination {
+    margin: 0;
+}
+.pagination > .active > a, 
+.pagination > .active > span, 
+.pagination > .active > a:hover, 
+.pagination > .active > span:hover, 
+.pagination > .active > a:focus, 
+.pagination > .active > span:focus {
+    background-color: $red;
+    border-color: $red-dark;
+    text-decoration: none !important;
+    @include transition(background-color .5s ease-in-out);
+
+    &:hover,
+    &:active,
+    &:focus,
+    &:hover:focus {
+        background-color: $red-dark;
+    }
+}
+
+.pagination > li > a, .pagination > li > span {
+    color: $red;
+    text-decoration: none !important;
+    @include transition(color 1s ease-in-out, background-color .5s ease-in-out);
+
+    &:hover,
+    &:active,
+    &:focus,
+    &:hover:focus {
+        color: #FFF;
+        background-color: $red;
+    }
 }

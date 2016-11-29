@@ -1,0 +1,53 @@
+﻿@model IEnumerable<CodeRedCreations.Models.Account.UserReferral>
+@{
+    ViewData["Title"] = "Manage Payouts";
+    var allUsers = (List<CodeRedCreations.Models.ApplicationUser>)ViewData["AllUsers"];
+}
+<h2>@ViewData["Title"]</h2>
+<hr />
+
+<div class="row">
+    <div class="col-md-12">
+        <table class="table table-responsive table-hover table-condensed">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>USER</th>
+                    <th>EARNINGS</th>
+                    <th>PAYPAL ACCOUNT</th>
+                    <th>REQUESTED PAYOUT</th>
+                    <th class="text-right">Send Payment</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var userRef in Model)
+                {
+                    <tr class="@((userRef.RequestedPayout) ? "success" : "")">
+                        <td>@userRef.Id</td>
+                        <td>
+                            @(allUsers.FirstOrDefault(x => x.Id == userRef.UserId).NormalizedEmail)
+                        </td>
+                        <td>@Math.Round(userRef.Earnings * (userRef.PayoutPercent / 100), 2).ToString("C2")</td>
+                        <td>@userRef.PayPalAccount</td>
+                        <td>@userRef.RequestedPayout</td>
+                        <td class="text-right">
+                            @if (!string.IsNullOrEmpty(userRef.PayPalAccount) && userRef.Earnings > 0m)
+                            {
+                                if (userRef.RequestedPayout)
+                                {
+                                    <a asp-controller="Admin" asp-action="SendPayment" asp-route-id="@userRef.Id">Send Payment</a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Admin" asp-action="SendPayment" asp-route-id="@userRef.Id"
+                                       onclick="return confirm('This user hasn\'t requested a payout yet, are you sure you wish to send them their referral payment?')">Send Payment</a>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

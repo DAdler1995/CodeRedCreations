@@ -14,6 +14,9 @@ using CodeRedCreations.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using CodeRedCreations.Models.Account;
+using Microsoft.AspNetCore.ResponseCompression;
+using System.IO.Compression;
 
 namespace CodeRedCreations
 {
@@ -26,18 +29,16 @@ namespace CodeRedCreations
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddEnvironmentVariables();
 
             if (env.IsDevelopment())
             {
-                // For more details on using the user secret store see http://go.microsoft.com/fwlink/?LinkID=532709
+                // For more details on using the user secret store see https://go.microsoft.com/fwlink/?LinkID=532709
                 builder.AddUserSecrets();
-
                 // This will push telemetry data through Application Insights pipeline faster, allowing you to view results immediately.
                 builder.AddApplicationInsightsSettings(developerMode: true);
             }
-
-            builder.AddEnvironmentVariables();
             Configuration = builder.Build();
         }
 
@@ -46,6 +47,14 @@ namespace CodeRedCreations
         {
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);
+            services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
+
+            services.Configure<GzipCompressionProviderOptions>
+                (options => options.Level = CompressionLevel.Fastest);
+            services.AddResponseCompression(options =>
+            {
+                options.Providers.Add<GzipCompressionProvider>();
+            });
 
             services.AddAuthorization();
             
@@ -55,11 +64,8 @@ namespace CodeRedCreations
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<CodeRedContext>()
                 .AddDefaultTokenProviders();
-            
-            services.Configure<MvcOptions>(options =>
-            {
-                options.Filters.Add(new RequireHttpsAttribute());
-            });
+
+            services.AddMemoryCache();
 
             services.Configure<IdentityOptions>(options =>
             {
@@ -88,10 +94,14 @@ namespace CodeRedCreations
 
             services.AddMvc(options =>
             {
-                options.Filters.Add(new RequireHttpsAttribute());
-            });
+                options.CacheProfiles.Add("default",
+                    new CacheProfile()
+                    {
+                        Duration = 60
+                    });
 
-            services.Configure<CodeRedPerformanceSettings>(Configuration.GetSection("AppSettings:CodeRedPerformanceSettings"));
+                //options.Filters.Add(new RequireHttpsAttribute());
+            });
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
@@ -105,26 +115,12 @@ namespace CodeRedCreations
 
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
-
+            
             app.UseStaticFiles(new StaticFileOptions
             {
                 OnPrepareResponse = ctx =>
                 {
-                    IHeaderDictionary headers = ctx.Context.Response.Headers;
-                    string contentType = headers["Content-Type"];
-                    if (contentType == "application/x-gzip")
-                    {
-                        if (ctx.File.Name.EndsWith("js.gz"))
-                        {
-                            contentType = "application/javascript";
-                        }
-                        else if (ctx.File.Name.EndsWith("css.gz"))
-                        {
-                            contentType = "text/css";
-                        }
-                        headers.Add("Content-Encoding", "gzip");
-                        headers["Content-Type"] = contentType;
-                    }
+                    ctx.Context.Response.Headers.Add("Cache-Control", "public, max-age=3600");
                 }
             });
 
@@ -136,25 +132,14 @@ namespace CodeRedCreations
                 app.UseDatabaseErrorPage();
                 app.UseBrowserLink();
             }
-            else
-            {
-                app.UseStatusCodePages(options =>
-                {
-                    options.UseStatusCodePagesWithRedirects("~/Error/{0}");
-                });
-            }
-            app.UseStatusCodePages(options =>
-            {
-                options.UseStatusCodePagesWithRedirects("~/Error/{0}");
-            });
 
             app.UseApplicationInsightsExceptionTelemetry();
-
+            
             app.UseStaticFiles();
 
             app.UseIdentity();
 
-            // Add external authentication middleware below. To configure them please see http://go.microsoft.com/fwlink/?LinkID=532715
+            // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715
             app.UseFacebookAuthentication(new FacebookOptions()
             {
                 AppId = Configuration["Authentication:Facebook:AppId"],
@@ -169,6 +154,11 @@ namespace CodeRedCreations
 
             app.UseMvc(routes =>
             {
+                routes.MapRoute(
+                    name: "referral",
+                    template: "Referral/{referrer}",
+                    defaults: new { controller = "Home" });
+
                 routes.MapRoute(
                     name: "parts",
                     template: "Parts/{action=Index}/{part=All}/{brand?}/{car?}",
@@ -188,8 +178,10 @@ namespace CodeRedCreations
             var UserManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             IList<IdentityRole> roles = new List<IdentityRole>();
-            roles.Add(new IdentityRole { Name = "Default", NormalizedName = "DEFAULT" });
-            roles.Add(new IdentityRole { Name = "Admin", NormalizedName = "ADMIN" });
+            foreach (var role in Enum.GetValues(typeof(UserRoles)))
+            {
+                roles.Add(new IdentityRole { Name = role.ToString(), NormalizedName = role.ToString().Normalize() });
+            }
 
             foreach (var role in roles)
             {

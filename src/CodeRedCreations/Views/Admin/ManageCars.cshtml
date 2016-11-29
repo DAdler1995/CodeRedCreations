@@ -1,44 +1,46 @@
 ﻿@model IEnumerable<CodeRedCreations.Models.CarModel>
-
+@using CodeRedCreations;
 @{
     ViewData["Title"] = "Manage Cars";
-    var dictionary = new Dictionary<string, string>();
 
-    foreach (var car in Model.OrderBy(x => x.Make))
-    {
-        dictionary.Add(car.Model, car.Make);
-    }
-    var carMakes = new List<string>();
-}
-@{
+    var columns = 4;
+    var col = $"col-md-{12 / columns}";
+    var allMakes = Model.OrderBy(x => x.Make).Select(x => x.Make).Distinct();
 }
 <h2>@ViewData["Title"]</h2>
 <p class="text-success">@ViewData["SuccessMessage"]</p>
-<a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-section="CAR">+ Add New Car</a>
-
 <div class="row">
-    <div class="col-md-6">
-        <ul class="list-unstyled">
-
-            @foreach (var car in dictionary)
-            {
-                if (!carMakes.Contains(car.Value))
+    <div class="col-md-3">
+        <a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-section="CAR">+ Add New Car</a>
+        <a asp-area="" asp-controller="Admin" asp-action="CapAll" class="pull-right">Capitalize All</a>
+    </div>
+</div>
+<hr />
+<div class="row">
+    @foreach (var split in allMakes.Split(columns))
+    {
+        <div class="@col">
+            <ul class="list-unstyled">
+                @foreach (var make in split)
                 {
-                    <li class="dropdown-header">@car.Value</li>
-                    foreach (var item in dictionary.Where(x => x.Value == car.Value).OrderBy(x => x.Key))
+                    <li>&nbsp;</li>
+                    <li class="dropdown-header" style="min-width: 150px"><strong>@make</strong></li>
+                    <li class="divider"></li>
+
+                    @foreach (var item in Model.Where(x => x.Make == make).OrderBy(x => x.Model).Select(x => x.Model))
                     {
-                        var specificCar = Model.FirstOrDefault(x => x.Make == item.Value && x.Model == item.Key);
+                        var specificCar = Model.FirstOrDefault(x => x.Make == make && x.Model == item);
                         if (specificCar != null)
                         {
-                            <li><a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@specificCar.CarId" asp-route-section="CAR">@item.Key</a></li>
+                            string confirmMessage = $"Are you sure you wish to delete: {specificCar.Make} {specificCar.Model}?";
+                            <li>
+                                <a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@specificCar.CarId" asp-route-section="CAR">@specificCar.Model (@specificCar.CarProducts.Select(x => x.Product).Count())</a>
+                                <a class="pull-right" asp-controller="Admin" asp-action="DeleteCar" asp-route-id="@specificCar.CarId" onclick="return confirm('Are you sure you want to delete this car?')">Delete Car</a>
+                            </li>
                         }
                     }
-                    carMakes.Add(car.Value);
-                    <li class="divider"><hr style="margin: 2px;" /></li>
                 }
-
-            }
-
-        </ul>
-    </div>
+            </ul>
+        </div>
+    }
 </div>

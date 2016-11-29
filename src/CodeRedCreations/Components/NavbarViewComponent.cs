@@ -2,6 +2,7 @@
 using CodeRedCreations.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -21,8 +22,8 @@ namespace CodeRedCreations.Components
         {
             var NavbarModel = new NavbarViewModel();
 
-            NavbarModel.Brand = await _context.Brand.Include(x => x.Parts).Where(x => x.Parts.Count > 0).ToListAsync();
-            NavbarModel.Cars = await _context.Car.ToListAsync();
+            NavbarModel.Brand = await _context.Brand.Include(x => x.Products).Where(x => x.Products.Count > 0).OrderBy(x => x.Name).ToListAsync();
+            NavbarModel.Cars = await _context.Car.Include(x => x.CarProducts).ThenInclude(x => x.Product).Where(x => x.CarProducts.Select(c => c.Product).FirstOrDefault() != null).ToListAsync();
 
             return View(NavbarModel);
         }
