@@ -34,7 +34,7 @@
 
                                                 @foreach (var item in Model.Cars.Where(x => x.Make == make).OrderBy(x => x.Model))
 	                                            {
-		                                             <li><a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="All" asp-route-car="@item.Model">@item.Model @((item.CarProducts.Select(c => c.Product) != null) ? $"({item.CarProducts.Select(c => c.Product).Count()})" : "")</a></li>
+		                                             <li><a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="All" asp-route-car="@item.Model">@item.Model</a></li>
 	                                            }
                                             }
                                         </ul>

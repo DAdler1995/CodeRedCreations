@@ -5,6 +5,8 @@ $(document).ready(function () {
     $('.tempMessage').show('slow').delay(5000).hide('slow');
     $('.loading').fadeOut('fast');
     $('.loadedContent').fadeIn('slow');
+
+    DiscountType();
 });
 
 $(".nav a").on("click", function () {
@@ -53,8 +55,7 @@ $.fn.carouselHeights = function () {
 
 };
 
-jQuery(function ($) {
-
+$(function ($) {
     $(window).on('load', function () {
         $('.carousel .item').carouselHeights();
     });
@@ -731,3 +732,33 @@ OTHER DEALINGS IN THE SOFTWARE.
 	};
 
 })(jQuery);
+
+
+var DiscountPercentage = $('#DiscountPercentage');
+var DiscountAmount = $('#DiscountAmount');
+
+function DiscountType() {
+    try {
+        if (DiscountPercentage.val().length > 0) {
+            DiscountPercentage.prop('disabled', false);
+            DiscountAmount.prop('disabled', true);
+        } else if (DiscountAmount.val().length > 0) {
+            DiscountPercentage.prop('disabled', true);
+            DiscountAmount.prop('disabled', false);
+        } else {
+            DiscountPercentage.prop('disabled', false);
+            DiscountAmount.prop('disabled', false);
+        }
+    } catch(e){}
+}
+
+DiscountPercentage.keyup(function () {
+    DiscountType();
+});
+DiscountAmount.keyup(function () {
+    DiscountType();
+});
+
+try {
+    $('.datepicker').datepicker().format("dd/mm/yyyy");
+} catch (e) {}

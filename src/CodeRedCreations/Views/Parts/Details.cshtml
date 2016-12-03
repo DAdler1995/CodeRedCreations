@@ -2,11 +2,14 @@
 @using CodeRedCreations.Models;
 @using System.Globalization;
 @using System.Text;
+@using CodeRedCreations.Methods;
 @{
     decimal? oldPrice = (decimal?)ViewData["OldPrice"];
     var product = Model.ProductModel;
     ViewData["Title"] = $"{Model.ProductModel.Brand.Name} - {Model.ProductModel.Name}";
     var cars = Model.ProductModel.CarProducts.Select(x => x.Car).ToList();
+
+    var url = $"http://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}";
 }
 <div class="row row-eq-height">
     <cache enabled="true" expires-after="@TimeSpan.FromHours(12)" vary-by="@Model.ProductModel.PartId">
@@ -16,16 +19,15 @@
                     @if (Model.Images != null && Model.Images.Count != 0)
                     {
                         <div class="item active">
-                            <img class="img-responsive" src="data:image/gif;base64, @Convert.ToBase64String(Model.Images.FirstOrDefault().Bytes)">
+                            <img class="img-responsive" src="@(await Static.GetImageSrcAsync(product.Images.FirstOrDefault().Bytes))">
                         </div>
 
                         @foreach (var image in Model.Images.Skip(1))
                         {
-                            var imageBase64 = Convert.ToBase64String(image.Bytes);
-                            var imgSrc = $"data:image/gif;base64, {imageBase64}";
+                            var imgSrc = await @Static.GetImageSrcAsync(image.Bytes);
 
                             <div class="item">
-                                <img style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; margin: auto;" class="img-responsive" src="@imgSrc">
+                                <img class="img-responsive" src="@imgSrc">
                             </div>
                         }
 
@@ -145,6 +147,9 @@
                 <li class="active"><a data-toggle="tab" href="#productDescription">Product Description</a></li>
                 <li><a data-toggle="tab" href="#productDetails">Product Details</a></li>
                 <li><a data-toggle="tab" href="#brandDescription">@product.Brand.Name Description</a></li>
+
+                <li class="pull-right hidden-sm hidden-xs"><a class="btn-link" onclick="share('@Model.ProductModel.Name', '@url')">Share <i class="fa fa-facebook-square"></i></a></li>
+                <li class="pull-right hidden-sm hidden-xs"><a class="btn-link" onclick="tweet('@Model.ProductModel.Name', '@url')">Tweet <i class="fa fa-twitter-square"></i></a></li>
             </ul>
             <div class="tab-content">
                 <div id="productDescription" class="tab-pane fade in active">

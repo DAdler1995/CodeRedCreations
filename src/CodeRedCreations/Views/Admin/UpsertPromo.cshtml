@@ -49,7 +49,7 @@
     <div class="form-group">
         <label asp-for="ApplicableParts" class="col-md-2 control-label"></label>
         <div class="col-md-10">
-            <select id="PartIds" name="PartIds" multiple="multiple" class="form-control">
+            <select id="PartIds" name="PartIds" multiple="multiple" class="form-control selectpicker" data-show-subtext="true" data-live-search="true">
                 @foreach (var part in allParts)
                 {
                     if (Model.ApplicableParts != null && Model.ApplicableParts.FirstOrDefault(x => x.PartId == part.PartId) != null)
@@ -58,7 +58,7 @@
                     }
                     else
                     {
-                        <option value="@part.PartId">@part.Name</option>
+                        <option value="@part.PartId">@part.Name (#@part.PartNumber)</option>
                     }
                 }
             </select>
@@ -100,33 +100,3 @@
         </div>
     </div>
 </form>
-<script>
-    var DiscountPercentage = $('#DiscountPercentage');
-    var DiscountAmount = $('#DiscountAmount');
-
-    function DiscountType() {
-        if (DiscountPercentage.val().length > 0) {
-            DiscountPercentage.prop('disabled', false);
-            DiscountAmount.prop('disabled', true);
-        } else if (DiscountAmount.val().length > 0) {
-            DiscountPercentage.prop('disabled', true);
-            DiscountAmount.prop('disabled', false);
-        } else {
-            DiscountPercentage.prop('disabled', false);
-            DiscountAmount.prop('disabled', false);
-        }
-    }
-
-    $(function () {
-        DiscountType();
-    })
-
-    DiscountPercentage.keyup(function () {
-        DiscountType();
-    });
-    DiscountAmount.keyup(function () {
-        DiscountType();
-    });
-
-    $('.datepicker').datepicker().format("dd/mm/yyyy");
-</script>

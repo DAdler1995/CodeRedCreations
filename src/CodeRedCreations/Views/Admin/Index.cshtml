@@ -8,23 +8,23 @@
 <div class="col-md-6">
     <h4>Tools</h4>
     <hr />
-    <ul class="list-unstyled">
-        <li>
-            <a asp-area="" asp-controller="Admin" asp-action="ManageUsers">Manage Users</a>
-        </li>
-        <li>
-            <a asp-area="" asp-controller="Admin" asp-action="ManageProducts">Manage Products & Brands</a>
-        </li>
-        <li>
-            <a asp-area="" asp-controller="Admin" asp-action="ManageCars">Manage Cars</a>
-        </li>
-        <li>
-            <a asp-area="" asp-controller="Admin" asp-action="ManagePromos">Manage Promos</a>
-        </li>
-        <li>
-            <a asp-area="" asp-controller="Admin" asp-action="ManagePayouts">Manage Payouts</a>
-        </li>
-    </ul>
+        <div class="col-md-6">
+            <ul class="list-unstyled">
+                <li><a asp-area="" asp-controller="Admin" asp-action="ManageUsers">Manage Users</a></li>
+                <li><a asp-area="" asp-controller="Admin" asp-action="ManageBrands">Manage Brands</a></li>
+                <li><a asp-area="" asp-controller="Admin" asp-action="ManageCars">Manage Cars</a></li>
+                <li><a asp-area="" asp-controller="Admin" asp-action="ManagePromos">Manage Promos</a></li>
+                <li><a asp-area="" asp-controller="Admin" asp-action="ManagePayouts">Manage Payouts</a></li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+
+            <ul class="list-unstyled">
+                <li><a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-section="PART">+ Add New Product</a></li>
+                <li><a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-section="BRAND">+ Add New Brand</a></li>
+                <li><a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-section="CAR">+ Add New Car</a></li>
+            </ul>
+        </div>
 </div>
 <div class="col-md-6">
     <h4>User List</h4>

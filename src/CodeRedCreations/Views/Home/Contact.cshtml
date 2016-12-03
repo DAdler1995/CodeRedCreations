@@ -1,22 +1,27 @@
 ﻿@{
     ViewData["Title"] = "Contact Us";
 }
-<h2>@ViewData["Title"]</h2>
-
 <cache enabled="true" expires-after="@TimeSpan.FromDays(30)">
     <div class="row">
-        <div class="col-md-4">
-            <h3>Contact Us Email Addresses</h3>
-            <address>
-                <ul class="list-unstyled">
-                    <li><strong>Support:</strong> <a class="pull-right" href="mailto:Support@CodeRedPerformance.com">Support@CodeRedPerformance.Com</a></li>
-                    <li><strong>Marketing:</strong> <a class="pull-right" href="mailto:Marketing@CodeRedPerformance.com">Marketing@CodeRedPerformance.Com</a></li>
-                    <li><strong>Request a Product:</strong> <a class="pull-right" asp-controller="Parts" asp-action="Request">Request A Product</a></li>
-                    <li><strong>Other:</strong> <a class="pull-right" href="mailto:Other@CodeRedPerformance.com">Other@CodeRedPerformance.Com</a></li>
-                </ul>
-            </address>
+        <div class="col-md-5">
+            <h3 class="text-center">Contact Us</h3>
+            <hr />
+            <ul class="list-unstyled">
+                <li><strong>SUPPORT</strong> <a class="pull-right" href="mailto:Support@CodeRedPerformance.com">Support@CodeRedPerformance.Com</a></li>
+                <li><strong>MARKETING</strong> <a class="pull-right" href="mailto:Marketing@CodeRedPerformance.com">Marketing@CodeRedPerformance.Com</a></li>
+                <li><strong>REQUESTS</strong> <a class="pull-right" asp-controller="Parts" asp-action="Request">Request A Product</a></li>
+                <li><strong>OTHER</strong> <a class="pull-right" href="mailto:Other@CodeRedPerformance.com">Other@CodeRedPerformance.Com</a></li>
+            </ul>
         </div>
-        <div class="col-md-8">
+        <div class="col-md-5">
+            <h3 class="text-center">Social Media</h3>
+            <hr />
+            <ul class="list-unstyled">
+                <li><strong>FACEBOOK</strong> <a class="pull-right" href="https://www.facebook.com/CodeRedPerformanc">Code Red Performance</a></li>
+                <li><strong>INSTAGRAM</strong> <a class="pull-right" href="https://instagram.com/CodeRedPerformance">Code Red Performance</a></li>
+                <li><strong>TWITTER</strong> <a class="pull-right" href="https://twitter.com/CRP_Dakota">@@CRP_Dakota</a></li>
+                <li><strong>WHEEL WELL</strong> <a class="pull-right" href="https://wheelwell.com/brand/583f4937a0ef210f1aa55027">Code Red Performance</a></li>
+            </ul>
         </div>
     </div>
 </cache>

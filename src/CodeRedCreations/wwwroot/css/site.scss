@@ -31,6 +31,10 @@ ul {
     margin: 0;
 }
 
+hr {
+    margin: 3px 0;
+}
+
 .body-content {
     order: 2;
     flex: 1;
@@ -48,6 +52,11 @@ footer {
     img {
         height: 35px;
         width: auto;
+    }
+
+    p {
+        margin: 0;
+        padding: 0;
     }
 }
 
@@ -88,10 +97,6 @@ img.loading {
 @-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
 @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
 @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
-
-/*hr {
-    margin: 3px 0;
-}*/
 
 .tempMessage {
     display: none;
@@ -205,12 +210,6 @@ img.loading {
         max-height: 1.2em * 3; /* fallback */
     }
 }
-
-@import 'https://fonts.googleapis.com/css?family=Hind:500|Open+Sans:300';
-
-
-$open: 'Open Sans', sans-serif;
-$hind: 'Hind', sans-serif;
 
 .text-open {
     font-family: $open;

@@ -36,7 +36,7 @@
                 </td>
                 <td>
                     <div class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a class="dropdown-toggle btn-link" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             New Role
                             <span class="caret"></span>
                         </a>
@@ -44,14 +44,14 @@
                             @foreach (var role in Enum.GetValues(typeof(UserRoles)))
                             {
                                 <li>
-                                    <a href="#" onclick="UpdateRole('@item.Email', '@role')">@role</a>
+                                    <a asp-controller="Admin" asp-action="UpdateRole" asp-route-email="@item.Email" asp-route-newRole="@role">@role</a>
                                 </li>
                             }
                         </ul>
                     </div>
                 </td>
 
-                @if (userRef != null)
+                @if (userRef != null && userRef.Enabled)
                 {
                     <td class="@((userRef.Enabled) ? "success" : "danger")">
                         <a asp-controller="Admin" asp-action="ToggleReferral" asp-route-id="@item.Id">@((userRef.Enabled) ? "Disable" : "Enable")</a>

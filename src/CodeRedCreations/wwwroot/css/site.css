@@ -1,15 +1,10 @@
 ﻿@import 'https://fonts.googleapis.com/css?family=Hind:500|Open+Sans:300';
+@import 'https://fonts.googleapis.com/css?family=Hind:500|Open+Sans:300';
 .text-red {
   color: #dc1818; }
 
 .text-grey {
   color: #6b6b6b; }
-
-.text-open {
-  font-family: "Open Sans", sans-serif; }
-
-.text-hind {
-  font-family: "Hind", sans-serif; }
 
 .navbar .nav,
 .navbar .nav > li {
@@ -215,12 +210,6 @@
 .text-grey {
   color: #6b6b6b; }
 
-.text-open {
-  font-family: "Open Sans", sans-serif; }
-
-.text-hind {
-  font-family: "Hind", sans-serif; }
-
 .flexbox-container {
   padding: 0;
   margin: 0;
@@ -250,6 +239,10 @@
 
 .flexbox-container.flex-col {
   flex-direction: column; }
+
+.vertical-center {
+  display: flex;
+  align-items: center; }
 
 /*!
  * Datepicker for Bootstrap
@@ -2123,6 +2116,9 @@ header {
 ul {
   margin: 0; }
 
+hr {
+  margin: 3px 0; }
+
 .body-content {
   order: 2;
   flex: 1; }
@@ -2138,6 +2134,9 @@ footer {
   footer img {
     height: 35px;
     width: auto; }
+  footer p {
+    margin: 0;
+    padding: 0; }
 
 h1, h2, h3, h4, h5, h6, strong, th, thead, dt {
   font-family: "Hind", sans-serif;
@@ -2188,9 +2187,6 @@ img.loading {
     -webkit-transform: rotate(360deg);
     transform: rotate(360deg); } }
 
-/*hr {
-    margin: 3px 0;
-}*/
 .tempMessage {
   display: none; }
 

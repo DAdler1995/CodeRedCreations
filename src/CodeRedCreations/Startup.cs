@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Identity;
 using CodeRedCreations.Models.Account;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
+using CodeRedCreations.Methods;
 
 namespace CodeRedCreations
 {
@@ -132,6 +133,9 @@ namespace CodeRedCreations
                 app.UseDatabaseErrorPage();
                 app.UseBrowserLink();
             }
+                app.UseDeveloperExceptionPage();
+                app.UseDatabaseErrorPage();
+                app.UseBrowserLink();
 
             app.UseApplicationInsightsExceptionTelemetry();
             

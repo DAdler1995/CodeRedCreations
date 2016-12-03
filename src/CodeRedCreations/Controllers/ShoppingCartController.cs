@@ -238,7 +238,7 @@ namespace CodeRedCreations.Controllers
                         builder.Append($"&discount_amount_cart={amount.ToString()}");
                     }
                 }
-                decimal tax = Math.Round((originalTotal * taxRate), 2);
+                decimal tax = Math.Round((totalValue * taxRate), 2);
                 builder.Append($"&tax_cart={UrlEncoder.Default.Encode(tax.ToString())}");
 
 

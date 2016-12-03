@@ -9,8 +9,8 @@
     display: flex;
     -webkit-flex-flow: row wrap;
     justify-content: space-around;
-        align-items: center;
-        justify-content: center;
+    align-items: center;
+    justify-content: center;
 
     .item {
         margin: auto;
@@ -23,7 +23,7 @@
     .item-bottom {
         align-self: flex-end;
     }
-    
+
     .item.item-left {
         margin: auto auto auto 0;
     }
@@ -39,4 +39,9 @@
 
 .flexbox-container.flex-col {
     flex-direction: column;
+}
+
+.vertical-center {
+    display: flex;
+    align-items: center;
 }

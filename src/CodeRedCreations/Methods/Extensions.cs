@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CodeRedCreations.Methods;
+using Microsoft.AspNetCore.Builder;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,8 +28,7 @@ namespace CodeRedCreations
                 position += size;
             }
         }
-
-
+        
         //used by LINQ to SQL
         public static IQueryable<TSource> Page<TSource>(this IQueryable<TSource> source, int page, int pageSize)
         {
@@ -38,6 +39,11 @@ namespace CodeRedCreations
         public static IEnumerable<TSource> Page<TSource>(this IEnumerable<TSource> source, int page, int pageSize)
         {
             return source.Skip((page - 1) * pageSize).Take(pageSize);
+        }
+
+        public static IApplicationBuilder UseCommonMethod(this IApplicationBuilder builder)
+        {
+            return builder.UseMiddleware<Common>();
         }
     }
 }

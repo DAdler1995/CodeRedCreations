@@ -8,18 +8,16 @@
 <h2>@ViewData["Title"]</h2>
 <p class="text-success">@TempData["SuccessMessage"]</p>
 
-<a asp-area="" asp-controller="Admin" asp-action="ManageProducts">Return to Manage Products</a> <span class="pull-right"><a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-id="">+ Add New</a></span>
-
 <ul class="nav nav-tabs" style="margin-top: 10px;">
-    <li id="tabBrand" class=""><a data-toggle="tab" href="#addBrand">Add Brand</a></li>
-    <li id="tabPart" class=""><a data-toggle="tab" href="#addPart">Add Part</a></li>
-    <li id="tabCar" class=""><a data-toggle="tab" href="#addCar">Add Car</a></li>
+    <li id="tabBrand" class="@((query.ToUpper() == "BRAND") ? "active" : "")"><a data-toggle="tab" href="#addBrand">Add Brand</a></li>
+    <li id="tabPart" class="@((query.ToUpper() == "PART") ? "active" : "")"><a data-toggle="tab" href="#addPart">Add Part</a></li>
+    <li id="tabCar" class="@((query.ToUpper() == "CAR") ? "active" : "")"><a data-toggle="tab" href="#addCar">Add Car</a></li>
 </ul>
 
 <div class="tab-content">
-    <div id="addBrand" class="tab-pane fade in">
+    <div id="addBrand" class="tab-pane fade @((query.ToUpper() == "BRAND") ? "in active" : "")">
         <form asp-controller="Admin" asp-action="AddBrand" id="AddBrandForm" method="post" class="form-horizontal">
-            <h4>Add a new brand.</h4>
+            <h4>Add a new brand. <span class="small pull-right"><a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-section="BRAND">+ Add New</a></span></h4> 
             <hr />
             <div asp-validation-summary="All" class="text-danger"></div>
             <div class="form-group">
@@ -33,7 +31,7 @@
             <div class="form-group">
                 <label asp-for="Brand.Description" class="col-md-2 control-label"></label>
                 <div class="col-md-10">
-                    <textarea asp-for="Brand.Description" class="form-control"></textarea>
+                    <textarea rows="10" asp-for="Brand.Description" class="form-control"></textarea>
                     <span asp-validation-for="Brand.Description" class="text-danger"></span>
                 </div>
             </div>
@@ -46,9 +44,9 @@
         </form>
     </div>
 
-    <div id="addPart" class="tab-pane fade in">
+    <div id="addPart" class="tab-pane fade @((query.ToUpper() == "PART") ? "in active" : "")">
         <form asp-controller="Admin" asp-action="AddPart" id="AddPartForm" method="post" class="form-horizontal" enctype="multipart/form-data">
-            <h4>Add a new part.</h4>
+            <h4>Add a new part. <span class="small pull-right"><a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-section="PART">+ Add New</a></span></h4> 
             <hr />
             <div asp-validation-summary="All" class="text-danger"></div>
             <input asp-for="Part.PartId" hidden="hidden" class="hidden" />
@@ -137,7 +135,7 @@
             </div>
 
             <div class="form-group">
-                <label title="Images" class="col-md-2 control-label"></label>
+                <label title="Images" class="col-md-2 control-label">Images (@((Model.Part.Images == null) ? 0 : Model.Part.Images.Count()))</label>
                 <div class="col-md-10">
                     <input name="Images" type="file" multiple class="form-control" />
                 </div>
@@ -157,9 +155,9 @@
         </form>
     </div>
 
-    <div id="addCar" class="tab-pane fade in">
+    <div id="addCar" class="tab-pane fade  @((query.ToUpper() == "CAR") ? "in active" : "")">
         <form asp-controller="Admin" asp-action="AddCar" id="AddCarForm" method="post" class="form-horizontal">
-            <h4>Add a new car.</h4>
+            <h4>Add a new car. <span class="small pull-right"><a asp-area="" asp-controller="Admin" asp-action="AddProduct" asp-route-section="CAR">+ Add New</a></span></h4> 
             <hr />
             <div asp-validation-summary="All" class="text-danger"></div>
             <input hidden="hidden" class="hidden" asp-for="NewCar.CarId" />

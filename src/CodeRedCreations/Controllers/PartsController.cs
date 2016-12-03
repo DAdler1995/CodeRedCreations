@@ -8,15 +8,13 @@ using CodeRedCreations.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Text.Encodings.Web;
-using MimeKit;
-using MimeKit.Text;
-using MailKit.Net.Smtp;
 using CodeRedCreations.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using CodeRedCreations.Models.Account;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Caching.Memory;
+using CodeRedCreations.Methods;
 
 namespace CodeRedCreations.Controllers
 {
@@ -44,8 +42,9 @@ namespace CodeRedCreations.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string part = "All", string brand = "All", string car = "All", string search = null, int page = 1)
         {
-            ViewData["allBrands"] = await GetAllBrandsAsync();
-            ViewData["allCars"] = await GetAllCarsAsync();
+            var _common = new Common(_cache, _context);
+            ViewData["allBrands"] = await _common.GetAllBrandNamesAsync();
+            ViewData["allCars"] = await _common.GetAllCarsAsync();
             ViewData["page"] = page;
             ViewData["Search"] = search;
             var products = await GetProductsAsync(part, brand, car, search, page);
@@ -169,21 +168,19 @@ namespace CodeRedCreations.Controllers
                 var url = (HttpContext.Request.Host.Host.ToUpper().Contains("LOCALHOST")) ?
                     "https://www.sandbox.paypal.com/us/cgi-bin/webscr" : "https://www.paypal.com/us/cgi-bin/webscr";
                 var paypalBusiness = _settings.PaypalBusiness;
-                
-                decimal tax = Math.Round(originalPrice * 0.08m, 2);
 
                 var builder = new StringBuilder();
                 builder.Append(url);
 
                 builder.Append($"?cmd=_xclick&business={UrlEncoder.Default.Encode(paypalBusiness)}");
-                builder.Append($"&lc=US&no_note=0&currency_code=USD&tax={tax.ToString()}");
+                builder.Append($"&lc=US&no_note=0&currency_code=USD&tax_rate=8");
                 builder.Append($"&custom={UrlEncoder.Default.Encode(model.ProductModel.PartNumber)}");
                 builder.Append($"&item_name={UrlEncoder.Default.Encode($"{model.ProductModel.Brand.Name} - {model.ProductModel.Name}: #{model.ProductModel.PartNumber}")}");
                 builder.Append($"&amount={UrlEncoder.Default.Encode(model.ProductModel.Price.ToString())}");
                 builder.Append($"&return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Home/ThankYou?id={model.ProductModel.PartId}")}");
                 builder.Append($"&cancel_return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Parts/Details?id={model.ProductModel.PartId}")}");
                 builder.Append($"&quantity={UrlEncoder.Default.Encode(model.Quantity.ToString())}");
-                builder.Append($"&shipping={UrlEncoder.Default.Encode((model.Quantity * model.ProductModel.Shipping).ToString())}");
+                builder.Append($"&shipping={UrlEncoder.Default.Encode(Math.Round((decimal)model.Quantity * model.ProductModel.Shipping, 2).ToString())}");
                 builder.Append($"&item_number={UrlEncoder.Default.Encode(model.ProductModel.PartNumber)}");
 
                 TempData["ThankYouValidation"] = true;
@@ -333,31 +330,6 @@ namespace CodeRedCreations.Controllers
             }
 
             return search;
-        }
-
-        public async Task<List<string>> GetAllBrandsAsync()
-        {
-            string key = "brands";
-            var brands = _cache.Get<List<string>>(key);
-            if (brands == null)
-            {
-                brands = await _context.Brand.Include(x => x.Products).Where(x => x.Products.Count > 0).OrderBy(x => x.Name).Select(x => x.Name).ToListAsync();
-                _cache.Set(key, brands, TimeSpan.FromDays(7));
-            }
-            
-            return brands;
-        }
-        public async Task<List<CarModel>> GetAllCarsAsync()
-        {
-            string key = "cars";
-            var cars = _cache.Get<List<CarModel>>(key);
-            if (cars == null)
-            {
-                cars = await _context.Car.OrderBy(x => x.Make).ThenBy(x => x.Model).ToListAsync();
-                _cache.Set(key, cars, TimeSpan.FromDays(7));
-            }
-
-            return cars;
         }
         public async Task<List<ProductModel>> GetProductsAsync(string part, string brand, string car, string search, int page)
         {

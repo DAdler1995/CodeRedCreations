@@ -19,27 +19,33 @@ using CodeRedCreations.Services;
 using System.Text.Encodings.Web;
 using System.Text;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Caching.Memory;
+using CodeRedCreations.Methods;
 
 namespace CodeRedCreations.Controllers
 {
-    [Authorize(Roles = "Admin"), ResponseCache(CacheProfileName = "Default")]
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
         private readonly CodeRedContext _context;
+        private IMemoryCache _cache;
+        private Common _common;
 
         public AdminController(
             UserManager<ApplicationUser> userManager,
             ILoggerFactory loggerFactory,
             CodeRedContext context,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IMemoryCache cache)
         {
             _userManager = userManager;
             _logger = loggerFactory.CreateLogger<AccountController>();
             _context = context;
             _emailSender = emailSender;
+            _common = new Common(cache, context);
         }
 
         // GET: /<controller>/
@@ -74,11 +80,16 @@ namespace CodeRedCreations.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ManageProducts()
+        public async Task<IActionResult> ManageBrands()
         {
-            var allProducts = await _context.Brand.Include(x => x.Products).ThenInclude(x => x.Images)
-                .Include(x => x.Products).ThenInclude(x => x.CarProducts).ThenInclude(x => x.Car).ToListAsync();
+            var brands = await _common.GetAllBrandsAsync();
+            return View(brands);
+        }
 
+        [HttpGet]
+        public async Task<IActionResult> ManageProducts(int id)
+        {
+            var allProducts = await _common.GetAllProductsAsync(id);
             return View(allProducts);
         }
 
@@ -230,32 +241,33 @@ namespace CodeRedCreations.Controllers
 
             if (id != null)
             {
-                if (string.IsNullOrEmpty(section) || section.Normalize() == "PART")
+                switch (section.ToUpper())
                 {
-                    AddNewProduct.Part = await _context.Products.Include(x => x.Brand)
-                        .Include(x => x.Images)
-                        .Include(x => x.CarProducts)
-                        .FirstOrDefaultAsync(x => x.PartId == id);
+                    case "CAR":
+                        AddNewProduct.NewCar = await _context.Car.FirstOrDefaultAsync(x => x.CarId == id);
+                        break;
+                    case "BRAND":
+                        AddNewProduct.Brand = await _context.Brand.FirstOrDefaultAsync(x => x.BrandId == id);
+                        break;
+                    case "PART":
+                    default:
+                        AddNewProduct.Part = await _context.Products.Include(x => x.Brand)
+                            .Include(x => x.Images)
+                            .Include(x => x.CarProducts)
+                            .FirstOrDefaultAsync(x => x.PartId == id);
 
-                    if (newSimilarProduct)
-                    {
-                        AddNewProduct.Part.PartNumber = null;
-                        AddNewProduct.Part.PartId = 0;
-                        AddNewProduct.Part.Images = null;
-                        AddNewProduct.Part.Years = null;
-                        AddNewProduct.Part.CarProducts = null;
-                        AddNewProduct.Part.Shipping = 0m;
-                    }
+                        if (newSimilarProduct)
+                        {
+                            AddNewProduct.Part.PartNumber = null;
+                            AddNewProduct.Part.PartId = 0;
+                            AddNewProduct.Part.Images = null;
+                            AddNewProduct.Part.Years = null;
+                            AddNewProduct.Part.CarProducts = null;
+                            AddNewProduct.Part.Shipping = 0m;
+                        }
 
-                    AddNewProduct.Brand = AddNewProduct.Part.Brand;
-                }
-                if (section.Normalize() == "CAR")
-                {
-                    AddNewProduct.NewCar = await _context.Car.FirstOrDefaultAsync(x => x.CarId == id);
-                }
-                else if (section.Normalize() == "BRAND")
-                {
-                    AddNewProduct.Brand = await _context.Brand.FirstOrDefaultAsync(x => x.BrandId == id);
+                        AddNewProduct.Brand = AddNewProduct.Part.Brand;
+                        break;
                 }
             }
 
@@ -304,7 +316,7 @@ namespace CodeRedCreations.Controllers
                 TempData["SuccessMessage"] = $"Added {newCar.Make} {newCar.Model}.";
             }
             await _context.SaveChangesAsync();
-            
+
             return RedirectToAction("AddProduct", new { section = "CAR", newSimilarProduct = false });
         }
 
@@ -373,7 +385,7 @@ namespace CodeRedCreations.Controllers
                 existing.Price = newProduct.Price;
                 existing.Shipping = newProduct.Shipping;
                 existing.Images = (newProduct.Images.Count() > 0) ? newProduct.Images : existing.Images;
-                
+
                 TempData["SuccessMessage"] = $"Successfully updated {existing.Name} ({existing.PartNumber})";
             }
             else
@@ -416,6 +428,7 @@ namespace CodeRedCreations.Controllers
             return RedirectToAction("ManageCars");
         }
 
+        [HttpGet]
         public async Task<IActionResult> DeleteBrand(int id)
         {
             var brand = await _context.Brand.FirstOrDefaultAsync(x => x.BrandId == id);
@@ -459,74 +472,74 @@ namespace CodeRedCreations.Controllers
         }
 
         // Called via ajax
-        [HttpPost]
+        [HttpGet]
         public async Task<IActionResult> UpdateRole(string email, string newRole)
         {
             if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(newRole))
             {
                 var user = await _userManager.FindByEmailAsync(email);
-                var currentRole = await _userManager.GetRolesAsync(user);
+                var currentRoles = await _userManager.GetRolesAsync(user);
                 var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == user.Id);
                 var refPromo = await _context.Promos.FirstOrDefaultAsync(x => x.Code == user.Email.Split('@')[0]);
 
-                if (currentRole.Count > 0)
+                if (!currentRoles.Contains(newRole))
                 {
-                    var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRole);
-                    if (removeResult.Succeeded)
+                    // Change Roles
+                    var removeRoleResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                    if (removeRoleResult.Succeeded)
                     {
-                        if (userRef != null && currentRole.Contains(UserRoles.Sponsor.ToString()))
-                        {
-                            userRef.Enabled = false;
+                        await _userManager.AddToRoleAsync(user, newRole);
+                    }
+                    await _context.SaveChangesAsync();
 
+                    switch (newRole.ToUpper())
+                    {
+                        case "SPONSOR":
+                            if (userRef == null)
+                            {
+                                userRef = new UserReferral
+                                {
+                                    UserId = user.Id,
+                                    Enabled = true,
+                                    ReferralCode = user.Email.Split('@')[0],
+                                    PayoutPercent = 100
+                                };
+                            }
+                            if (refPromo == null)
+                            {
+                                refPromo = new PromoModel
+                                {
+                                    Code = userRef.ReferralCode,
+                                    DiscountPercentage = 5,
+                                    Enabled = true
+                                };
+                            }
+
+                            userRef.Enabled = true;
+                            userRef.PayoutPercent = 100;
+                            refPromo.Enabled = true;
+
+                            await UpsertUserReferralAsync(userRef);
+                            await UpsertPromoCodeAsync(refPromo);
+                            break;
+                        case "DEFAULT":
+                        default:
+                            if (userRef != null)
+                            {
+                                userRef.Enabled = false;
+                            }
                             if (refPromo != null)
                             {
                                 refPromo.Enabled = false;
                             }
-                        }
-                        _logger.LogInformation($"{user.Email} has had their roles removed.");
-                    }
-                }
 
-                var addResult = await _userManager.AddToRoleAsync(user, newRole);
-                if (addResult.Succeeded)
-                {
-                    _logger.LogInformation($"{user.Email} was given {newRole} roles.");
-                    if (await _userManager.IsInRoleAsync(user, UserRoles.Sponsor.ToString()))
-                    {
-                        if (refPromo == null)
-                        {
-                            _context.Promos.Add(new PromoModel
-                            {
-                                Code = userRef.ReferralCode,
-                                DiscountPercentage = 5,
-                                Enabled = true
-                            });
-                        }
-                        else
-                        {
-                            refPromo.Enabled = true;
-                        }
-
-                        if (userRef != null)
-                        {
-                            userRef.Enabled = true;
-                            userRef.PayoutPercent = 100;
-                            _context.UserReferral.Update(userRef);
-                        }
-                        else
-                        {
-                            _context.UserReferral.Add(new UserReferral
-                            {
-                                UserId = user.Id,
-                                Enabled = true,
-                                ReferralCode = user.Email.Split('@')[0]
-                            });
-                        }
+                            await UpsertUserReferralAsync(userRef);
+                            await UpsertPromoCodeAsync(refPromo);
+                            break;
                     }
                 }
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction("ManageUsers", "Admin");
         }
 
@@ -615,6 +628,57 @@ namespace CodeRedCreations.Controllers
             });
 
             return shipping;
+        }
+
+        private async Task UpsertPromoCodeAsync(PromoModel promo)
+        {
+            if (promo != null)
+            {
+                var existingPromo = await _context.Promos.FirstOrDefaultAsync(x => x.Id == promo.Id || x.Code == promo.Code);
+                if (existingPromo != null)
+                {
+                    existingPromo.ApplicableParts = promo.ApplicableParts;
+                    existingPromo.Code = promo.Code;
+                    existingPromo.DiscountAmount = promo.DiscountAmount;
+                    existingPromo.DiscountPercentage = promo.DiscountPercentage;
+                    existingPromo.Enabled = promo.Enabled;
+                    existingPromo.ExpirationDate = promo.ExpirationDate;
+                    existingPromo.TimesUsed = promo.TimesUsed;
+                    existingPromo.UsageLimit = promo.UsageLimit;
+                    _context.Promos.Update(existingPromo);
+                }
+                else
+                {
+                    _context.Promos.Add(promo);
+                }
+
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private async Task UpsertUserReferralAsync(UserReferral referral)
+        {
+            if (referral != null)
+            {
+                var existingReferral = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == referral.Id || x.UserId == referral.UserId);
+                if (existingReferral != null)
+                {
+                    existingReferral.Earnings = referral.Earnings;
+                    existingReferral.Enabled = referral.Enabled;
+                    existingReferral.PayoutPercent = referral.PayoutPercent;
+                    existingReferral.PayPalAccount = referral.PayPalAccount;
+                    existingReferral.ReferralCode = referral.ReferralCode;
+                    existingReferral.RequestedPayout = referral.RequestedPayout;
+                    existingReferral.UserId = referral.UserId;
+                    _context.UserReferral.Update(existingReferral);
+                }
+                else
+                {
+                    _context.UserReferral.Add(referral);
+                }
+
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }
