@@ -761,4 +761,20 @@ DiscountAmount.keyup(function () {
 
 try {
     $('.datepicker').datepicker().format("dd/mm/yyyy");
-} catch (e) {}
+} catch (e) { }
+
+$('.product-image').each(function () {
+    var product = $(this);
+    var productId = product.attr('id');
+    var url = product.data('url');
+    document.write('Fetching product image for product #' + productId);
+
+    $.ajax({
+        type: 'GET',
+        url: url,
+        data: { productId: productId },
+        success: function (response, textStatus, jqXHR) {
+            product.attr('src', response);
+        }
+    })
+});

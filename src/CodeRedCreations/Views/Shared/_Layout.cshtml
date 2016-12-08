@@ -9,6 +9,7 @@
         var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
         itemCount = cart.Parts.Count();
     }
+    var message = TempData["Message"];
 }
 <!DOCTYPE html>
 <html>
@@ -78,9 +79,9 @@
         </nav>
     </cache>
     <div class="container body-content">
-        @if (TempData["Message"] != null)
+        @if (message != null)
         {
-            <p class="small tempMessage">@TempData["Message"]</p>
+            <p class="small tempMessage">@message</p>
         }
         <img class="loading img-responsive img-rounded" src="~/images/Logo-small.png" />
         <div class="loadedContent">

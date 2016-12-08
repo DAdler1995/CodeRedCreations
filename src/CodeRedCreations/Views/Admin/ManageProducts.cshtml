@@ -22,11 +22,9 @@
                 @foreach (var product in Model.Products.OrderBy(x => x.Name))
                 {
                     var cars = product.CarProducts.Where(x => x.ProductId == product.PartId).Select(x => x.Car);
-                    string imgSrc = await Static.GetImageSrcAsync(product);
-
                     <tr>
                         <td>@product.PartId</td>
-                        <td><img class="img-responsive" src="@imgSrc" width="100" /></td>
+                        <td><img id="@product.PartId" class="img-responsive product-image" src="~/images/Logo-small-text.png" width="100" data-url="@Url.Action("GetProductImageAsync", "Parts")" /></td>
                         <td>
                             @product.Name (@product.PartType)
                             <ul class="small">

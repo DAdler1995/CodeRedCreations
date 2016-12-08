@@ -254,7 +254,10 @@ namespace CodeRedCreations.Controllers
         [HttpGet]
         public async Task<IActionResult> PromoCode(string promoCode)
         {
-            var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Code.ToUpper().Replace(" ", "") == promoCode.ToUpper().Replace(" ", ""));
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == user.Id);
+            var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Code.ToUpper().Replace(" ", "") == promoCode.ToUpper().Replace(" ", "")
+                                                                    && x.Code.ToUpper() != userRef.ReferralCode);
             var session = HttpContext.Session.GetString(sessionKey);
             TempData["RefPromo"] = true;
 

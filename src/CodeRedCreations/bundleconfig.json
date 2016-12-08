@@ -28,12 +28,6 @@
     ]
   },
   {
-    "outputFileName": "wwwroot/js/twitter.min.js",
-    "inputFiles": [
-      "wwwroot/js/twitter.js"
-    ]
-  },
-  {
     "outputFileName": "wwwroot/js/social.min.js",
     "inputFiles": [
       "wwwroot/js/social.js"

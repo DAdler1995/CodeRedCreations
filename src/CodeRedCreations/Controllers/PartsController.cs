@@ -193,9 +193,12 @@ namespace CodeRedCreations.Controllers
 
         public async Task<IActionResult> PromoCode(ProductDetailsView model)
         {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == user.Id);
             if (!string.IsNullOrEmpty(model.PromoModel.Code))
             {
-                var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Code.ToUpper() == model.PromoModel.Code.ToUpper().Replace(" ", ""));
+                var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Code.ToUpper() == model.PromoModel.Code.ToUpper().Replace(" ", "")
+                                                                    && x.Code.ToUpper() != userRef.ReferralCode);
                 if (promo != null)
                 {
                     TempData["Promo"] = promo.Id;
@@ -337,7 +340,7 @@ namespace CodeRedCreations.Controllers
             var products = _cache.Get<List<ProductModel>>(key);
             if (products == null)
             {
-                var partsQuery = _context.Products.Include(x => x.Images)
+                var partsQuery = _context.Products
                    .Include(x => x.Brand).Include(x => x.CarProducts).ThenInclude(x => x.Car)
                    .Where(x => x.Price > 0m);
 
@@ -372,6 +375,12 @@ namespace CodeRedCreations.Controllers
 
             ViewData["partCount"] = products.Count();
             return products.Page(page, 54).ToList();
+        }
+
+        [HttpGet]
+        public async Task<string> GetProductImageAsync(int productId)
+        {
+            return await Static.GetImageSrcAsync(productId, _context);
         }
     }
 }

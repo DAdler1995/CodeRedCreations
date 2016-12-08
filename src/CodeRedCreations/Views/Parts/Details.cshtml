@@ -154,13 +154,28 @@
             <div class="tab-content">
                 <div id="productDescription" class="tab-pane fade in active">
                     <h3>Product Description</h3>
-                    <p>@product.Description</p>
+                    <p>@Html.Raw(product.Description.Replace(Environment.NewLine, "<br />"))</p>
                 </div>
                 <div id="productDetails" class="tab-pane fade">
                     <h3>Product Details</h3>
                     <dl class="dl-horizontal">
                         <dt>Part Type:</dt>
                         <dd>@product.PartType</dd>
+                        <dt>Product Number:</dt>
+                        <dd>@product.PartNumber</dd>
+                        <dt>Compatible Car(s):</dt>
+                        @if (Model.ProductModel.CarProducts.Select(x => x.Car).Count() > 0)
+                        {
+                            @foreach (var car in Model.ProductModel.CarProducts.Select(x => x.Car))
+                            {
+
+                                <dd>@car.Make @car.Model: @Model.ProductModel.Years</dd>
+                            }
+                        }
+                        else
+                        {
+                            <dd>All</dd>
+                        }
                         <dt>Brand:</dt>
                         <dd>@product.Brand.Name</dd>
                     </dl>

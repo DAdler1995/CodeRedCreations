@@ -370,6 +370,13 @@ namespace CodeRedCreations.Controllers
             var existingReferralCode = await _context.UserReferral.FirstOrDefaultAsync(x => x.ReferralCode == model.UserReferral.ReferralCode);
             if (existingReferralCode == null)
             {
+                var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Code == userReferral.ReferralCode);
+                if (promo != null)
+                {
+                    promo.Code = model.UserReferral.ReferralCode;
+                    _context.Promos.Update(promo);
+                }
+
                 userReferral.ReferralCode = model.UserReferral.ReferralCode;
                 _context.UserReferral.Update(userReferral);
                 await _context.SaveChangesAsync();

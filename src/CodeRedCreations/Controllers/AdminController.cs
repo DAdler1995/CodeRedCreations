@@ -31,7 +31,6 @@ namespace CodeRedCreations.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
         private readonly CodeRedContext _context;
-        private IMemoryCache _cache;
         private Common _common;
 
         public AdminController(
@@ -72,6 +71,14 @@ namespace CodeRedCreations.Controllers
             if (userRef != null)
             {
                 userRef.Enabled = !userRef.Enabled;
+
+                var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Code == userRef.ReferralCode);
+                if (promo != null)
+                {
+                    promo.Enabled = userRef.Enabled;
+                    _context.Promos.Update(promo);
+                }
+
                 _context.UserReferral.Update(userRef);
                 await _context.SaveChangesAsync();
             }
@@ -117,7 +124,7 @@ namespace CodeRedCreations.Controllers
                 var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.Id == id);
                 var user = await _userManager.FindByIdAsync(userRef.UserId);
                 var payoutAmount = Math.Round((userRef.Earnings / 3), 2);
-                ViewData["Message"] = $"{user.NormalizedEmail} has been successfully paid: {payoutAmount.ToString("C2")}.";
+                TempData["Message"] = $"{user.NormalizedEmail} has been successfully paid: {payoutAmount.ToString("C2")}.";
 
                 userRef.Earnings = 0m;
                 userRef.RequestedPayout = false;
@@ -526,6 +533,7 @@ namespace CodeRedCreations.Controllers
                         default:
                             if (userRef != null)
                             {
+                                userRef.PayoutPercent = 33;
                                 userRef.Enabled = false;
                             }
                             if (refPromo != null)
@@ -549,6 +557,18 @@ namespace CodeRedCreations.Controllers
             if (!string.IsNullOrEmpty(email))
             {
                 var user = await _userManager.FindByEmailAsync(email);
+                var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == user.Id);
+                if (userRef != null)
+                {
+                    var promoCode = await _context.Promos.FirstOrDefaultAsync(x => x.Code == userRef.ReferralCode);
+                    if (promoCode != null)
+                    {
+                        _context.Promos.Remove(promoCode);
+                    }
+                    _context.UserReferral.Remove(userRef);
+                    await _context.SaveChangesAsync();
+                }
+
                 var result = await _userManager.DeleteAsync(user);
 
                 if (result.Succeeded)

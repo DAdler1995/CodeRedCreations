@@ -66,7 +66,7 @@ namespace CodeRedCreations.Methods
             var products = _cache.Get<IList<BrandModel>>(key);
             if (products == null)
             {
-                products = await _context.Brand.Include(x => x.Products).ThenInclude(x => x.Images)
+                products = await _context.Brand.Include(x => x.Products)
                 .Include(x => x.Products).ThenInclude(x => x.CarProducts).ThenInclude(x => x.Car).ToListAsync();
                 _cache.Set(key, products, TimeSpan.FromDays(7));
             }

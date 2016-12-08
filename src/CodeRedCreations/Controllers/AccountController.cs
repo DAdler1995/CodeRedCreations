@@ -63,12 +63,18 @@ namespace CodeRedCreations.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
+                var user = await _userManager.FindByEmailAsync(model.Email);
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+                if (user != null && !user.EmailConfirmed)
+                {
+                    TempData["Message"] = "Please confirm your email address.";
+                    return RedirectToAction("Index", "Home");
+                }
+
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    var user = await _userManager.FindByEmailAsync(model.Email);
                     var roles = await _userManager.GetRolesAsync(user);
                     if (roles.Count() == 0)
                     {
@@ -119,27 +125,27 @@ namespace CodeRedCreations.Controllers
             if (ModelState.IsValid)
             {
                 var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                if (user.Email.ToUpper().Contains("CODEREDPERFORMANCE"))
+                {
+                    return View(model);
+                }
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    await _userManager.AddToRoleAsync(user, "Default");
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var callbackUrl = Url.Action(
+                       "ConfirmEmail", "Account",
+                       new { userId = user.Id, code = code },
+                       protocol: Request.Scheme);
 
-                    if (user.NormalizedEmail == "ZEKETIKI@GMAIL.COM")
-                    {
-                        await _userManager.AddToRoleAsync(user, "Admin");
-                    }
-                    _logger.LogInformation(3, "User created a new account with password.");
+                    await _emailSender.SendEmailAsync(user.Email,
+                        "Account",
+                        "Confirm Your Account",
+                        "Please confirm your account by clicking this link: <a href=\""
+                                                        + callbackUrl + "\">link</a>");
 
-                    _context.UserReferral.Add(new Models.Account.UserReferral
-                    {
-                        UserId = user.Id,
-                        Enabled = false,
-                        ReferralCode = $"{user.Email.Split('@')[0]}"
-                    });
-                    await _context.SaveChangesAsync();
-
-                    return RedirectToLocal(returnUrl);
+                    TempData["Message"] = "Please confirm your email address.";
+                    return RedirectToAction("Index", "Home");
                 }
                 AddErrors(result);
             }
@@ -229,7 +235,7 @@ namespace CodeRedCreations.Controllers
                 {
                     return View("ExternalLoginFailure");
                 }
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, EmailConfirmed = true };
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
@@ -247,8 +253,16 @@ namespace CodeRedCreations.Controllers
                         _context.UserReferral.Add(new Models.Account.UserReferral
                         {
                             UserId = user.Id,
-                            Enabled = false,
-                            ReferralCode = $"{user.Email.Split('@')[0]}"
+                            Enabled = true,
+                            ReferralCode = $"{user.Email.Split('@')[0]}",
+                            PayPalAccount = user.Email,
+                            PayoutPercent = 33
+                        });
+                        _context.Promos.Add(new PromoModel
+                        {
+                            Code = $"{user.Email.Split('@')[0]}",
+                            Enabled = true,
+                            DiscountPercentage = 5
                         });
                         await _context.SaveChangesAsync();
 
@@ -278,6 +292,36 @@ namespace CodeRedCreations.Controllers
                 return View("Error");
             }
             var result = await _userManager.ConfirmEmailAsync(user, code);
+
+            if (result.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                await _userManager.AddToRoleAsync(user, "Default");
+
+                if (user.NormalizedEmail == "ZEKETIKI@GMAIL.COM")
+                {
+                    await _userManager.AddToRoleAsync(user, "Admin");
+                }
+                _logger.LogInformation(3, "User created a new account with password.");
+
+                _context.UserReferral.Add(new Models.Account.UserReferral
+                {
+                    UserId = user.Id,
+                    Enabled = true,
+                    ReferralCode = $"{user.Email.Split('@')[0]}",
+                    PayPalAccount = user.Email,
+                    PayoutPercent = 33
+                });
+                _context.Promos.Add(new PromoModel
+                {
+                    Code = $"{user.Email.Split('@')[0]}",
+                    Enabled = true,
+                    DiscountPercentage = 5
+                });
+                await _context.SaveChangesAsync();
+
+                //return RedirectToLocal(returnUrl);
+            }
             return View(result.Succeeded ? "ConfirmEmail" : "Error");
         }
 

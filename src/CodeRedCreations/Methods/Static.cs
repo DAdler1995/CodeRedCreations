@@ -1,4 +1,6 @@
-﻿using CodeRedCreations.Models;
+﻿using CodeRedCreations.Data;
+using CodeRedCreations.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +30,23 @@ namespace CodeRedCreations.Methods
                 await Task.Run(() =>
                 {
                     var base64 = Convert.ToBase64String(product.Images.FirstOrDefault().Bytes);
+                    imgSrc = $"data:image/gif;base64, {base64}";
+                });
+            }
+
+            return imgSrc;
+        }
+
+        public static async Task<string> GetImageSrcAsync(int productId, CodeRedContext _context)
+        {
+            string imgSrc = "/images/Photo-Not-Available.png";
+            var product = await _context.Products.Include(x => x.Images).FirstOrDefaultAsync(x => x.PartId == productId);
+            if (product.Images.Count > 0)
+            {
+                await Task.Run(() =>
+                {
+                    var image = product.Images.FirstOrDefault();
+                    var base64 = Convert.ToBase64String(image.Bytes);
                     imgSrc = $"data:image/gif;base64, {base64}";
                 });
             }

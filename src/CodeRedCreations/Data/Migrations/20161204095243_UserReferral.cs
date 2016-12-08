@@ -15,7 +15,12 @@ namespace coderedcreations.Data.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Earnings = table.Column<decimal>(nullable: false),
+                    Enabled = table.Column<bool>(nullable: false),
+                    PayPalAccount = table.Column<string>(nullable: true),
+                    PayoutPercent = table.Column<int>(nullable: false),
                     ReferralCode = table.Column<string>(nullable: true),
+                    RequestedPayout = table.Column<bool>(nullable: false),
                     UserId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>

@@ -38,7 +38,7 @@ namespace CodeRedCreations.Controllers
 
         public IActionResult Contact()
         {
-            ViewData["Message"] = "Your contact page.";
+            TempData["Message"] = "Your contact page.";
 
             return View();
         }
@@ -51,9 +51,16 @@ namespace CodeRedCreations.Controllers
         [HttpGet]
         public async Task<IActionResult> Referral(string id)
         {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
             var referrerFound = await _context.UserReferral.FirstOrDefaultAsync(x => x.ReferralCode == id);
             if (referrerFound != null && referrerFound.Enabled)
             {
+                if (referrerFound.UserId == user.Id)
+                {
+                    TempData["Message"] = "You cannot use your own referral link.";
+                    return RedirectToAction("Index", "Home");
+                }
+
                 referrerFound.Earnings = -1;
                 referrerFound.PayPalAccount = null;
                 referrerFound.PayoutPercent = -1;

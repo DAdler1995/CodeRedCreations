@@ -22,7 +22,8 @@
         {
             var userRef = allUserRefs.FirstOrDefault(x => x.UserId == item.Id);
             var roles = _userManager.GetRolesAsync(await _userManager.FindByEmailAsync(item.Email)).Result;
-            <tr class="@((roles.Contains(UserRoles.Sponsor.ToString())) ? "info" : "")">
+            var userConfirm = item.EmailConfirmed;
+            <tr class="@((roles.Contains(UserRoles.Sponsor.ToString())) ? "info" : "") @((!userConfirm) ? "danger" : "")">
                 <td>
                     @item.UserName
                 </td>
@@ -51,22 +52,30 @@
                     </div>
                 </td>
 
-                @if (userRef != null && userRef.Enabled)
+                @if (userRef != null)
                 {
                     <td class="@((userRef.Enabled) ? "success" : "danger")">
                         <a asp-controller="Admin" asp-action="ToggleReferral" asp-route-id="@item.Id">@((userRef.Enabled) ? "Disable" : "Enable")</a>
                     </td>
-                    <td>
-                        <form asp-controller="Admin" asp-action="SetRefPercent" method="post">
-                            <input hidden="hidden" class="hidden" name="UserId" id="UserId" value="@item.Id" />
-                            <div class="input-group">
-                                <input type="number" class="form-control" name="RefPercent" id="RefPercent" value="@userRef.PayoutPercent" />
-                                <span class="input-group-btn">
-                                    <button type="submit" class="btn btn-default">Change Percent</button>
-                                </span>
-                            </div>
-                        </form>
-                    </td>
+                    if (userRef.Enabled)
+                    {
+                        <td class="@((userRef.Enabled) ? "success" : "danger")">
+                            <form asp-controller="Admin" asp-action="SetRefPercent" method="post">
+                                <input hidden="hidden" class="hidden" name="UserId" id="UserId" value="@item.Id" />
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="RefPercent" id="RefPercent" value="@userRef.PayoutPercent" />
+                                    <span class="input-group-btn">
+                                        <button type="submit" class="btn btn-default">Change Percent</button>
+                                    </span>
+                                </div>
+                            </form>
+                        </td>
+
+                    }
+                    else
+                    {
+                        <td></td>
+                    }
                 }
                 else
                 {

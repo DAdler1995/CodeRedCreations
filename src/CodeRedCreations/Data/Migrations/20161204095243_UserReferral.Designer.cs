@@ -8,8 +8,8 @@ using CodeRedCreations.Data;
 namespace coderedcreations.Data.Migrations
 {
     [DbContext(typeof(CodeRedContext))]
-    [Migration("20161116214023_UserReferralUpdate4")]
-    partial class UserReferralUpdate4
+    [Migration("20161204095243_UserReferral")]
+    partial class UserReferral
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
