@@ -15,11 +15,12 @@
     var brand = ViewContext.RouteData.Values["brand"];
     var car = ViewContext.RouteData.Values["car"];
 
+    var part = (ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : EnumString.GetEnumDescription((PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), ViewContext.RouteData.Values["part"].ToString()));
+
     var allBrands = (List<string>)ViewData["allBrands"];
     var carMakes = new List<string>();
     var carModels = new List<string>();
-
-    int page = (int)ViewData["page"];
+    
     int partCount = (int)ViewData["partCount"];
 }
 
@@ -32,7 +33,7 @@
                     <ul class="list-inline">
                         <li class="dropdown">
                             Part Type:
-                            <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@((ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : EnumString.GetEnumDescription((PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), ViewContext.RouteData.Values["part"].ToString()))) <span class="caret"></span></strong></a>
+                            <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@part <span class="caret"></span></strong></a>
                             <ul class="dropdown-menu" role="menu">
                                 <li>
                                     <div class="yamm-content">
@@ -132,32 +133,13 @@
 
                         <li>
                             <div class="col-md-3" style="padding: 0; margin-top: 3px;">
-                                <form asp-action="Index" asp-controller="Parts" method="get">
-                                    <input hidden="hidden" class="hidden" name="part" id="part" value="@((ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : EnumString.GetEnumDescription((PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), ViewContext.RouteData.Values["part"].ToString())))" />
-                                    <input hidden="hidden" class="hidden" name="brand" id="brand" value="@brand" />
-                                    <input hidden="hidden" class="hidden" name="car" id="car" value="@car" />
-                                    <div class="input-group">
-                                        <input name="search" id="search" placeholder="Search" class="form-control" value="@((ViewData["Search"] != null) ? ViewData["Search"].ToString() : "")" />
-                                        <span class="input-group-btn">
-                                            <button type="submit" class="btn btn-default">Search</button>
-                                        </span>
-                                    </div>
-                                </form>
-                            </div>
-                            @if ((int)((partCount + 1) / 54) > 1)
-                            {
-                                <div class="col-md-3 col-md-offset-6" style="padding: 0; margin-top: 3px;">
-                                    <ul class="pagination pull-right" style="margin-top: 0;">
-                                        @for (int i = 1; i < Math.Ceiling((double)(partCount / 53)) + 2; i++)
-                                        {
-                                            <li class="@((page == i) ? "active" : "")">
-                                                <a asp-controller="Parts" asp-action="Index"
-                                                   asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="@car" asp-route-page="@i">@i</a>
-                                            </li>
-                                        }
-                                    </ul>
+                                <div class="input-group">
+                                    <input name="search" id="search" placeholder="Search" class="form-control" value="@((ViewData["Search"] != null) ? ViewData["Search"].ToString() : "")" />
+                                    <span class="input-group-btn">
+                                        <a id="partSearchButton" onclick="return searchPart('@part', '@brand', '@car');" class="btn btn-default">Search</a>
+                                    </span>
                                 </div>
-                            }
+                            </div>
                         </li>
                     </ul>
                 </li>
@@ -210,7 +192,7 @@
                                         {
                                             var onlyCar = item.CarProducts.Select(x => x.Car).FirstOrDefault();
                                             <span>
-                                                Car: <span class="text-red btn-link" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" data-trigger="hover" data-content="@item.Years">@onlyCar.Make @onlyCar.Model</span>
+                                                Car: @onlyCar.Make @onlyCar.Model (@(string.IsNullOrEmpty(item.Years) ? "All" : item.Years))
                                             </span>
                                         }
                                         else
@@ -218,7 +200,7 @@
                                             var builder = new StringBuilder();
                                             foreach (var compatible in item.CarProducts.Select(x => x.Car).OrderBy(x => x.Make).ThenBy(x => x.Model))
                                             {
-                                                builder.Append($"{compatible.Make} {compatible.Model}: {item.Years}<br />");
+                                                builder.Append($"{compatible.Make} {compatible.Model}: {(string.IsNullOrEmpty(item.Years) ? "All" : item.Years)}<br />");
                                             }
 
                                             <span>
@@ -247,23 +229,6 @@
                             </div>
                         </div>
                 }
-            </div>
-        }
-
-        @if ((int)((partCount + 1) / 54) > 1)
-        {
-            <div class="row">
-                <div style="text-align: center;">
-                    <ul class="pagination">
-                        @for (int i = 1; i < Math.Ceiling((double)(partCount / 53)) + 2; i++)
-                    {
-                            <li class="@((page == i) ? "active" : "")">
-                                <a asp-controller="Parts" asp-action="Index"
-                                   asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="@car" asp-route-page="@i">@i</a>
-                            </li>
-                        }
-                    </ul>
-                </div>
             </div>
         }
     }

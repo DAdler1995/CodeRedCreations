@@ -69,6 +69,18 @@ namespace CodeRedCreations.Controllers
                 if (user != null && !user.EmailConfirmed)
                 {
                     TempData["Message"] = "Please confirm your email address.";
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var callbackUrl = Url.Action(
+                       "ConfirmEmail", "Account",
+                       new { userId = user.Id, code = code },
+                       protocol: Request.Scheme);
+
+                    await _emailSender.SendEmailAsync(user.Email,
+                        "Account",
+                        "Confirm Your Account",
+                        "Please confirm your account by clicking this link: <a href=\""
+                                                        + callbackUrl + "\">link</a>");
+
                     return RedirectToAction("Index", "Home");
                 }
 
@@ -256,14 +268,15 @@ namespace CodeRedCreations.Controllers
                             Enabled = true,
                             ReferralCode = $"{user.Email.Split('@')[0]}",
                             PayPalAccount = user.Email,
-                            PayoutPercent = 33
+                            PayoutPercent = 33,
+                            StoreCreditPercent = 5
                         });
-                        _context.Promos.Add(new PromoModel
-                        {
-                            Code = $"{user.Email.Split('@')[0]}",
-                            Enabled = true,
-                            DiscountPercentage = 5
-                        });
+                        //_context.Promos.Add(new PromoModel
+                        //{
+                        //    Code = $"{user.Email.Split('@')[0].ToUpper()}",
+                        //    Enabled = true,
+                        //    DiscountPercentage = 5
+                        //});
                         await _context.SaveChangesAsync();
 
                         _logger.LogInformation(6, "User created an account using {Name} provider.", info.LoginProvider);
@@ -310,14 +323,15 @@ namespace CodeRedCreations.Controllers
                     Enabled = true,
                     ReferralCode = $"{user.Email.Split('@')[0]}",
                     PayPalAccount = user.Email,
-                    PayoutPercent = 33
+                    PayoutPercent = 33,
+                    StoreCreditPercent = 5
                 });
-                _context.Promos.Add(new PromoModel
-                {
-                    Code = $"{user.Email.Split('@')[0]}",
-                    Enabled = true,
-                    DiscountPercentage = 5
-                });
+                //_context.Promos.Add(new PromoModel
+                //{
+                //    Code = $"{user.Email.Split('@')[0].ToUpper()}",
+                //    Enabled = true,
+                //    DiscountPercentage = 5
+                //});
                 await _context.SaveChangesAsync();
 
                 //return RedirectToLocal(returnUrl);

@@ -778,3 +778,15 @@ $('.product-image').each(function () {
         }
     })
 });
+
+$('#search').keyup(function (event) {
+    if (event.keyCode == 13) {
+        $('#partSearchButton').click();
+    }
+})
+
+function searchPart(part, brand, car) {
+    var button = $('#partSearchButton');
+    var href = '/Parts/Index/' + part + '/' + brand + '/' + car + '/' + $('#search').val();
+    window.location.href = href;
+}

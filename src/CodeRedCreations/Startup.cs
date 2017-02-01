@@ -60,7 +60,7 @@ namespace CodeRedCreations
             services.AddAuthorization();
             
             services.AddDbContext<CodeRedContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("LiveConnection")));
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<CodeRedContext>()
@@ -158,14 +158,14 @@ namespace CodeRedCreations
 
             app.UseMvc(routes =>
             {
-                routes.MapRoute(
-                    name: "referral",
-                    template: "Referral/{referrer}",
-                    defaults: new { controller = "Home" });
+                //routes.MapRoute(
+                //    name: "referral",
+                //    template: "Referral/{referrer}",
+                //    defaults: new { controller = "Home" });
 
                 routes.MapRoute(
                     name: "parts",
-                    template: "Parts/{action=Index}/{part=All}/{brand?}/{car?}",
+                    template: "Parts/{action=Index}/{part=All}/{brand=All}/{car=All}/{search?}",
                     defaults: new { controller = "Parts" });
 
                 routes.MapRoute(

@@ -19,7 +19,11 @@ namespace CodeRedCreations.Models
         {
             get
             {
-                return CarProducts.Count;
+                if (CarProducts != null)
+                {
+                    return CarProducts.Count;
+                }
+                return 0;
             }
         }
     }

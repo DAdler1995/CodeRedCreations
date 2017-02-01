@@ -40,14 +40,13 @@ namespace CodeRedCreations.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string part = "All", string brand = "All", string car = "All", string search = null, int page = 1)
+        public async Task<IActionResult> Index(string part = "All", string brand = "All", string car = "All", string search = null)
         {
             var _common = new Common(_cache, _context);
             ViewData["allBrands"] = await _common.GetAllBrandNamesAsync();
             ViewData["allCars"] = await _common.GetAllCarsAsync();
-            ViewData["page"] = page;
             ViewData["Search"] = search;
-            var products = await GetProductsAsync(part, brand, car, search, page);
+            var products = await GetProductsAsync(part, brand, car, search);
             
             return View(products);
         }
@@ -334,9 +333,9 @@ namespace CodeRedCreations.Controllers
 
             return search;
         }
-        public async Task<List<ProductModel>> GetProductsAsync(string part, string brand, string car, string search, int page)
+        public async Task<List<ProductModel>> GetProductsAsync(string part, string brand, string car, string search)
         {
-            string key = $"{part}{brand}{car}{search}{page}";
+            string key = $"{part}{brand}{car}{search}";
             var products = _cache.Get<List<ProductModel>>(key);
             if (products == null)
             {
@@ -370,11 +369,11 @@ namespace CodeRedCreations.Controllers
                     .ThenBy(x => x.Price)
                     .ToListAsync();
 
-                _cache.Set(key, products, TimeSpan.FromDays(7));
+                _cache.Set(key, products, TimeSpan.FromHours(1));
             }
 
             ViewData["partCount"] = products.Count();
-            return products.Page(page, 54).ToList();
+            return products;
         }
 
         [HttpGet]

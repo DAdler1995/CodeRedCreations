@@ -416,12 +416,15 @@ namespace CodeRedCreations.Controllers
             var partFound = await _context.Products.Include(x => x.Images).FirstOrDefaultAsync(x => x.PartId == id);
             if (partFound != null)
             {
+                var brandId = partFound.Brand.BrandId;
                 _context.Images.RemoveRange(partFound.Images);
                 var remove = _context.Products.Remove(partFound);
                 await _context.SaveChangesAsync();
+                return RedirectToAction("ManageProducts", new { id = brandId });
             }
 
-            return RedirectToAction("ManageProducts");
+            TempData["Message"] = "The part Id was incorrect.";
+            return RedirectToAction("ManageBrands");
         }
         public async Task<IActionResult> DeleteCar(int id)
         {
@@ -509,7 +512,8 @@ namespace CodeRedCreations.Controllers
                                     UserId = user.Id,
                                     Enabled = true,
                                     ReferralCode = user.Email.Split('@')[0],
-                                    PayoutPercent = 100
+                                    PayoutPercent = 100,
+                                    StoreCreditPercent = 10
                                 };
                             }
                             if (refPromo == null)
@@ -524,6 +528,7 @@ namespace CodeRedCreations.Controllers
 
                             userRef.Enabled = true;
                             userRef.PayoutPercent = 100;
+                            userRef.StoreCreditPercent = 10;
                             refPromo.Enabled = true;
 
                             await UpsertUserReferralAsync(userRef);
@@ -534,7 +539,7 @@ namespace CodeRedCreations.Controllers
                             if (userRef != null)
                             {
                                 userRef.PayoutPercent = 33;
-                                userRef.Enabled = false;
+                                userRef.StoreCreditPercent = 5;
                             }
                             if (refPromo != null)
                             {

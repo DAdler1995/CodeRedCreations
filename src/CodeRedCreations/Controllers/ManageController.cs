@@ -95,7 +95,7 @@ namespace CodeRedCreations.Controllers
             }
 
 
-            ViewData["ReferralUrl"] = $"https://{HttpContext.Request.Host}/Home/Referral/{model.UserReferral.ReferralCode}";
+            ViewData["ReferralUrl"] = $"http://{HttpContext.Request.Host}/Home/Referral/{model.UserReferral.ReferralCode}";
             ViewData["ReferralEarnings"] = Math.Round(model.UserReferral.Earnings, 2);
             return View(model);
         }

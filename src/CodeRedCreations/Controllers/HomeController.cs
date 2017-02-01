@@ -25,7 +25,7 @@ namespace CodeRedCreations.Controllers
             _userManager = userManager;
             _emailSender = emailSender;
         }
-        
+
         public IActionResult Index()
         {
             return View();
@@ -47,7 +47,7 @@ namespace CodeRedCreations.Controllers
         {
             return View();
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> Referral(string id)
         {
@@ -55,7 +55,7 @@ namespace CodeRedCreations.Controllers
             var referrerFound = await _context.UserReferral.FirstOrDefaultAsync(x => x.ReferralCode == id);
             if (referrerFound != null && referrerFound.Enabled)
             {
-                if (referrerFound.UserId == user.Id)
+                if (user != null && referrerFound.UserId == user.Id)
                 {
                     TempData["Message"] = "You cannot use your own referral link.";
                     return RedirectToAction("Index", "Home");
@@ -67,14 +67,20 @@ namespace CodeRedCreations.Controllers
                 referrerFound.RequestedPayout = false;
                 var serializedReferral = await Task.Factory.StartNew(() => JsonConvert.SerializeObject(referrerFound));
                 HttpContext.Response.Cookies.Append("Referral", serializedReferral, new CookieOptions
-                { Expires = DateTime.Now.AddMonths(3), Secure = true });
-                TempData["Message"] = $"Referral discount is now active.";
+                { Expires = DateTime.Now.AddMonths(3) });
+                var referrer = await _userManager.FindByIdAsync(referrerFound.UserId);
+                var roles = _userManager.GetRolesAsync(referrer).Result;
+
+                if (roles.Contains(UserRoles.Sponsor.ToString()))
+                {
+                    TempData["Message"] = $"Referral discount is now active.";
+                }
             }
             else
             {
                 TempData["Message"] = "Not a valid referral link.";
             }
-
+            
             return RedirectToAction("Index", "Home");
         }
 

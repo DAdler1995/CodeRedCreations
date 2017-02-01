@@ -11,7 +11,7 @@
         @if (SignInManager.IsSignedIn(User))
         {
             <li>
-                <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage">Hello @UserManager.GetUserName(User)!</a>
+                <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage">Manage Account</a>
             </li>
             <li>
                 <a href="#" onclick="$('#logoutForm').submit();">Log off</a>

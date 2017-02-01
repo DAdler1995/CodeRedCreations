@@ -23,9 +23,9 @@ namespace CodeRedCreations.Services
             _context = context;
         }
 
-        public async Task SendEmailAsync(string toEmail, string fromEmail, string subject, string message)
+        public async Task SendEmailAsync(string toEmail, string fromName, string subject, string message)
         {
-            var from = new MailboxAddress(fromEmail, $"{fromEmail.Replace(" ", "")}@CodeRedPerformance.com");
+            var from = new MailboxAddress(fromName, $"{fromName.Replace(" ", "")}@CodeRedPerformance.com");
 
             var emailMessage = new MimeMessage();
             emailMessage.From.Add(from);
