@@ -24,7 +24,7 @@ namespace CodeRedCreations.Models.Account
         [DefaultValue(33)]
         public int PayoutPercent { get; set; }
 
-        [DefaultValue(5)]
+        [DefaultValue(3)]
         public int StoreCreditPercent { get; set; }
     }
 }

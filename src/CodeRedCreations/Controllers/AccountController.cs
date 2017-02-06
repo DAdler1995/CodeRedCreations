@@ -261,16 +261,6 @@ namespace CodeRedCreations.Controllers
                         {
                             await _userManager.AddToRoleAsync(user, "Admin");
                         }
-
-                        _context.UserReferral.Add(new Models.Account.UserReferral
-                        {
-                            UserId = user.Id,
-                            Enabled = true,
-                            ReferralCode = $"{user.Email.Split('@')[0]}",
-                            PayPalAccount = user.Email,
-                            PayoutPercent = 33,
-                            StoreCreditPercent = 5
-                        });
                         await _context.SaveChangesAsync();
 
                         _logger.LogInformation(6, "User created an account using {Name} provider.", info.LoginProvider);
@@ -310,16 +300,6 @@ namespace CodeRedCreations.Controllers
                     await _userManager.AddToRoleAsync(user, "Admin");
                 }
                 _logger.LogInformation(3, "User created a new account with password.");
-
-                _context.UserReferral.Add(new Models.Account.UserReferral
-                {
-                    UserId = user.Id,
-                    Enabled = true,
-                    ReferralCode = $"{user.Email.Split('@')[0]}",
-                    PayPalAccount = user.Email,
-                    PayoutPercent = 33,
-                    StoreCreditPercent = 5
-                });
                 await _context.SaveChangesAsync();
 
                 //return RedirectToLocal(returnUrl);

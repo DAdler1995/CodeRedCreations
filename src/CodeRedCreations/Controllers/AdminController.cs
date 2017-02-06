@@ -528,7 +528,7 @@ namespace CodeRedCreations.Controllers
 
                             userRef.Enabled = true;
                             userRef.PayoutPercent = 100;
-                            userRef.StoreCreditPercent = 10;
+                            userRef.StoreCreditPercent = 3;
                             refPromo.Enabled = true;
 
                             await UpsertUserReferralAsync(userRef);
@@ -539,7 +539,7 @@ namespace CodeRedCreations.Controllers
                             if (userRef != null)
                             {
                                 userRef.PayoutPercent = 33;
-                                userRef.StoreCreditPercent = 5;
+                                userRef.StoreCreditPercent = 0;
                             }
                             if (refPromo != null)
                             {
