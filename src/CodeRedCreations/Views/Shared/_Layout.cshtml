@@ -7,7 +7,7 @@
     if (session != null)
     {
         var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
-        itemCount = cart.Parts.Count();
+        itemCount = cart.Products.Count();
     }
     var message = TempData["Message"];
 }

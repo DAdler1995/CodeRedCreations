@@ -482,10 +482,10 @@ namespace CodeRedCreations.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SetStoreCredit(string UserId, string RefPercent)
+        public async Task<IActionResult> SetStoreCredit(string UserId, string StoreCredit)
         {
             var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == UserId);
-            var percent = int.Parse(RefPercent);
+            var percent = int.Parse(StoreCredit);
             if (userRef != null)
             {
                 userRef.StoreCreditPercent = percent;
@@ -554,8 +554,7 @@ namespace CodeRedCreations.Controllers
                         default:
                             if (userRef != null)
                             {
-                                userRef.PayoutPercent = 33;
-                                userRef.StoreCreditPercent = 0;
+                                userRef.Enabled = false;
                             }
                             if (refPromo != null)
                             {
