@@ -52,7 +52,6 @@
                         </ul>
                     </div>
                 </td>
-
                 @if (userRef != null)
                 {
                     <td class="@((userRef.Enabled) ? "success" : "danger")">
@@ -61,18 +60,27 @@
                     if (userRef.Enabled)
                     {
                         <td class="@((userRef.Enabled) ? "success" : "danger")">
-                            <p>Store Credit: @userRef.StoreCreditPercent%</p>
+                            <form asp-controller="Admin" asp-action="SetStoreCredit" method="post">
+                                <input hidden="hidden" class="hidden" name="UserId" id="UserId" value="@item.Id" />
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">Store Credit %:</span>
+                                        <input type="number" class="form-control" name="StoreCredit" id="StoreCredit" value="@userRef.StoreCreditPercent" />
+                                        <span class="input-group-btn">
+                                            <button type="submit" class="btn btn-default">Change Percent</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </form>
                             <form asp-controller="Admin" asp-action="SetRefPercent" method="post">
                                 <input hidden="hidden" class="hidden" name="UserId" id="UserId" value="@item.Id" />
                                 <div class="form-group">
-                                    <label for="RefPercent" class="col-md-2" style="padding: 0;">Payout %:</label>
-                                    <div class="col-md-10">
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="RefPercent" id="RefPercent" value="@userRef.PayoutPercent" />
-                                            <span class="input-group-btn">
-                                                <button type="submit" class="btn btn-default">Change Percent</button>
-                                            </span>
-                                        </div>
+                                    <div class="input-group">
+                                        <span class="input-group-addon">Payout %:</span>
+                                        <input type="number" class="form-control" name="RefPercent" id="RefPercent" value="@userRef.PayoutPercent" />
+                                        <span class="input-group-btn">
+                                            <button type="submit" class="btn btn-default">Change Percent</button>
+                                        </span>
                                     </div>
                                 </div>
                             </form>

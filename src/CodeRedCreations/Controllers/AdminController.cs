@@ -475,7 +475,23 @@ namespace CodeRedCreations.Controllers
                 userRef.PayoutPercent = percent;
                 _context.UserReferral.Update(userRef);
                 await _context.SaveChangesAsync();
-                TempData["Message"] = $"Payout percentage successfully set to: {percent} %.";
+                TempData["Message"] = $"Payout percentage successfully set to: {percent}%.";
+            }
+
+            return RedirectToAction("ManageUsers", "Admin");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SetStoreCredit(string UserId, string RefPercent)
+        {
+            var userRef = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == UserId);
+            var percent = int.Parse(RefPercent);
+            if (userRef != null)
+            {
+                userRef.StoreCreditPercent = percent;
+                _context.UserReferral.Update(userRef);
+                await _context.SaveChangesAsync();
+                TempData["Message"] = $"Store credit percentage successfully set to: {percent}%.";
             }
 
             return RedirectToAction("ManageUsers", "Admin");
@@ -521,7 +537,7 @@ namespace CodeRedCreations.Controllers
                                 refPromo = new PromoModel
                                 {
                                     Code = userRef.ReferralCode,
-                                    DiscountPercentage = 5,
+                                    DiscountPercentage = 3,
                                     Enabled = true
                                 };
                             }
