@@ -10,5 +10,7 @@ namespace CodeRedCreations.Models
         public ICollection<ImageModel> Images { get; set; }
         public int Quantity { get; set; }
         public UserReferral UserReferral { get; set; }
+
+        public decimal? NewPrice { get; set; }
     }
 }

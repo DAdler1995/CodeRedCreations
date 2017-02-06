@@ -271,12 +271,6 @@ namespace CodeRedCreations.Controllers
                             PayoutPercent = 33,
                             StoreCreditPercent = 5
                         });
-                        //_context.Promos.Add(new PromoModel
-                        //{
-                        //    Code = $"{user.Email.Split('@')[0].ToUpper()}",
-                        //    Enabled = true,
-                        //    DiscountPercentage = 5
-                        //});
                         await _context.SaveChangesAsync();
 
                         _logger.LogInformation(6, "User created an account using {Name} provider.", info.LoginProvider);
@@ -326,12 +320,6 @@ namespace CodeRedCreations.Controllers
                     PayoutPercent = 33,
                     StoreCreditPercent = 5
                 });
-                //_context.Promos.Add(new PromoModel
-                //{
-                //    Code = $"{user.Email.Split('@')[0].ToUpper()}",
-                //    Enabled = true,
-                //    DiscountPercentage = 5
-                //});
                 await _context.SaveChangesAsync();
 
                 //return RedirectToLocal(returnUrl);

@@ -5,28 +5,25 @@
 @{
     ViewData["Title"] = "Shopping Cart";
     decimal shipping = 0m;
-    decimal subTotal = 0m;
+    decimal subTotal = Model.Total;
     decimal tax = 0m;
     decimal taxRate = Math.Round((decimal)8 / 100, 2);
-
-    decimal? oldTotal = (decimal?)TempData["OldTotal"];
-    decimal? newTotal = (decimal?)TempData["NewTotal"];
 }
 <h3>
     @ViewData["Title"]
-    @if (Model.Parts != null)
+    @if (Model.Products != null)
     {
-        if (Model.Parts.Count() == 1)
+        if (Model.Products.Count() == 1)
         {
             <span>
-                (@Model.Parts.Count() item)
+                (@Model.Products.Count() item)
             </span>
         }
         else
         {
 
             <span>
-                (@Model.Parts.Count() items)
+                (@Model.Products.Count() items)
             </span>
         }
     }
@@ -35,9 +32,9 @@
 {
     <p class="small">Shopping cart started on: @Model.ShoppingCartStarted.ToString("MM/dd/yyyy")</p>
 }
-@if (Model.Parts != null && Model.Parts.Count > 0)
+@if (Model.Products != null && Model.Products.Count > 0)
 {
-    <p><a asp-area="" asp-controller="Parts" asp-action="Index">Continue Shopping</a> <a class="pull-right" asp-area="" asp-controller="ShoppingCart" asp-action="ClearCart" onclick="return confirm('Are you sure you wish to remove all ' + @Model.Parts.Count + ' product(s) from your cart?')">Clear Cart</a></p>
+    <p><a asp-area="" asp-controller="Parts" asp-action="Index">Continue Shopping</a> <a class="pull-right" asp-area="" asp-controller="ShoppingCart" asp-action="ClearCart" onclick="return confirm('Are you sure you wish to remove all ' + @Model.Products.Count + ' product(s) from your cart?')">Clear Cart</a></p>
     <hr />
     <table class="table table-responsive">
         <thead>
@@ -50,10 +47,9 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var product in Model.Parts)
+            @foreach (var product in Model.Products)
                 {
                     shipping += product.Shipping;
-                    subTotal += product.Price;
 
                     var cars = product.CarProducts.Select(x => x.Car);
 
@@ -103,17 +99,18 @@
             <tr>
                 <th colspan="2">&nbsp;</th>
                 <th class="text-right">Subtotal</th>
-                @if (newTotal != null && oldTotal != null)
+                @if (Model.NewTotal == null)
                 {
-                    <th>
-                        @newTotal.Value.ToString("C2", new CultureInfo("en-US"))
-                        <br />
-                        <del>@subTotal.ToString("C2", new CultureInfo("en-US"))</del>
-                    </th>
+
+                    <th>@subTotal.ToString("C2", new CultureInfo("en-US"))</th>
                 }
                 else
                 {
-                    <th>@subTotal.ToString("C2", new CultureInfo("en-US"))</th>
+                    <th>
+                        <del>@Model.Total.ToString("C2", new CultureInfo("en-US"))</del>
+                        <br />
+                        @Model.NewTotal.Value.ToString("C2", new CultureInfo("en-US"))
+                    </th>
                 }
                 <th></th>
             </tr>
@@ -127,9 +124,9 @@
                 <th colspan="2">&nbsp;</th>
                 <th class="text-right">Tax</th>
 
-                @if (newTotal != null && oldTotal != null)
+                @if (Model.NewTotal != null)
                 {
-                    tax = Math.Round((decimal)oldTotal * taxRate, 2);
+                    tax = Math.Round((decimal)Model.Total * taxRate, 2);
                 }
                 else
                 {
@@ -142,12 +139,12 @@
             <tr>
                 <th colspan="2"></th>
                 <th class="text-right">Total</th>
-                @if (newTotal != null && oldTotal != null)
+                @if (Model.NewTotal != null)
                 {
                     <th>
-                        @((shipping + (decimal)newTotal + tax).ToString("C2", new CultureInfo("en-US")))
+                        @((shipping + Model.NewTotal.Value + tax).ToString("C2", new CultureInfo("en-US")))
                         <br />
-                        <del>@((shipping + subTotal + tax).ToString("C2", new CultureInfo("en-US")))</del>
+                        <del>@((shipping + Model.Total + tax).ToString("C2", new CultureInfo("en-US")))</del>
                     </th>
                 }
                 else
@@ -160,7 +157,7 @@
                             <input placeholder="Promo Code" id="promoCode" name="promoCode" type="text" class="form-control" value="@((TempData["PromoCode"] != null) ? TempData["PromoCode"].ToString() : "" )" />
                             <span class="input-group-btn">
                                 <button type="submit" class="btn btn-default">Apply Promo Code</button>
-                                <a class="btn btn-default" asp-area="" asp-controller="ShoppingCart" asp-action="Checkout" asp-route-id="@TempData["ReferralAmount"]"><span class="glyphicon glyphicon-shopping-cart"></span> Checkout</a>
+                                <a class="btn btn-default" asp-area="" asp-controller="ShoppingCart" asp-action="Checkout" asp-route-id="@TempData["StoreCredit"]"><span class="glyphicon glyphicon-shopping-cart"></span> Checkout</a>
                             </span>
                         </div>
                     </form>

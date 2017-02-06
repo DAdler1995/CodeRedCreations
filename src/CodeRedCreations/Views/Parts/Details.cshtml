@@ -4,7 +4,6 @@
 @using System.Text;
 @using CodeRedCreations.Methods;
 @{
-    decimal? oldPrice = (decimal?)ViewData["OldPrice"];
     var product = Model.ProductModel;
     ViewData["Title"] = $"{Model.ProductModel.Brand.Name} - {Model.ProductModel.Name}";
     var cars = Model.ProductModel.CarProducts.Select(x => x.Car).ToList();
@@ -82,16 +81,17 @@
             </p>
             <hr />
         </cache>
-        @if (oldPrice == null)
-            {
+
+        @if (Model.NewPrice == null)
+        {
             <h3 id="price" class="text-red">@product.Price.ToString("C2", new CultureInfo("en-US"))</h3>
         }
         else
         {
-            <h3 id="price" class="text-red">@product.Price.ToString("C2", new CultureInfo("en-US"))</h3>
-                <h4 id="oldPrice"><del>@oldPrice.Value.ToString("C2", new CultureInfo("en-US"))</del></h4>
-
+            <h3 id="oldPrice"><del>@product.Price.ToString("C2", new CultureInfo("en-US"))</del></h3>
+            <h3 id="price" class="text-red">@Model.NewPrice.Value.ToString("C2", new CultureInfo("en-US"))</h3>
         }
+
         <p>+@product.Shipping.ToString("C2", new CultureInfo("en-US")) shipping</p>
         <p class="small">Item #@product.PartNumber</p>
         <hr />
@@ -123,7 +123,7 @@
         <form asp-controller="Parts" asp-action="BuyNow">
             <input hidden asp-for="ProductModel.PartId" value="@product.PartId" />
             <input hidden="hidden" class="hidden" asp-for="UserReferral.Id" />
-            <input hidden="hidden" class="hidden" name="refAmount" id="refAmount" value="@TempData["ReferralAmount"]" />
+            <input hidden="hidden" class="hidden" name="refAmount" id="refAmount" value="@TempData["StoreCredit"]" />
             @if (Model.PromoModel != null)
             {
                 <input hidden asp-for="PromoModel.Id" value="@Model.PromoModel.Id" />

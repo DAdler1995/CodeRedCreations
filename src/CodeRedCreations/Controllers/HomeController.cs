@@ -138,7 +138,7 @@ namespace CodeRedCreations.Controllers
                             {
                                 var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
                                 decimal cartValue = 0;
-                                foreach (var item in cart.Parts)
+                                foreach (var item in cart.Products)
                                 {
                                     cartValue += item.Price;
                                 }

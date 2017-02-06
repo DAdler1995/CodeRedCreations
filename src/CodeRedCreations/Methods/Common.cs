@@ -1,5 +1,6 @@
 ﻿using CodeRedCreations.Data;
 using CodeRedCreations.Models;
+using CodeRedCreations.Models.Account;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System;
@@ -85,6 +86,34 @@ namespace CodeRedCreations.Methods
             }
 
             return products;
+        }
+
+
+        public async Task<PromoModel> GetPromoAsync(int promoId)
+        {
+            string key = $"promo-{promoId}";
+            var promo = _cache.Get<PromoModel>(key);
+
+            if (promo == null)
+            {
+                promo = await _context.Promos.FirstOrDefaultAsync(x => x.Id == promoId);
+                _cache.Set(key, promo, TimeSpan.FromHours(1));
+            }
+
+            return promo;
+        }
+
+        public async Task<PromoModel> GetPromoAsync(UserReferral userReferral)
+        {
+            var refPromo = await _context.Promos.FirstOrDefaultAsync(x => x.Code == userReferral.ReferralCode);
+            PromoModel promo = null;
+
+            if (refPromo != null)
+            {
+                promo = await GetPromoAsync(refPromo.Id);
+            }
+
+            return promo;
         }
     }
 }

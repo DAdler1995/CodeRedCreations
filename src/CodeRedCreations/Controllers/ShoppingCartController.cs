@@ -68,18 +68,17 @@ namespace CodeRedCreations.Controllers
                     cart.UserReferral = userRef;
                 }
 
-                if (TempData["ReferralAmount"] != null)
+                if (TempData["StoreCredit"] != null)
                 {
-                    decimal ReferralAmount = decimal.Parse(TempData["ReferralAmount"].ToString());
+                    decimal StoreCredit = decimal.Parse(TempData["StoreCredit"].ToString());
                     decimal total = 0m;
-                    foreach (var product in cart.Parts)
+                    foreach (var product in cart.Products)
                     {
                         total += product.Price;
                     }
-                    TempData["OldTotal"] = total;
 
-                    decimal newTotal = ((total - ReferralAmount) <= 0) ? 0.01m : (total - ReferralAmount);
-                    TempData["NewTotal"] = newTotal;
+                    decimal newTotal = ((total - StoreCredit) <= 0) ? 0.01m : (total - StoreCredit);
+                    cart.NewTotal = newTotal;
                 }
                 else if (TempData["RefPromo"] == null && refPromo != null)
                 {
@@ -105,13 +104,13 @@ namespace CodeRedCreations.Controllers
             if (session == null)
             {
                 var newCart = new ShoppingCartViewModel();
-                newCart.Parts = new List<ProductModel>();
-                newCart.PromoId = null;
+                newCart.Products = new List<ProductModel>();
+                newCart.PromoModel = null;
                 newCart.ShoppingCartStarted = DateTime.Now;
 
                 for (int i = 0; i < quantity; i++)
                 {
-                    newCart.Parts.Add(part);
+                    newCart.Products.Add(part);
                 }
 
                 var serializedCart = await Task.Factory.StartNew(() => JsonConvert.SerializeObject(newCart, Formatting.Indented,
@@ -127,7 +126,7 @@ namespace CodeRedCreations.Controllers
 
                 for (int i = 0; i < quantity; i++)
                 {
-                    cart.Parts.Add(part);
+                    cart.Products.Add(part);
                 }
 
                 var serializedCart = await Task.Factory.StartNew(() => JsonConvert.SerializeObject(cart, Formatting.Indented,
@@ -153,9 +152,9 @@ namespace CodeRedCreations.Controllers
             else
             {
                 var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
-                cart.Parts.Remove(cart.Parts.FirstOrDefault(x => x.PartId == id));
+                cart.Products.Remove(cart.Products.FirstOrDefault(x => x.PartId == id));
 
-                if (cart.Parts == null || cart.Parts.Count() == 0)
+                if (cart.Products == null || cart.Products.Count() == 0)
                 {
                     HttpContext.Session.Remove(sessionKey);
                 }
@@ -196,10 +195,9 @@ namespace CodeRedCreations.Controllers
                 int productCount = 1;
                 var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
 
-                if (cart.PromoId != null)
+                if (cart.PromoModel != null)
                 {
-                    var promo = await _context.Promos.FirstOrDefaultAsync(x => x.Id == cart.PromoId);
-                    promo.TimesUsed++;
+                    cart.PromoModel.TimesUsed++;
                     await _context.SaveChangesAsync();
                 }
 
@@ -207,11 +205,11 @@ namespace CodeRedCreations.Controllers
                 builder.Append(url);
                 builder.Append($"?cmd=_cart&upload=1&business={UrlEncoder.Default.Encode(paypalBusiness)}");
                 builder.Append($"&lc=US&no_note=0&currency_code=USD");
-                builder.Append($"&custom=PromoCode:{cart.PromoId.ToString()}");
+                builder.Append($"&custom=PromoCode:{cart.PromoModel.Code}");
 
                 var totalValue = 0m;
                 decimal taxRate = Math.Round((decimal)8 / 100, 2);
-                foreach (var product in cart.Parts)
+                foreach (var product in cart.Products)
                 {
                     totalValue += product.Price;
                     builder.Append($"&item_name_{productCount}={UrlEncoder.Default.Encode($"{product.Brand.Name} - {product.Name}: #{product.PartNumber}")}");
@@ -271,16 +269,16 @@ namespace CodeRedCreations.Controllers
                         {
                             var cart = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<ShoppingCartViewModel>(session));
 
-                            if (cart.PromoId != null)
+                            if (cart.PromoModel != null)
                             {
-                                foreach (var product in cart.Parts)
+                                foreach (var product in cart.Products)
                                 {
                                     product.Price = (await _context.Products.FirstOrDefaultAsync(x => x.PartId == product.PartId)).Price;
                                 }
                             }
 
-                            cart.PromoId = promo.Id;
-                            foreach (var product in cart.Parts)
+                            cart.PromoModel = promo;
+                            foreach (var product in cart.Products)
                             {
                                 if (promo.ApplicableParts != null)
                                 {
@@ -352,7 +350,7 @@ namespace CodeRedCreations.Controllers
                     {
                         amount = userRef.Earnings;
                     }
-                    TempData["ReferralAmount"] = amount.ToString();
+                    TempData["StoreCredit"] = amount.ToString();
                 }
             }
 

@@ -25,6 +25,8 @@ namespace CodeRedCreations.Controllers
         private readonly IEmailSender _emailSender;
         private readonly UserManager<ApplicationUser> _userManager;
         private IMemoryCache _cache;
+        private Common _common;
+
         public PartsController(
             CodeRedContext context,
             IOptions<AppSettings> settings,
@@ -37,17 +39,17 @@ namespace CodeRedCreations.Controllers
             _userManager = userManager;
             _emailSender = emailSender;
             _cache = cache;
+            _common = new Common(cache, context);
         }
 
         [HttpGet]
         public async Task<IActionResult> Index(string part = "All", string brand = "All", string car = "All", string search = null)
         {
-            var _common = new Common(_cache, _context);
             ViewData["allBrands"] = await _common.GetAllBrandNamesAsync();
             ViewData["allCars"] = await _common.GetAllCarsAsync();
             ViewData["Search"] = search;
             var products = await GetProductsAsync(part, brand, car, search);
-            
+
             return View(products);
         }
 
@@ -56,52 +58,44 @@ namespace CodeRedCreations.Controllers
         {
             var user = await _userManager.GetUserAsync(HttpContext.User);
             var viewModel = new ProductDetailsView();
-            var product = await _context.Products.Include(x => x.Images).Include(x => x.Brand).Include(x => x.CarProducts).ThenInclude(x => x.Car).FirstOrDefaultAsync(x => x.PartId == id);
-            if (HttpContext.Request.Cookies["Referral"] != null)
-            {
-                var referralCookie = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<UserReferral>(HttpContext.Request.Cookies["Referral"]));
-                if (referralCookie != null)
-                {
-                    var refPromo = await _context.Promos.FirstOrDefaultAsync(x => x.Code == referralCookie.ReferralCode);
-                    if (TempData["Promo"] == null && refPromo != null)
-                    {
-                        if ((user != null && referralCookie.UserId != user.Id) || user == null)
-                        {
-                            TempData["Promo"] = refPromo.Id;
-                        }
-                    }
-                }
-            }
 
-            viewModel.ProductModel = product;
-            viewModel.Images = product.Images;
+            viewModel.ProductModel = await _context.Products.Include(x => x.Images).Include(x => x.Brand).Include(x => x.CarProducts).ThenInclude(x => x.Car).FirstOrDefaultAsync(x => x.PartId == id);
+            viewModel.Images = viewModel.ProductModel.Images;
+
             if (user != null)
             {
                 viewModel.UserReferral = await _context.UserReferral.FirstOrDefaultAsync(x => x.UserId == user.Id);
             }
 
-            if (TempData["Promo"] != null)
+            // Refferal Check
+            if (HttpContext.Request.Cookies["Referral"] != null)
             {
-                int promoId = int.Parse(TempData["Promo"].ToString());
-                viewModel.PromoModel = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == promoId);
-                if (viewModel.ProductModel.Price != ApplyPromoCode(viewModel))
+                var referralCookie = await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<UserReferral>(HttpContext.Request.Cookies["Referral"]));
+                if (referralCookie != null && (user != null && referralCookie.UserId != user.Id) || user == null)
                 {
-                    ViewData["OldPrice"] = viewModel.ProductModel.Price;
-                    viewModel.ProductModel.Price = ApplyPromoCode(viewModel);
+                    viewModel.PromoModel = await _common.GetPromoAsync(referralCookie);
                 }
             }
 
-            if (TempData["ReferralAmount"] != null)
+            // Promo
+            if (TempData["Promo"] != null)
             {
-                var refAmount = decimal.Parse(TempData["ReferralAmount"].ToString());
-                ViewData["OldPrice"] = viewModel.ProductModel.Price;
+                viewModel.PromoModel = await _common.GetPromoAsync(int.Parse(TempData["Promo"].ToString()));
+                var promoPrice = ApplyPromoCode(viewModel);
 
-                var newPrice = ((viewModel.ProductModel.Price - refAmount) <= 0 ? 0.01m : (viewModel.ProductModel.Price - refAmount));
-
-                viewModel.ProductModel.Price = newPrice;
+                if (viewModel.ProductModel.Price != promoPrice)
+                {
+                    viewModel.NewPrice = promoPrice;
+                }
             }
 
-            viewModel.ProductModel.Price = Math.Round(viewModel.ProductModel.Price, 2);
+            // Store Credit
+            if (TempData["StoreCredit"] != null)
+            {
+                var refAmount = decimal.Parse(TempData["StoreCredit"].ToString());
+
+                viewModel.NewPrice = ((viewModel.ProductModel.Price - refAmount) <= 0 ? 0.01m : (viewModel.ProductModel.Price - refAmount));
+            }
 
             return View(viewModel);
         }
@@ -156,7 +150,7 @@ namespace CodeRedCreations.Controllers
                     {
                         refAmount = userRef.Earnings;
                     }
-                    
+
                     decimal price = ((model.ProductModel.Price - (decimal)refAmount) <= 0 ? 0.01m : (model.ProductModel.Price - (decimal)refAmount));
                     model.ProductModel.Price = Math.Round(price, 2);
                 }
@@ -266,7 +260,7 @@ namespace CodeRedCreations.Controllers
                     {
                         amount = userRef.Earnings;
                     }
-                    TempData["ReferralAmount"] = amount.ToString();
+                    TempData["StoreCredit"] = amount.ToString();
                 }
             }
             return RedirectToAction("Details", new { id = model.ProductModel.PartId });
