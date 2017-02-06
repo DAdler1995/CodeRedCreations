@@ -78,10 +78,9 @@ namespace CodeRedCreations.Controllers
             }
 
             // Promo
-            if (TempData["Promo"] != null)
+            if (viewModel.PromoModel != null)
             {
-                viewModel.PromoModel = await _common.GetPromoAsync(int.Parse(TempData["Promo"].ToString()));
-                var promoPrice = ApplyPromoCode(viewModel);
+                var promoPrice = await ApplyPromoCode(viewModel);
 
                 if (viewModel.ProductModel.Price != promoPrice)
                 {
@@ -136,7 +135,7 @@ namespace CodeRedCreations.Controllers
                 model.PromoModel = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == model.PromoModel.Id);
                 var promo = model.PromoModel;
                 var timesUsed = promo.TimesUsed;
-                model.ProductModel.Price = ApplyPromoCode(model);
+                model.ProductModel.Price = await ApplyPromoCode(model);
                 timesUsed++;
                 await _context.SaveChangesAsync();
             }
@@ -205,20 +204,31 @@ namespace CodeRedCreations.Controllers
             return RedirectToAction("Details", new { id = model.ProductModel.PartId });
         }
 
-        public decimal ApplyPromoCode(ProductDetailsView model)
+        public async Task<decimal> ApplyPromoCode(ProductDetailsView model)
         {
+            if (model.PromoModel == null)
+            {
+                int promoId = int.Parse(TempData["Promo"].ToString());
+                model.PromoModel = await _context.Promos.FirstOrDefaultAsync(x => x.Id == promoId);
+            }
+
             var promo = model.PromoModel;
             var part = model.ProductModel;
             var price = part.Price;
 
+            // Valid Promo Check
             if (promo != null && promo.Enabled)
             {
+                // Usage Limit Check
                 if (promo.UsageLimit == null || promo.TimesUsed <= promo.UsageLimit)
                 {
+                    // Expiration Check
                     if (promo.ExpirationDate == null || promo.ExpirationDate > DateTime.UtcNow)
                     {
-                        if (promo.ApplicableParts.Count() == 0 || promo.ApplicableParts.FirstOrDefault(x => x.PartId == part.PartId) != null)
+                        // Applicable Part Check
+                        if (promo.ApplicableParts == null || promo.ApplicableParts.Count() == 0 || promo.ApplicableParts.FirstOrDefault(x => x.PartId == part.PartId) != null)
                         {
+                            // Valid Discount Amount
                             if (promo.DiscountAmount != null)
                             {
                                 price = Math.Round((price - (decimal)promo.DiscountAmount), 2);
