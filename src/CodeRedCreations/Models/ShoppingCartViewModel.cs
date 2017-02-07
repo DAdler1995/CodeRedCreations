@@ -20,9 +20,19 @@ namespace CodeRedCreations.Models
             get
             {
                 decimal totalAmount = 0m;
-                foreach (var product in Products)
+                if (Products != null)
                 {
-                    totalAmount += product.Price;
+                    foreach (var product in Products)
+                    {
+                        if (product.OnSale)
+                        {
+                            totalAmount += product.SalePrice;
+                        }
+                        else
+                        {
+                            totalAmount += product.Price;
+                        }
+                    }
                 }
 
                 return totalAmount;

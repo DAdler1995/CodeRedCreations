@@ -13,6 +13,7 @@
 <div class="row row-eq-height">
     <cache enabled="true" expires-after="@TimeSpan.FromHours(12)" vary-by="@Model.ProductModel.PartId">
         <div class="col-sm-6">
+
             <div class="carousel slide flexbox-container" id="productImageCarousel" data-ride="carousel" data-interval="10000" data-pause="hover">
                 <div class="carousel-inner" role="listbox">
                     @if (Model.Images != null && Model.Images.Count != 0)
@@ -55,6 +56,15 @@
         </div>
     </cache>
     <div class="col-sm-6">
+        @if (product.DateAdded.AddDays(14) >= DateTime.UtcNow)
+        {
+            <div class="ribbon left new"><span>NEW!</span></div>
+        }
+        else if (product.OnSale)
+        {
+            <div class="ribbon left sale"><span>SALE!</span></div>
+        }
+
         <cache enabled="true" expires-after="@TimeSpan.FromHours(12)" vary-by="@Model.ProductModel.PartId">
             <h3>@product.Brand.Name</h3>
             <h4>@product.Name</h4>
@@ -90,6 +100,7 @@
         {
             <h3 id="oldPrice"><del>@product.Price.ToString("C2", new CultureInfo("en-US"))</del></h3>
             <h3 id="price" class="text-red">@Model.NewPrice.Value.ToString("C2", new CultureInfo("en-US"))</h3>
+            TempData["NewPrice"] = Model.NewPrice.Value.ToString();
         }
 
         <p>+@product.Shipping.ToString("C2", new CultureInfo("en-US")) shipping</p>
@@ -120,7 +131,8 @@
                 </form>
         }
         <br />
-        <form asp-controller="Parts" asp-action="BuyNow">
+        <form asp-controller="Parts" asp-action="BuyNow" asp-antiforgery="true">
+            @Html.AntiForgeryToken()
             <input hidden asp-for="ProductModel.PartId" value="@product.PartId" />
             <input hidden="hidden" class="hidden" asp-for="UserReferral.Id" />
             <input hidden="hidden" class="hidden" name="refAmount" id="refAmount" value="@TempData["StoreCredit"]" />

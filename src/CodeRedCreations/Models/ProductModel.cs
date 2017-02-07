@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -35,6 +36,33 @@ namespace CodeRedCreations.Models
         [Display(Name = "Compatible Cars")]
         public virtual ICollection<CarProduct> CarProducts { get; set; }
         public string Years { get; set; }
+
+        public DateTime DateAdded { get; set; }
+
+        public bool OnSale { get; set; }
+        public int? SalePercent { get; set; }
+        public int? SaleAmount { get; set; }
+        public DateTime? SaleExpiration { get; set; }
+        public decimal SalePrice
+        {
+            get
+            {
+                if (OnSale)
+                {
+                    if (SalePercent != null)
+                    {
+                        var discount = Price * (decimal)(SalePercent / 100m);
+                        return Math.Round(Price - discount, 2);
+                    }
+                    else if (SaleAmount != null)
+                    {
+                        return Math.Round(Price - (decimal)SaleAmount, 2);
+                    }
+                }
+
+                return Math.Round(Price, 2);
+            }
+        }
 
     }
 }

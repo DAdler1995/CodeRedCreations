@@ -397,6 +397,7 @@ namespace CodeRedCreations.Controllers
             }
             else
             {
+                newProduct.DateAdded = DateTime.UtcNow;
                 _context.Products.Add(newProduct);
 
                 TempData["SuccessMessage"] = $"Added {newProduct.Brand.Name} {newProduct.Name} ({newProduct.PartNumber}).";
@@ -630,6 +631,28 @@ namespace CodeRedCreations.Controllers
             }
 
             return RedirectToAction("ManageCars");
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> OnSale(ProductModel product)
+        {
+            var part = await _context.Products.Include(x => x.Brand).FirstOrDefaultAsync(x => x.PartId == product.PartId);
+
+            part.OnSale = product.OnSale;
+            part.SalePercent = product.SalePercent;
+            part.SaleAmount = product.SaleAmount;
+            if (product.SaleExpiration.HasValue)
+            {
+                part.SaleExpiration = product.SaleExpiration.Value.ToUniversalTime();
+            }
+
+            _context.Products.Update(part);
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "Sale successfully updated";
+            return RedirectToAction("ManageProducts", new { id = part.Brand.BrandId });
+            
         }
 
         private byte[] ConvertToBytes(IFormFile file)

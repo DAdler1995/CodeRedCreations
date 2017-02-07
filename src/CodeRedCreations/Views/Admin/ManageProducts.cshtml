@@ -35,6 +35,25 @@
                                     </li>
                                 }
                             </ul>
+
+                            <form asp-controller="Admin" asp-action="OnSale" method="post" class="form-inline">
+                                <input asp-for="@product.PartId" hidden="hidden" class="hidden" />
+                                <div class="form-group">
+                                    <input type="checkbox" asp-for="@product.OnSale" />
+                                </div>
+                                <div class="form-group">
+                                    <input type="number" asp-for="@product.SalePercent" class="form-control" placeholder="Sale Percent" />
+                                </div>
+                                <div class="form-group">
+                                    <input type="number" asp-for="@product.SaleAmount" class="form-control" placeholder="Sale Amount" />
+                                </div>
+                                <div class="form-group">
+                                    <input asp-for="@product.SaleExpiration" class="form-control datepicker" value="@((product.SaleExpiration.HasValue) ? product.SaleExpiration.Value.ToLocalTime().ToString("MM/dd/yyyy") : "") " />
+                                </div>
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-default">Set Sale</button>
+                                </div>
+                            </form>
                         </td>
                         <td>@product.Price.ToString("C2") <p>+@product.Shipping.ToString("C2") s/h</p></td>
                         <td><a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@product.PartId" asp-route-section="PART">Edit</a></td>

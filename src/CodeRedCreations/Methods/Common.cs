@@ -63,29 +63,13 @@ namespace CodeRedCreations.Methods
 
         public async Task<IList<BrandModel>> GetAllProductsAsync()
         {
-            string key = "products";
-            var products = _cache.Get<IList<BrandModel>>(key);
-            if (products == null)
-            {
-                products = await _context.Brand.Include(x => x.Products)
+            return await _context.Brand.Include(x => x.Products)
                 .Include(x => x.Products).ThenInclude(x => x.CarProducts).ThenInclude(x => x.Car).ToListAsync();
-                _cache.Set(key, products, TimeSpan.FromDays(7));
-            }
-
-            return products;
         }
 
         public async Task<BrandModel> GetAllProductsAsync(int brandId)
         {
-            string key = $"products-{brandId}";
-            var products = _cache.Get<BrandModel>(key);
-            if (products == null)
-            {
-                products = (await GetAllProductsAsync()).FirstOrDefault(x => x.BrandId == brandId);
-                _cache.Set(key, products, TimeSpan.FromDays(7));
-            }
-
-            return products;
+            return (await GetAllProductsAsync()).FirstOrDefault(x => x.BrandId == brandId);
         }
 
 

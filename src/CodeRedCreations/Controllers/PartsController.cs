@@ -50,6 +50,19 @@ namespace CodeRedCreations.Controllers
             ViewData["Search"] = search;
             var products = await GetProductsAsync(part, brand, car, search);
 
+            await Task.Run(() =>
+            {
+                foreach (var product in products.Where(x => x.OnSale == true))
+                {
+                    if (product.SaleExpiration <= DateTime.UtcNow)
+                    {
+                        product.OnSale = false;
+                        _context.Products.Update(product);
+                        _context.SaveChangesAsync();
+                    }
+                }
+            });
+
             return View(products);
         }
 
@@ -96,6 +109,31 @@ namespace CodeRedCreations.Controllers
                 viewModel.NewPrice = ((viewModel.ProductModel.Price - refAmount) <= 0 ? 0.01m : (viewModel.ProductModel.Price - refAmount));
             }
 
+            // Sale
+            if (viewModel.ProductModel.OnSale)
+            {
+                if (viewModel.ProductModel.SaleExpiration == null || viewModel.ProductModel.SaleExpiration >= DateTime.UtcNow)
+                {
+                    if (viewModel.ProductModel.SaleAmount != null)
+                    {
+                        viewModel.NewPrice = viewModel.ProductModel.Price - (decimal)viewModel.ProductModel.SaleAmount;
+                    }
+                    else
+                    {
+                        var discount = viewModel.ProductModel.Price * (decimal)(viewModel.ProductModel.SalePercent / 100m);
+                        viewModel.NewPrice = viewModel.ProductModel.Price - discount;
+                    }
+                }
+                else
+                {
+                    var product = viewModel.ProductModel;
+                    product.OnSale = false;
+
+                    _context.Products.Update(product);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             return View(viewModel);
         }
 
@@ -125,11 +163,12 @@ namespace CodeRedCreations.Controllers
 
         }
 
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> BuyNow(ProductDetailsView model, decimal? refAmount)
         {
             var user = await _userManager.GetUserAsync(HttpContext.User);
             model.ProductModel = await _context.Products.Include(x => x.Brand).FirstOrDefaultAsync(x => x.PartId == model.ProductModel.PartId);
-            var originalPrice = model.ProductModel.Price;
+
             if (model.PromoModel != null)
             {
                 model.PromoModel = await _context.Promos.Include(x => x.ApplicableParts).FirstOrDefaultAsync(x => x.Id == model.PromoModel.Id);
@@ -168,7 +207,7 @@ namespace CodeRedCreations.Controllers
                 builder.Append($"&lc=US&no_note=0&currency_code=USD&tax_rate=8");
                 builder.Append($"&custom={UrlEncoder.Default.Encode(model.ProductModel.PartNumber)}");
                 builder.Append($"&item_name={UrlEncoder.Default.Encode($"{model.ProductModel.Brand.Name} - {model.ProductModel.Name}: #{model.ProductModel.PartNumber}")}");
-                builder.Append($"&amount={UrlEncoder.Default.Encode(model.ProductModel.Price.ToString())}");
+                builder.Append($"&amount={UrlEncoder.Default.Encode(model.ProductModel.SalePrice.ToString())}");
                 builder.Append($"&return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Home/ThankYou?id={model.ProductModel.PartId}")}");
                 builder.Append($"&cancel_return={UrlEncoder.Default.Encode($"https://{HttpContext.Request.Host.Value}/Parts/Details?id={model.ProductModel.PartId}")}");
                 builder.Append($"&quantity={UrlEncoder.Default.Encode(model.Quantity.ToString())}");

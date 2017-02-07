@@ -8,9 +8,10 @@ using CodeRedCreations.Data;
 namespace coderedcreations.Data.Migrations
 {
     [DbContext(typeof(CodeRedContext))]
-    partial class CodeRedContextModelSnapshot : ModelSnapshot
+    [Migration("20170207000904_ProductAddDate")]
+    partial class ProductAddDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.1")
@@ -174,8 +175,6 @@ namespace coderedcreations.Data.Migrations
                     b.Property<string>("Name")
                         .IsRequired();
 
-                    b.Property<bool>("OnSale");
-
                     b.Property<string>("PartNumber");
 
                     b.Property<int>("PartType");
@@ -183,12 +182,6 @@ namespace coderedcreations.Data.Migrations
                     b.Property<decimal>("Price");
 
                     b.Property<int?>("PromoModelId");
-
-                    b.Property<int?>("SaleAmount");
-
-                    b.Property<DateTime?>("SaleExpiration");
-
-                    b.Property<int?>("SalePercent");
 
                     b.Property<decimal>("Shipping");
 

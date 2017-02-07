@@ -79,9 +79,11 @@ a,
         color: $red-dark;
     }
 }
+
 .loadedContent {
     display: none;
 }
+
 img.loading {
     position: fixed;
     margin-left: auto;
@@ -94,9 +96,25 @@ img.loading {
     -moz-animation: spin 4s linear infinite;
     animation: spin 4s linear infinite;
 }
-@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
-@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
-@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+
+@-moz-keyframes spin {
+    100% {
+        -moz-transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes spin {
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
 
 .tempMessage {
     display: none;
@@ -214,6 +232,116 @@ img.loading {
 .text-open {
     font-family: $open;
 }
+
 .text-hind {
     font-family: $hind;
 }
+
+
+//-----------------------------
+//  Ribbons
+//-----------------------------
+
+.ribbon {
+    position: absolute;
+    right: 10px;
+    top: -5px;
+    z-index: 1;
+    overflow: hidden;
+    width: 75px;
+    height: 75px;
+    text-align: right;
+}
+
+
+.ribbon.left {
+    position: absolute;
+    left: -5px;
+    top: -5px;
+    z-index: 1;
+    overflow: hidden;
+    width: 75px;
+    height: 75px;
+    text-align: right;
+}
+
+.ribbon span {
+    font-size: 10px;
+    color: #fff;
+    text-transform: uppercase;
+    text-align: center;
+    font-weight: bold;
+    line-height: 20px;
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg); /* Needed for Safari */
+    width: 100px;
+    display: block;
+    background: #79A70A;
+    background: linear-gradient(#9BC90D 0%, #79A70A 100%);
+    box-shadow: 0 3px 10px -5px rgba(0, 0, 0, 1);
+    position: absolute;
+    top: 19px;
+    right: -21px;
+}
+
+.ribbon.left span {
+    font-size: 10px;
+    font-weight: bold;
+    color: #FFF;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 20px;
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+    width: 100px;
+    display: block;
+    background: #79A70A;
+    background: linear-gradient(#2989d8 0%, #1e5799 100%);
+    box-shadow: 0 3px 10px -5px rgba(0, 0, 0, 1);
+    position: absolute;
+    top: 19px;
+    left: -21px;
+}
+
+.ribbon span::before {
+    content: '';
+    position: absolute;
+    left: 0px;
+    top: 100%;
+    z-index: -1;
+    border-left: 3px solid #79A70A;
+    border-right: 3px solid transparent;
+    border-bottom: 3px solid transparent;
+    border-top: 3px solid #79A70A;
+}
+
+.ribbon span::after {
+    content: '';
+    position: absolute;
+    right: 0%;
+    top: 100%;
+    z-index: -1;
+    border-right: 3px solid #79A70A;
+    border-left: 3px solid transparent;
+    border-bottom: 3px solid transparent;
+    border-top: 3px solid #79A70A;
+}
+
+.ribbon.small {
+    top: -20px;
+    width: 60px;
+    height: 75px;
+
+    span {
+    transform: rotate(0);
+    -webkit-transform: rotate(0); /* Needed for Safari */
+    }
+}
+
+.sale span, .ribbon.left.sale span {background: linear-gradient($red 0%, $red 100%);}
+.sale span::before, .ribbon.left.sale span::before {border-left-color: $red-dark; border-top-color: $red-dark;}
+.sale span::after, .ribbon.left.sale span::after {border-right-color: $red-dark; border-top-color: $red-dark;}
+
+.new span, .ribbon.left.new span {background: linear-gradient(#7a7a7a 0%, #7a7a7a 100%); }
+.new span::before, .ribbon.left.new span::before {border-left-color: #5e5e5e; border-top-color: #5e5e5e;}
+.new span::after, .ribbon.left.new span::after {border-right-color: #5e5e5e; border-top-color: #5e5e5e;}

@@ -186,8 +186,7 @@ namespace CodeRedCreations.Controllers
         public async Task<IActionResult> Checkout(string id)
         {
             var session = HttpContext.Session.GetString(sessionKey);
-            var url = (HttpContext.Request.Host.Host.ToUpper().Contains("LOCALHOST")) ?
-                "https://www.sandbox.paypal.com/us/cgi-bin/webscr" : "https://www.paypal.com/us/cgi-bin/webscr";
+            var url = "https://www.paypal.com/us/cgi-bin/webscr";
             var paypalBusiness = _settings.PaypalBusiness;
 
             if (session != null)
@@ -205,16 +204,19 @@ namespace CodeRedCreations.Controllers
                 builder.Append(url);
                 builder.Append($"?cmd=_cart&upload=1&business={UrlEncoder.Default.Encode(paypalBusiness)}");
                 builder.Append($"&lc=US&no_note=0&currency_code=USD");
-                builder.Append($"&custom=PromoCode:{cart.PromoModel.Code}");
+                if (cart.PromoModel != null)
+                {
+                    builder.Append($"&custom=PromoCode:{cart.PromoModel.Code}");
+                }
 
                 var totalValue = 0m;
                 decimal taxRate = Math.Round((decimal)8 / 100, 2);
                 foreach (var product in cart.Products)
                 {
-                    totalValue += product.Price;
+                    totalValue += product.SalePrice;
                     builder.Append($"&item_name_{productCount}={UrlEncoder.Default.Encode($"{product.Brand.Name} - {product.Name}: #{product.PartNumber}")}");
                     builder.Append($"&item_number_{productCount}={UrlEncoder.Default.Encode(product.PartNumber)}");
-                    builder.Append($"&amount_{productCount}={UrlEncoder.Default.Encode(product.Price.ToString())}");
+                    builder.Append($"&amount_{productCount}={UrlEncoder.Default.Encode(product.SalePrice.ToString())}");
                     builder.Append($"&shipping_{productCount}={UrlEncoder.Default.Encode(product.Shipping.ToString())}");
 
                     productCount++;

@@ -20,100 +20,98 @@
     var allBrands = (List<string>)ViewData["allBrands"];
     var carMakes = new List<string>();
     var carModels = new List<string>();
-    
+
     int partCount = (int)ViewData["partCount"];
 }
-
-<cache expires-after="@TimeSpan.FromHours(12)" vary-by="@($"{Context.Request.Path}{Context.Request.QueryString}")">
-    <div class="row yamm">
-        <div class="col-xs-12">
-            <ul class="list-inline">
-                <li style="width: 100%;">
-                    <h3 style="margin-top: 0;">Filter Parts<span class="pull-right">@partCount parts found</span></h3>
-                    <ul class="list-inline">
-                        <li class="dropdown">
-                            Part Type:
-                            <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@part <span class="caret"></span></strong></a>
-                            <ul class="dropdown-menu" role="menu">
-                                <li>
-                                    <div class="yamm-content">
-                                        <div class="row">
-                                            <div class="col-xs-12">
-                                                <ul class="list-unstyled">
-                                                    <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="@brand" asp-route-car="@car">All</a></strong></li>
-                                                    <li class="divider"></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Aero_Body" asp-route-brand="@brand" asp-route-car="@car">Aero & Body</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Air_Intake" asp-route-brand="@brand" asp-route-car="@car">Air Intakes</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Brakes" asp-route-brand="@brand" asp-route-car="@car">Brakes</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Cooling" asp-route-brand="@brand" asp-route-car="@car">Cooling</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Clutch_Flywheel" asp-route-brand="@brand" asp-route-car="@car">Clutch & Flywheel</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Engine_Management" asp-route-brand="@brand" asp-route-car="@car">Engine Management</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Electroncis" asp-route-brand="@brand" asp-route-car="@car">Electronics</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Endine_Dress_Up" asp-route-brand="@brand" asp-route-car="@car">Engine Dress-up</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Engine_Parts" asp-route-brand="@brand" asp-route-car="@car">Engine Parts</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Exhaust" asp-route-brand="@brand" asp-route-car="@car">Exhaust</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Forced_Induction" asp-route-brand="@brand" asp-route-car="@car">Forced Induction</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Fuel_System" asp-route-brand="@brand" asp-route-car="@car">Fuel System</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Guages_Pods" asp-route-brand="@brand" asp-route-car="@car">Gauges & Pods</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Intercooler" asp-route-brand="@brand" asp-route-car="@car">Intercooler</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Interior" asp-route-brand="@brand" asp-route-car="@car">Interior</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Lights_Emblems" asp-route-brand="@brand" asp-route-car="@car">Lights & Emblems</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Nitrus" asp-route-brand="@brand" asp-route-car="@car">Nitrus</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Oils_Lubricants" asp-route-brand="@brand" asp-route-car="@car">Oils & Lubricants</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Suspension" asp-route-brand="@brand" asp-route-car="@car">Suspension</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Transmission_Drivetrain" asp-route-brand="@brand" asp-route-car="@car">Transmission & Drivetrain</a></li>
-                                                    <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Wheels_Tires" asp-route-brand="@brand" asp-route-car="@car">Wheels & Tires</a></li>
-                                                </ul>
-                                            </div>
+<div class="row yamm">
+    <div class="col-xs-12">
+        <ul class="list-inline">
+            <li style="width: 100%;">
+                <h3 style="margin-top: 0;">Filter Parts<span class="pull-right">@partCount parts found</span></h3>
+                <ul class="list-inline">
+                    <li class="dropdown">
+                        Part Type:
+                        <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@part <span class="caret"></span></strong></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <div class="yamm-content">
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <ul class="list-unstyled">
+                                                <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="@brand" asp-route-car="@car">All</a></strong></li>
+                                                <li class="divider"></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Aero_Body" asp-route-brand="@brand" asp-route-car="@car">Aero & Body</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Air_Intake" asp-route-brand="@brand" asp-route-car="@car">Air Intakes</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Brakes" asp-route-brand="@brand" asp-route-car="@car">Brakes</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Cooling" asp-route-brand="@brand" asp-route-car="@car">Cooling</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Clutch_Flywheel" asp-route-brand="@brand" asp-route-car="@car">Clutch & Flywheel</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Engine_Management" asp-route-brand="@brand" asp-route-car="@car">Engine Management</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Electroncis" asp-route-brand="@brand" asp-route-car="@car">Electronics</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Endine_Dress_Up" asp-route-brand="@brand" asp-route-car="@car">Engine Dress-up</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Engine_Parts" asp-route-brand="@brand" asp-route-car="@car">Engine Parts</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Exhaust" asp-route-brand="@brand" asp-route-car="@car">Exhaust</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Forced_Induction" asp-route-brand="@brand" asp-route-car="@car">Forced Induction</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Fuel_System" asp-route-brand="@brand" asp-route-car="@car">Fuel System</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Guages_Pods" asp-route-brand="@brand" asp-route-car="@car">Gauges & Pods</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Intercooler" asp-route-brand="@brand" asp-route-car="@car">Intercooler</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Interior" asp-route-brand="@brand" asp-route-car="@car">Interior</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Lights_Emblems" asp-route-brand="@brand" asp-route-car="@car">Lights & Emblems</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Nitrus" asp-route-brand="@brand" asp-route-car="@car">Nitrus</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Oils_Lubricants" asp-route-brand="@brand" asp-route-car="@car">Oils & Lubricants</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Suspension" asp-route-brand="@brand" asp-route-car="@car">Suspension</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Transmission_Drivetrain" asp-route-brand="@brand" asp-route-car="@car">Transmission & Drivetrain</a></li>
+                                                <li><a asp-controller="Parts" asp-action="Index" asp-route-part="Wheels_Tires" asp-route-brand="@brand" asp-route-car="@car">Wheels & Tires</a></li>
+                                            </ul>
                                         </div>
                                     </div>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="dropdown">
-                            Brand:
-                            <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@brand <span class="caret"></span></strong></a>
-                            <ul class="dropdown-menu" role="menu">
-                                <li>
-                                    <div class="yamm-content">
-                                        <div class="row">
-                                            <div class="col-xs-12">
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        Brand:
+                        <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@brand <span class="caret"></span></strong></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <div class="yamm-content">
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <ul class="list-unstyled">
+                                                <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="All" asp-route-car="@car">All</a></strong></li>
+                                                <li class="divider"></li>
+                                                @foreach (var b in allBrands)
+                                                {
+                                                    <li><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@b" asp-route-car="@car">@b</a></li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        Car:
+                        <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@car <span class="caret"></span></strong></a>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="dCars">
+                            <li>
+                                <div class="yamm-content">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <ul class="list-unstyled">
+                                                <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="All">All</a></strong></li>
+                                                <li class="divider"></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        @foreach (var split in allMakes.Split(4))
+                                        {
+                                            <div class="col-md-3">
                                                 <ul class="list-unstyled">
-                                                    <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="All" asp-route-car="@car">All</a></strong></li>
-                                                    <li class="divider"></li>
-                                                    @foreach (var b in allBrands)
+                                                    @foreach (var make in split)
                                                     {
-                                                        <li><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@b" asp-route-car="@car">@b</a></li>
-                                                    }
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="dropdown">
-                            Car:
-                            <a class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>@car <span class="caret"></span></strong></a>
-                            <ul class="dropdown-menu" role="menu" aria-labelledby="dCars">
-                                <li>
-                                    <div class="yamm-content">
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <ul class="list-unstyled">
-                                                    <li><strong><a asp-area="" asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="All">All</a></strong></li>
-                                                    <li class="divider"></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            @foreach (var split in allMakes.Split(4))
-                                            {
-                                                <div class="col-md-3">
-                                                    <ul class="list-unstyled">
-                                                        @foreach (var make in split)
-                                                        {
-                                                            <li>&nbsp;</li>
+                                                        <li>&nbsp;</li>
                                                             <li class="dropdown-header" style="min-width: 150px"><strong>@make</strong></li>
                                                             <li class="divider"></li>
 
@@ -121,115 +119,142 @@
                                                             {
                                                                 <li><a asp-controller="Parts" asp-action="Index" asp-route-part="@partType" asp-route-brand="@brand" asp-route-car="@item">@item</a></li>
                                                             }
-                                                        }
-                                                    </ul>
-                                                </div>
-                                            }
-                                        </div>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        }
                                     </div>
-                                </li>
-                            </ul>
-                        </li>
-
-                        <li>
-                            <div class="col-md-3" style="padding: 0; margin-top: 3px;">
-                                <div class="input-group">
-                                    <input name="search" id="search" placeholder="Search" class="form-control" value="@((ViewData["Search"] != null) ? ViewData["Search"].ToString() : "")" />
-                                    <span class="input-group-btn">
-                                        <a id="partSearchButton" onclick="return searchPart('@part', '@brand', '@car');" class="btn btn-default">Search</a>
-                                    </span>
                                 </div>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <div class="col-md-3" style="padding: 0; margin-top: 3px;">
+                            <div class="input-group">
+                                <input name="search" id="search" placeholder="Search" class="form-control" value="@((ViewData["Search"] != null) ? ViewData["Search"].ToString() : "")" />
+                                <span class="input-group-btn">
+                                    <a id="partSearchButton" onclick="return searchPart('@part', '@brand', '@car');" class="btn btn-default">Search</a>
+                                </span>
                             </div>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div>
+
+@if (Model.Count() == 0)
+{
+    <div class="row">
+        <div class="col-xs-12">
+            <h3>No products found.</h3>
+            <p>Hello there, it seems like there are no products found in the store that matched:</p>
+            <dl class="dl-horizontal">
+                <dt>Part Type:</dt>
+                <dd>@partType</dd>
+                <dt>Brand:</dt>
+                <dd>@brand</dd>
+                <dt>Car:</dt>
+                <dd>@car</dd>
+            </dl>
+            <p>We're always looking for new products to feature in our store, please click <a asp-controller="Parts" asp-action="Request">HERE</a> to request a part. You can also click the <strong><a asp-controller="Parts" asp-action="Request">REQUEST A PRODUCT</a></strong> link found within the navbar.</p>
+            <p>Thank you for choosing <span class="text-red">Code Red</span> Performance, and we're sorry we were unsuccessfull at getting you the parts you were looking for.</p>
+            <br />
+            <a asp-area="" asp-controller="Home" asp-action="Index">Return home.</a>
         </div>
     </div>
-
-
-    @if (Model.Count() == 0)
+}
+else
+{
+    @for (int i = 0; i < Model.Count(); i += columns)
     {
-        <div class="row">
-            <div class="col-xs-12">
-                <h3>No products found.</h3>
-                <p>Hello there, it seems like there are no products found in the store that matched:</p>
-                <dl class="dl-horizontal">
-                    <dt>Part Type:</dt>
-                    <dd>@partType</dd>
-                    <dt>Brand:</dt>
-                    <dd>@brand</dd>
-                    <dt>Car:</dt>
-                    <dd>@car</dd>
-                </dl>
-                <p>We're always looking for new products to feature in our store, please click <a asp-controller="Parts" asp-action="Request">HERE</a> to request a part. You can also click the <strong><a asp-controller="Parts" asp-action="Request">REQUEST A PRODUCT</a></strong> link found within the navbar.</p>
-                <p>Thank you for choosing <span class="text-red">Code Red</span> Performance, and we're sorry we were unsuccessfull at getting you the parts you were looking for.</p>
-                <br />
-                <a asp-area="" asp-controller="Home" asp-action="Index">Return home.</a>
-            </div>
-        </div>
-    }
-    else
-    {
-        @for (int i = 0; i < Model.Count(); i += columns)
-        {
-            <div class="row row-eq-height">
-                @foreach (var item in Model.OrderBy(x => x.Name).ThenBy(x => x.Brand.Name).Skip(i).Take(columns))
+        <div class="row row-eq-height">
+            @foreach (var item in Model.OrderBy(x => x.Name).ThenBy(x => x.Brand.Name).Skip(i).Take(columns))
                     {
-                        <div class="@col">
-                            <div class="panel panel-default" style="height: 100%">
-                                <div class="panel-heading">
-                                    <h5 style="margin: 5px 0 0 0;">@item.Name</h5>
-                                    <p class="small text-capitalize" style="margin: 0;">
-                                        Brand: @item.Brand.Name
-                                    </p>
-                                    <p class="small" style="margin: 0;">
-                                        @if (item.CarProducts.Select(x => x.Car).Count() == 0)
-                                        {
-                                            <span>Car: All</span>
-                                        }
-                                        else if (item.CarProducts.Select(x => x.Car).Count() == 1)
-                                        {
-                                            var onlyCar = item.CarProducts.Select(x => x.Car).FirstOrDefault();
-                                            <span>
-                                                Car: @onlyCar.Make @onlyCar.Model (@(string.IsNullOrEmpty(item.Years) ? "All" : item.Years))
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            var builder = new StringBuilder();
-                                            foreach (var compatible in item.CarProducts.Select(x => x.Car).OrderBy(x => x.Make).ThenBy(x => x.Model))
-                                            {
-                                                builder.Append($"{compatible.Make} {compatible.Model}: {(string.IsNullOrEmpty(item.Years) ? "All" : item.Years)}<br />");
-                                            }
-
-                                            <span>
-                                                Car: <a href="#" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" data-trigger="hover" data-content="@builder.ToString()">See all</a>
-                                            </span>
-                                        }
-                                    </p>
-                                </div>
-                                <div class="panel-body" style="margin-bottom: 37px;">
-                                    <div class="row row-eq-height">
-                                        <div class="col-sm-4">
-                                            <img id="@item.PartId" class="img-responsive product-image" src="~/images/Logo-small-text.png" data-url="@Url.Action("GetProductImageAsync", "Parts")">
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <p class="truncate">@item.Description</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="panel-footer" style="position: absolute; bottom: 1px; left: 16px; right: 16px;">
+                <div class="@col">
+                    <div class="panel panel-default" style="height: 100%">
+                        @if (item.DateAdded.AddDays(14) >= DateTime.UtcNow)
+                        {
+                            <div class="ribbon new"><span>NEW!</span></div>
+                        }
+                        else if (item.OnSale)
+                        {
+                            <div class="ribbon sale"><span>SALE!</span></div>
+                        }
+                        <div class="panel-heading">
+                            <h5 style="margin: 5px 0 0 0;">@item.Name</h5>
+                            <p class="small text-capitalize" style="margin: 0;">
+                                Brand: @item.Brand.Name
+                            </p>
+                            <p class="small" style="margin: 0;">
+                                @if (item.CarProducts.Select(x => x.Car).Count() == 0)
+                                {
+                                    <span>Car: All</span>
+                                }
+                                else if (item.CarProducts.Select(x => x.Car).Count() == 1)
+                                {
+                                    var onlyCar = item.CarProducts.Select(x => x.Car).FirstOrDefault();
                                     <span>
-                                        <a asp-area="" asp-controller="Parts" asp-action="Details" asp-route-id="@item.PartId">View Details</a> |
-                                        <a asp-area="" asp-controller="ShoppingCart" asp-action="AddToCart" asp-route-id="@item.PartId">Add to Cart</a>
+                                        Car: @onlyCar.Make @onlyCar.Model (@(string.IsNullOrEmpty(item.Years) ? "All" : item.Years))
                                     </span>
-                                    <span class="pull-right">@item.Price.ToString("C2", new CultureInfo("en-US"))</span>
+                                }
+                                else
+                                {
+                                    var builder = new StringBuilder();
+                                    foreach (var compatible in item.CarProducts.Select(x => x.Car).OrderBy(x => x.Make).ThenBy(x => x.Model))
+                                    {
+                                        builder.Append($"{compatible.Make} {compatible.Model}: {(string.IsNullOrEmpty(item.Years) ? "All" : item.Years)}<br />");
+                                    }
+
+                                    <span>
+                                        Car: <a href="#" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" data-trigger="hover" data-content="@builder.ToString()">See all</a>
+                                    </span>
+                                }
+                            </p>
+                        </div>
+                        <div class="panel-body" style="margin-bottom: 37px;">
+                            <div class="row row-eq-height">
+                                <div class="col-sm-4">
+                                    <img id="@item.PartId" class="img-responsive product-image" src="~/images/Logo-small-text.png" data-url="@Url.Action("GetProductImageAsync", "Parts")">
+                                </div>
+                                <div class="col-sm-8">
+                                    <p class="truncate">@item.Description</p>
                                 </div>
                             </div>
                         </div>
-                }
-            </div>
-        }
+                        <div class="panel-footer" style="position: absolute; bottom: 1px; left: 16px; right: 16px;">
+                            <span>
+                                <a asp-area="" asp-controller="Parts" asp-action="Details" asp-route-id="@item.PartId">View Details</a> |
+                                <a asp-area="" asp-controller="ShoppingCart" asp-action="AddToCart" asp-route-id="@item.PartId">Add to Cart</a>
+                            </span>
+                            @if (item.OnSale)
+                            {
+                                var newPrice = item.Price;
+                                if (item.SaleAmount != null)
+                                {
+                                    newPrice = item.Price - (decimal)item.SaleAmount;
+                                }
+                                else
+                                {
+                                    var discount = item.Price * (decimal)(item.SalePercent / 100m);
+                                    newPrice = item.Price - discount;
+                                }
+
+                                <span class="pull-right">
+                                    <del>@item.Price.ToString("C2", new CultureInfo("en-US"))</del>
+                                    @newPrice.ToString("C2", new CultureInfo("en-US"))
+                                </span>
+
+                            }
+                            else
+                            {
+                                <span class="pull-right">@item.Price.ToString("C2", new CultureInfo("en-US"))</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     }
-</cache>
+}

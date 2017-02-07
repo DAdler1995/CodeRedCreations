@@ -64,7 +64,19 @@
                         imgSrc = "/images/Photo-Not-Available.png";
                     }
                     <tr>
-                        <td style="width: 100px;"><img class="img-responsive" src="@imgSrc" style="height: 50px; width: 100%" /></td>
+                        <td style="width: 100px;">
+                            <div style="position: relative;">
+                                @if (product.DateAdded.AddDays(14) >= DateTime.UtcNow)
+                                {
+                                    <div class="ribbon small left new"><span>NEW!</span></div>
+                                }
+                                else if (product.OnSale)
+                                {
+                                    <div class="ribbon small left sale"><span>SALE!</span></div>
+                                }
+                                <img class="img-responsive" src="@imgSrc" style="height: 50px; width: 100%" />
+                            </div>
+                        </td>
                         <td><a asp-controller="Parts" asp-action="Index" asp-route-part="All" asp-route-brand="@product.Brand.Name" asp-route-car="All">@product.Brand.Name</a></td>
                         <td>
                             <a asp-controller="Parts" asp-action="Details" asp-route-id="@product.PartId">@product.Name</a>
@@ -90,7 +102,17 @@
                                 }
                             </p>
                         </td>
-                        <td>@product.Price.ToString("C2", new CultureInfo("en-US"))</td>
+                        <td>
+                            @if (product.OnSale)
+                            {
+                                <del>@product.Price.ToString("C2", new CultureInfo("en-US"))</del>
+                                @product.SalePrice.ToString("C2", new CultureInfo("en-US"))
+                            }
+                            else
+                            {
+                                @product.Price.ToString("C2", new CultureInfo("en-US"))
+                            }
+                        </td>
                         <td class="text-right"><a asp-area="" asp-controller="ShoppingCart" asp-action="RemoveFromCart" asp-route-id="@product.PartId">Remove</a></td>
                     </tr>
             }
