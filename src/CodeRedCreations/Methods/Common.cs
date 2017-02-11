@@ -29,7 +29,7 @@ namespace CodeRedCreations.Methods
             {
                 var brands = await GetAllBrandsAsync();
                 brandNames = brands.Select(x => x.Name).ToList();
-                _cache.Set(key, brandNames, TimeSpan.FromDays(7));
+                _cache.Set(key, brandNames, TimeSpan.FromHours(1));
             }
 
             return brandNames;
@@ -42,7 +42,7 @@ namespace CodeRedCreations.Methods
             if (brands == null)
             {
                 brands = await _context.Brand.Include(x => x.Products).Where(x => x.Products.Count > 0).OrderBy(x => x.Name).ToListAsync();
-                _cache.Set(key, brands, TimeSpan.FromDays(7));
+                _cache.Set(key, brands, TimeSpan.FromHours(1));
             }
 
             return brands;
@@ -55,7 +55,7 @@ namespace CodeRedCreations.Methods
             if (cars == null)
             {
                 cars = await _context.Car.Include(x => x.CarProducts).ThenInclude(x => x.Car).Where(x => x.ProductCount > 0).OrderBy(x => x.Make).ThenBy(x => x.Model).ToListAsync();
-                _cache.Set(key, cars, TimeSpan.FromDays(7));
+                _cache.Set(key, cars, TimeSpan.FromHours(1));
             }
 
             return cars;
@@ -63,13 +63,29 @@ namespace CodeRedCreations.Methods
 
         public async Task<IList<BrandModel>> GetAllProductsAsync()
         {
-            return await _context.Brand.Include(x => x.Products)
+            string key = "products";
+            var products = _cache.Get<IList<BrandModel>>(key);
+            if (products == null)
+            {
+                products = await _context.Brand.Include(x => x.Products)
                 .Include(x => x.Products).ThenInclude(x => x.CarProducts).ThenInclude(x => x.Car).ToListAsync();
+                _cache.Set(key, products, TimeSpan.FromHours(1));
+            }
+
+            return products;
         }
 
         public async Task<BrandModel> GetAllProductsAsync(int brandId)
         {
-            return (await GetAllProductsAsync()).FirstOrDefault(x => x.BrandId == brandId);
+            string key = $"products-{brandId}";
+            var products = _cache.Get<BrandModel>(key);
+            if (products == null)
+            {
+                products = (await GetAllProductsAsync()).FirstOrDefault(x => x.BrandId == brandId);
+                _cache.Set(key, products, TimeSpan.FromHours(1));
+            }
+
+            return products;
         }
 
 

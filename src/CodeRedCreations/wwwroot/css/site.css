@@ -145,6 +145,9 @@
   .carousel .right.carousel-control {
     background: none; }
 
+.carousel-inner > .item > img {
+  margin: 0 auto; }
+
 /*
  * Styles copied from the Grid example to make grid rows & columns visible.
  */
@@ -223,7 +226,7 @@
   justify-content: space-around;
   align-items: center;
   justify-content: center; }
-  .flexbox-container .item {
+  .flexbox-container .flex-item {
     margin: auto; }
   .flexbox-container .item-top {
     align-self: flex-start; }

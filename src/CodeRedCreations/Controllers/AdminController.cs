@@ -9,18 +9,15 @@ using Microsoft.AspNetCore.Identity;
 using CodeRedCreations.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Http;
 using System.IO;
-using System.IO.Compression;
 using CodeRedCreations.Models.Account;
-using Microsoft.Extensions.Options;
 using CodeRedCreations.Services;
 using System.Text.Encodings.Web;
 using System.Text;
-using Newtonsoft.Json;
 using Microsoft.Extensions.Caching.Memory;
 using CodeRedCreations.Methods;
+using OfficeOpenXml;
 
 namespace CodeRedCreations.Controllers
 {
@@ -407,6 +404,124 @@ namespace CodeRedCreations.Controllers
             return RedirectToAction("AddProduct", new { id = newProduct.PartId, section = "PART", newSimilarProduct = false });
         }
 
+        public async Task<IActionResult> AddMultipleProducts()
+        {
+            var productList = new List<ProductModel>();
+
+            var excelFile = Request.Form.Files.FirstOrDefault(x => x.FileName.Contains(".xlsx"));
+            if (excelFile != null)
+            {
+                var package = new ExcelPackage(excelFile.OpenReadStream());
+                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+
+                for (int i = worksheet.Dimension.Start.Row + 1; i < worksheet.Dimension.End.Row + 1; i++)
+                {
+                    var row = worksheet.Cells[i, 1, i, 9].ToArray();
+
+                    if (row != null && row.Length > 0)
+                    {
+                        string PartNumber = row[0].Text;
+                        var existingPart = await _context.Products.FirstOrDefaultAsync(x => x.PartNumber == PartNumber);
+                        if (existingPart == null)
+                        {
+                            string Name = row[1].Text;
+                            string Description = row[2].Value.ToString();
+                            BrandModel Brand = await _context.Brand.FirstOrDefaultAsync(x => x.Name.Replace(" ", "").ToUpper() == row[3].Text.Replace(" ", "").ToUpper());
+                            PartTypeEnum PartType = (PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), row[4].Text);
+                            decimal Price = decimal.Parse(row[5].Text);
+
+                            string CarMake = row[6].Text;
+                            string CarModel = row[7].Text;
+                            var carFound = await _context.Car.FirstOrDefaultAsync(x => x.Make.Replace(" ", "").Replace("-", "").ToUpper() == CarMake.Replace(" ", "").Replace("-", "").ToUpper()
+                                                && x.Model.Replace(" ", "").Replace("-", "").ToUpper() == CarModel.Replace(" ", "").Replace("-", "").ToUpper());
+
+                            CarModel Car = null;
+
+                            if (carFound != null)
+                            {
+                                Car = carFound;
+                            }
+                            else
+                            {
+                                Car = new CarModel
+                                {
+                                    Make = CarMake,
+                                    Model = CarModel
+                                };
+                                _context.Car.Add(Car);
+                                await _context.SaveChangesAsync();
+                            }
+
+                            string Years = (string.IsNullOrEmpty(row[8].Text) || row[8].Text.ToUpper() == "ALL") ? null : row[8].Text.ToUpper().Replace(" ", "").Replace("-", " - ").Replace("UP", "Present");
+
+                            var Product = new ProductModel
+                            {
+                                PartNumber = PartNumber,
+                                Name = Name,
+                                Description = Description,
+                                Brand = Brand,
+                                PartType = PartType,
+                                Price = Price,
+                                Years = Years,
+                                Shipping = await CalculateShippingAsync(Price)
+                        };
+
+                            CarProduct CarProduct = new CarProduct
+                            {
+                                CarId = Car.CarId,
+                                Car = Car,
+                                ProductId = Product.PartId,
+                                Product = Product
+                            };
+
+                            Product.CarProducts = new List<CarProduct>();
+                            Product.CarProducts.Add(CarProduct);
+
+                            Product.DateAdded = DateTime.UtcNow;
+
+                            productList.Add(Product);
+                        }
+                    }
+                    else
+                    {
+                        i = 999999;
+                    }
+                }
+                _context.Products.AddRange(productList);
+            }
+
+            var imagesUploaded = 0;
+            var allImages = Request.Form.Files.Where(x => !x.FileName.Contains(".xlsx"));
+            var productNumbers = allImages.Select(x => x.FileName.Split('(')[0]).Distinct();
+            var products = new List<ProductModel>();
+
+            foreach (var productNumber in productNumbers)
+            {
+                var product = await _context.Products.Include(x => x.Images).FirstOrDefaultAsync(x => x.PartNumber.ToUpper() == productNumber.ToUpper());
+                if (product != null)
+                {
+                    var newImageList = new List<ImageModel>();
+
+                    foreach (var image in allImages.Where(x => x.FileName.ToUpper().Contains(product.PartNumber.ToUpper())))
+                    {
+                        newImageList.Add(new ImageModel
+                        {
+                            Name = image.FileName.Split('.')[0],
+                            Description = image.FileName,
+                            Bytes = ConvertToBytes(image)
+                        });
+                    }
+
+                    product.Images = newImageList;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Message"] = $"Successfully added {productList.Count} products to the store. Successfully uploaded {imagesUploaded} images.";
+
+            return RedirectToAction("AddProduct", new { section = "PART" });
+        }
+
         public IActionResult NewSimilarProduct(int id)
         {
             return RedirectToAction("AddProduct", new { id = id, section = "PART", newSimilarProduct = true });
@@ -414,7 +529,7 @@ namespace CodeRedCreations.Controllers
 
         public async Task<IActionResult> DeletePart(int id)
         {
-            var partFound = await _context.Products.Include(x => x.Images).FirstOrDefaultAsync(x => x.PartId == id);
+            var partFound = await _context.Products.Include(x => x.Brand).Include(x => x.Images).FirstOrDefaultAsync(x => x.PartId == id);
             if (partFound != null)
             {
                 var brandId = partFound.Brand.BrandId;
@@ -635,7 +750,7 @@ namespace CodeRedCreations.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> OnSale(ProductModel product)
+        public async Task<IActionResult> PartSale(ProductModel product)
         {
             var part = await _context.Products.Include(x => x.Brand).FirstOrDefaultAsync(x => x.PartId == product.PartId);
 
@@ -652,7 +767,51 @@ namespace CodeRedCreations.Controllers
 
             TempData["Message"] = "Sale successfully updated";
             return RedirectToAction("ManageProducts", new { id = part.Brand.BrandId });
-            
+
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BrandSale(int BrandId, int? SalePercent, int? SaleAmount, string SaleExpiration)
+        {
+            var brandProducts = _context.Products.Include(x => x.Brand).Where(x => x.Brand.BrandId == BrandId);
+
+            foreach (var product in brandProducts)
+            {
+                product.OnSale = true;
+                product.SalePercent = SalePercent;
+                product.SaleAmount = SaleAmount;
+                if (!string.IsNullOrEmpty(SaleExpiration))
+                {
+                    product.SaleExpiration = DateTime.Parse(SaleExpiration).ToUniversalTime();
+                }
+
+                _context.Products.Update(product);
+            }
+            await _context.SaveChangesAsync();
+            TempData["Message"] = "All products have been marked on sale!";
+
+            return RedirectToAction("ManageBrands");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ClearAllSales(int id)
+        {
+            var brandProducts = _context.Products.Include(x => x.Brand).Where(x => x.Brand.BrandId == id);
+
+            foreach (var product in brandProducts)
+            {
+                product.OnSale = false;
+                product.SalePercent = null;
+                product.SaleAmount = null;
+                product.SaleExpiration = null;
+
+                _context.Products.Update(product);
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Message"] = "All product sales have been cleared.";
+
+            return RedirectToAction("ManageBrands");
         }
 
         private byte[] ConvertToBytes(IFormFile file)

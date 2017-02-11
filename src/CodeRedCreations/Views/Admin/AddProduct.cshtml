@@ -153,6 +153,31 @@
                 </div>
             </div>
         </form>
+
+        <hr />
+        <h3>Upload Excel</h3>
+        <form asp-controller="Admin" asp-action="AddMultipleProducts"method="post" class="form-horizontal" enctype="multipart/form-data">
+            <div class="form-group">
+                <label class="col-md-2 control-label">Upload Multiple Products</label>
+                <div class="col-md-10">
+                    <input name="Excel" type="file" class="form-control" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-md-2 control-label">Product Images</label>
+                <div class="col-md-10">
+                    <input name="Images" type="file" multiple class="form-control" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <button type="submit" class="btn btn-default">Upload Excel File</button>
+                </div>
+            </div>
+        </form>
+
     </div>
 
     <div id="addCar" class="tab-pane fade  @((query.ToUpper() == "CAR") ? "in active" : "")">

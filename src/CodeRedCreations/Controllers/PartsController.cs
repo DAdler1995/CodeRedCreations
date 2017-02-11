@@ -43,12 +43,13 @@ namespace CodeRedCreations.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string part = "All", string brand = "All", string car = "All", string search = null)
+        public async Task<IActionResult> Index(string part = "All", string brand = "All", string car = "All", string search = null, int page = 1)
         {
             ViewData["allBrands"] = await _common.GetAllBrandNamesAsync();
             ViewData["allCars"] = await _common.GetAllCarsAsync();
-            ViewData["Search"] = search;
-            var products = await GetProductsAsync(part, brand, car, search);
+            ViewData["search"] = search;
+            ViewData["Page"] = page;
+            var products = await GetProductsAsync(part, brand, car, search, page);
 
             await Task.Run(() =>
             {
@@ -204,7 +205,7 @@ namespace CodeRedCreations.Controllers
                 builder.Append(url);
 
                 builder.Append($"?cmd=_xclick&business={UrlEncoder.Default.Encode(paypalBusiness)}");
-                builder.Append($"&lc=US&no_note=0&currency_code=USD&tax_rate=8");
+                builder.Append($"&lc=US&no_note=0&currency_code=USD&tax_rate=9");
                 builder.Append($"&custom={UrlEncoder.Default.Encode(model.ProductModel.PartNumber)}");
                 builder.Append($"&item_name={UrlEncoder.Default.Encode($"{model.ProductModel.Brand.Name} - {model.ProductModel.Name}: #{model.ProductModel.PartNumber}")}");
                 builder.Append($"&amount={UrlEncoder.Default.Encode(model.ProductModel.SalePrice.ToString())}");
@@ -376,47 +377,42 @@ namespace CodeRedCreations.Controllers
 
             return search;
         }
-        public async Task<List<ProductModel>> GetProductsAsync(string part, string brand, string car, string search)
+        public async Task<List<ProductModel>> GetProductsAsync(string part, string brand, string car, string search, int page)
         {
-            string key = $"{part}{brand}{car}{search}";
-            var products = _cache.Get<List<ProductModel>>(key);
-            if (products == null)
+
+
+            var partsQuery = _context.Products
+               .Include(x => x.Brand).Include(x => x.CarProducts).ThenInclude(x => x.Car)
+               .Where(x => x.Price > 0m);
+
+            if (car != "All")
             {
-                var partsQuery = _context.Products
-                   .Include(x => x.Brand).Include(x => x.CarProducts).ThenInclude(x => x.Car)
-                   .Where(x => x.Price > 0m);
-
-                if (car != "All")
-                {
-                    partsQuery = partsQuery.Where(x => x.CarProducts.Any(c => c.Car.Model.ToUpper() == car.ToUpper()));
-                }
-                if (part != "All")
-                {
-                    PartTypeEnum partType = (PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), part);
-                    partsQuery = partsQuery.Where(x => x.PartType == partType);
-                }
-                if (brand != "All")
-                {
-                    partsQuery = partsQuery.Where(x => x.Brand.Name.ToUpper() == brand.ToUpper());
-                }
-                if (!string.IsNullOrEmpty(search))
-                {
-                    partsQuery = await SearchProductsAsync(search, partsQuery);
-                }
-
-                products = await partsQuery
-                    .OrderBy(x => x.Name).ThenBy(x => x.Brand.Name)
-                    .ThenBy(x => x.CarProducts.Select(c => c.Car).OrderBy(c => c.Make).FirstOrDefault())
-                    .ThenBy(x => x.CarProducts.Select(c => c.Car).OrderBy(c => c.Model).FirstOrDefault())
-                    .ThenBy(x => x.Years)
-                    .ThenBy(x => x.Price)
-                    .ToListAsync();
-
-                _cache.Set(key, products, TimeSpan.FromHours(1));
+                partsQuery = partsQuery.Where(x => x.CarProducts.Any(c => c.Car.Model.ToUpper() == car.ToUpper()));
+            }
+            if (part != "All")
+            {
+                PartTypeEnum partType = (PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), part);
+                partsQuery = partsQuery.Where(x => x.PartType == partType);
+            }
+            if (brand != "All")
+            {
+                partsQuery = partsQuery.Where(x => x.Brand.Name.ToUpper() == brand.ToUpper());
+            }
+            if (!string.IsNullOrEmpty(search))
+            {
+                partsQuery = await SearchProductsAsync(search, partsQuery);
             }
 
+            var products = partsQuery
+                .OrderBy(x => x.Name).ThenBy(x => x.Brand.Name)
+                .ThenBy(x => x.CarProducts.Select(c => c.Car).OrderBy(c => c.Make).FirstOrDefault())
+                .ThenBy(x => x.CarProducts.Select(c => c.Car).OrderBy(c => c.Model).FirstOrDefault())
+                .ThenBy(x => x.Years)
+                .ThenBy(x => x.Price);
+
             ViewData["partCount"] = products.Count();
-            return products;
+
+            return products.Page(page, 33).ToList();
         }
 
         [HttpGet]

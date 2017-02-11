@@ -14,6 +14,8 @@
     var partType = (ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : ViewContext.RouteData.Values["part"].ToString();
     var brand = ViewContext.RouteData.Values["brand"];
     var car = ViewContext.RouteData.Values["car"];
+    var search = (string)ViewData["search"];
+    var page = (int)ViewData["page"];
 
     var part = (ViewContext.RouteData.Values["part"].ToString() == "All") ? "All" : EnumString.GetEnumDescription((PartTypeEnum)Enum.Parse(typeof(PartTypeEnum), ViewContext.RouteData.Values["part"].ToString()));
 
@@ -22,6 +24,8 @@
     var carModels = new List<string>();
 
     int partCount = (int)ViewData["partCount"];
+
+    var pages = Math.Ceiling((double)(partCount / 33));
 }
 <div class="row yamm">
     <div class="col-xs-12">
@@ -167,6 +171,18 @@
 }
 else
 {
+    @if (pages > 1)
+    {
+        <ul class="pagination">
+            @for (int i = 1; i < pages + 1; i++)
+            {
+                <li class="@((i == page) ? "active" : "")">
+                    <a asp-controller="Parts" asp-action="Index" asp-route-part="@part" asp-route-brand="@brand" asp-route-car="@car" asp-route-search="@search" asp-route-page="@i">@i</a>
+                </li>
+            }
+        </ul>
+    }
+
     @for (int i = 0; i < Model.Count(); i += columns)
     {
         <div class="row row-eq-height">

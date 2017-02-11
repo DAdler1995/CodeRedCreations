@@ -210,7 +210,7 @@ namespace CodeRedCreations.Controllers
                 }
 
                 var totalValue = 0m;
-                decimal taxRate = Math.Round((decimal)8 / 100, 2);
+                decimal taxRate = Math.Round((decimal)9 / 100, 2);
                 foreach (var product in cart.Products)
                 {
                     totalValue += product.SalePrice;

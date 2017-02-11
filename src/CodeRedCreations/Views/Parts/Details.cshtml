@@ -66,7 +66,13 @@
         }
 
         <cache enabled="true" expires-after="@TimeSpan.FromHours(12)" vary-by="@Model.ProductModel.PartId">
-            <h3>@product.Brand.Name</h3>
+            <h3>
+                @product.Brand.Name
+                @if (User != null && User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@product.PartId" asp-route-section="PART" class="pull-right small">Edit Product</a>
+                }
+            </h3>
             <h4>@product.Name</h4>
             <p>
                 <span>Compatible with: </span>
@@ -77,7 +83,7 @@
                 else if (cars.Count() == 1)
                 {
                     var car = cars.FirstOrDefault();
-                    <span>@car.Make @car.Model: @product.Years</span>
+                    <span>@car.Make @car.Model: @((string.IsNullOrEmpty(product.Years)) ? "All" : product.Years)</span>
                 }
                 else
                 {
@@ -181,7 +187,7 @@
                             @foreach (var car in Model.ProductModel.CarProducts.Select(x => x.Car))
                             {
 
-                                <dd>@car.Make @car.Model: @Model.ProductModel.Years</dd>
+                                <dd>@car.Make @car.Model: @((string.IsNullOrEmpty(product.Years)) ? "All" : product.Years)</dd>
                             }
                         }
                         else

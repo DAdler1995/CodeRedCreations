@@ -18,7 +18,29 @@
                 {
                     <tr>
                         <td>@brand.BrandId</td>
-                        <td><a asp-controller="Admin" asp-action="ManageProducts" asp-route-id="@brand.BrandId">@brand.Name (@brand.Products.Count())</a></td>
+                        <td>
+                            <a asp-controller="Admin" asp-action="ManageProducts" asp-route-id="@brand.BrandId">@brand.Name (@brand.Products.Count())</a>
+                            <form asp-controller="Admin" asp-action="BrandSale" method="post" class="form-inline">
+                                <input name="BrandId" id="BrandId" value="@brand.BrandId" hidden="hidden" class="hidden" />
+                                <div class="form-group">
+                                    <div class="form-group">
+                                        <input type="number" name="SalePercent" id="SalePercent" class="form-control" placeholder="Sale Percent" />
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="number" name="SaleAmount" id="SaleAmount" class="form-control" placeholder="Sale Amount" />
+                                    </div>
+                                    <div class="form-group">
+                                        <input name="SaleExpiration" id="SaleExpiration" class="form-control datepicker" />
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="btn-group">
+                                            <button type="submit" class="btn btn-default">Set Sale</button>
+                                            <a asp-controller="Admin" asp-action="ClearAllSales" asp-route-id="@brand.BrandId" class="btn btn-default">Clear All Sales</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </td>
                         <td><a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@brand.BrandId" asp-route-section="BRAND">Edit</a></td>
                         <td>
                             @if (brand.Products.Count == 0)
