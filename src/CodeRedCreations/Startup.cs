@@ -117,18 +117,18 @@ namespace CodeRedCreations
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
-            app.Use(async (ctx, next) =>
-            {
-                if (!ctx.Request.IsHttps)
-                {
-                    await next();
-                }
-                else
-                {
-                    var withHttps = $"https://{ctx.Request.Host}{ctx.Request.Path}{ctx.Request.QueryString}";
-                    ctx.Response.Redirect(withHttps);
-                }
-            });
+            //app.Use(async (ctx, next) =>
+            //{
+            //    if (!ctx.Request.IsHttps)
+            //    {
+            //        await next();
+            //    }
+            //    else
+            //    {
+            //        var withHttps = $"https://{ctx.Request.Host}{ctx.Request.Path}{ctx.Request.QueryString}";
+            //        ctx.Response.Redirect(withHttps);
+            //    }
+            //});
             
             app.UseStaticFiles(new StaticFileOptions
             {
